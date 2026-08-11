@@ -20,6 +20,43 @@ const ACCENT = Colors.primary[600];
 const ACCENT_LIGHT = Colors.mint[100];
 const PAGE_BG = Colors.mint[50];
 
+const ELIGIBILITY_POINTS = [
+  'You must be a resident of Maharashtra.',
+  'Your age must be between 21 and 65 years.',
+  'Your annual family income must be less than ₹2.5 lakh.',
+  'You must have an Aadhaar-linked bank account.',
+];
+
+const DOCUMENT_ITEMS = [
+  'Aadhaar Card',
+  'Ration Card',
+  'Residence Certificate',
+  'Bank Passbook',
+  'Income Certificate',
+  'Passport Photo',
+];
+
+const APPLY_STEPS = [
+  'Visit the official scheme portal or contact the local Gram Panchayat/Municipal Corporation office.',
+  'Fill out the online application form and upload the required documents.',
+];
+
+const FAQ_ITEMS = [
+  {
+    question: 'Who can apply?',
+    answer: 'Eligible residents of Maharashtra who satisfy the age, income, and account requirements can apply.',
+  },
+  {
+    question: 'Where can I get help?',
+    answer: 'You can contact the local office or use the scheme portal support option for assistance.',
+  },
+];
+
+const CONTACT_ITEMS = [
+  'Local Gram Panchayat / Municipal Corporation Office',
+  'Official Scheme Portal Support',
+];
+
 export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const schemeId = route.params?.schemeId || '';
@@ -134,26 +171,114 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             <Ionicons name="open-outline" size={18} color={Colors.text.secondary} />
           </TouchableOpacity>
 
-          {(scheme.about || scheme.description) && (
-            <View style={styles.infoSection}>
-              <Text style={styles.infoTitle}>About</Text>
-              <Text style={styles.infoText}>{scheme.about ?? scheme.description}</Text>
-            </View>
-          )}
+          <View style={styles.guideSection}>
+            <Text style={styles.guideTitle}>Scheme Details</Text>
+            <Text style={styles.guideSubtitle}>All the important information listed below, one section after another.</Text>
 
-          {scheme.eligibility_criteria && (
-            <View style={styles.infoSection}>
-              <Text style={styles.infoTitle}>Eligibility Criteria</Text>
-              <Text style={styles.infoText}>{scheme.eligibility_criteria}</Text>
+            <View style={styles.guideSectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.guideIconWrap}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color={ACCENT} />
+                </View>
+                <Text style={styles.sectionHeading}>Eligibility Criteria</Text>
+              </View>
+              <View style={styles.pointList}>
+                {ELIGIBILITY_POINTS.map((point, index) => (
+                  <View key={index} style={styles.pointRow}>
+                    <View style={styles.pointBullet}>
+                      <Ionicons name="checkmark" size={14} color={Colors.primary[700]} />
+                    </View>
+                    <Text style={styles.pointText}>{point}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-          )}
 
-          {scheme.benefits && (
-            <View style={styles.infoSection}>
-              <Text style={styles.infoTitle}>Benefits</Text>
-              <Text style={styles.infoText}>{scheme.benefits}</Text>
+            <View style={styles.guideSectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.guideIconWrap}>
+                  <Ionicons name="document-text-outline" size={18} color={ACCENT} />
+                </View>
+                <Text style={styles.sectionHeading}>Documents</Text>
+              </View>
+              <View style={styles.chipGrid}>
+                {DOCUMENT_ITEMS.map((item) => (
+                  <View key={item} style={styles.docChip}>
+                    <Text style={styles.docChipText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-          )}
+
+            <View style={styles.guideSectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.guideIconWrap}>
+                  <Ionicons name="create-outline" size={18} color={ACCENT} />
+                </View>
+                <Text style={styles.sectionHeading}>How to Apply</Text>
+              </View>
+              <View style={styles.stepList}>
+                {APPLY_STEPS.map((step, index) => (
+                  <View key={index} style={styles.stepRow}>
+                    <View style={styles.stepNumber}>
+                      <Text style={styles.stepNumberText}>{index + 1}</Text>
+                    </View>
+                    <Text style={styles.stepText}>{step}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.guideSectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.guideIconWrap}>
+                  <Ionicons name="help-circle-outline" size={18} color={ACCENT} />
+                </View>
+                <Text style={styles.sectionHeading}>FAQs</Text>
+              </View>
+              <View style={styles.faqList}>
+                {FAQ_ITEMS.map((faq) => (
+                  <View key={faq.question} style={styles.faqItem}>
+                    <Text style={styles.faqQuestion}>{faq.question}</Text>
+                    <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.guideSectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.guideIconWrap}>
+                  <Ionicons name="download-outline" size={18} color={ACCENT} />
+                </View>
+                <Text style={styles.sectionHeading}>GR (View/Download)</Text>
+              </View>
+              <TouchableOpacity style={styles.grRow} onPress={openUrl} activeOpacity={0.86}>
+                <Ionicons name="document-text-outline" size={18} color={ACCENT} />
+                <Text style={styles.grText}>View the GR or download it from the official source</Text>
+                <Ionicons name="open-outline" size={18} color={Colors.gray[400]} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.guideSectionBlock}>
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.guideIconWrap}>
+                  <Ionicons name="call-outline" size={18} color={ACCENT} />
+                </View>
+                <Text style={styles.sectionHeading}>Contact</Text>
+              </View>
+              <View style={styles.contactList}>
+                {CONTACT_ITEMS.map((item) => (
+                  <View key={item} style={styles.contactRow}>
+                    <View style={styles.contactDot} />
+                    <Text style={styles.contactText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+
+
 
           {scheme.documents_required && scheme.documents_required.length > 0 && (
             <View style={styles.infoSection}>
@@ -380,6 +505,176 @@ const styles = StyleSheet.create({
   viewActionText: {
     fontSize: 13,
     fontWeight: '800',
+    color: Colors.text.primary,
+  },
+  guideSection: {
+    marginBottom: Spacing.lg,
+  },
+  guideTitle: {
+    ...Typography.h5,
+    color: Colors.text.primary,
+    marginBottom: 4,
+  },
+  guideSubtitle: {
+    ...Typography.bodySm,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.md,
+  },
+  guideSectionBlock: {
+    marginBottom: Spacing.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  sectionHeading: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Colors.text.primary,
+    letterSpacing: 0.5,
+  },
+  guideIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: ACCENT_LIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  guideLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  pointList: {
+    gap: Spacing.md,
+  },
+  pointRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  pointBullet: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: Colors.primary[700],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
+    backgroundColor: Colors.white,
+  },
+  pointText: {
+    flex: 1,
+    ...Typography.body,
+    color: Colors.text.primary,
+    lineHeight: 26,
+  },
+  chipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  docChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+  },
+  docChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  stepList: {
+    gap: Spacing.md,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
+  },
+  stepNumber: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F7A54A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  stepNumberText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.white,
+  },
+  stepText: {
+    flex: 1,
+    ...Typography.body,
+    color: Colors.text.primary,
+    lineHeight: 26,
+  },
+  faqList: {
+    gap: Spacing.md,
+  },
+  faqItem: {
+    backgroundColor: Colors.white,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    padding: Spacing.md,
+  },
+  faqQuestion: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Colors.text.primary,
+    marginBottom: 6,
+  },
+  faqAnswer: {
+    ...Typography.bodySm,
+    color: Colors.text.secondary,
+    lineHeight: 22,
+  },
+  grRow: {
+    minHeight: 54,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  grText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  contactList: {
+    gap: Spacing.sm,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  contactDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: ACCENT,
+  },
+  contactText: {
+    flex: 1,
+    ...Typography.body,
     color: Colors.text.primary,
   },
   infoSection: {

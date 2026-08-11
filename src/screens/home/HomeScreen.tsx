@@ -104,7 +104,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
 
           {/* Greeting Titles */}
           <Text style={styles.greetingTitle}>
-            Namaste! 🌱{'\n'}
+            Namaste! {'\n'}
             <Text style={styles.greetingBold}>{greeting}</Text>
           </Text>
 

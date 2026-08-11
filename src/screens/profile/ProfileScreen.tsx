@@ -21,14 +21,11 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
+  { icon: 'paper-plane-outline', label: 'Applied Schemes', screen: 'SchemesTab' },
   { icon: 'settings-outline', label: 'Settings', screen: 'Settings' },
   { icon: 'language-outline', label: 'Language', screen: 'LanguageSelection' },
   { icon: 'bookmark-outline', label: 'Bookmarks', screen: 'Bookmarks' },
-  { icon: 'chatbubbles-outline', label: 'Chat History', screen: 'ConversationHistory' },
-  { icon: 'help-circle-outline', label: 'Help & Support', screen: 'Help' },
   { icon: 'information-circle-outline', label: 'About', screen: 'About' },
-  { icon: 'shield-checkmark-outline', label: 'Privacy Policy', screen: 'PrivacyPolicy' },
-  { icon: 'document-text-outline', label: 'Terms & Conditions', screen: 'TermsConditions' },
 ];
 
 export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigation }) => {
@@ -39,7 +36,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
 
   const handleLogout = async () => {
     setShowLogoutDialog(false);
-    try { await logoutMutation.mutateAsync(); } catch {}
+    try { await logoutMutation.mutateAsync(); } catch { }
     await logout();
   };
 

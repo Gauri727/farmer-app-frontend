@@ -22,7 +22,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
 
   const tabs = [
     { routeName: 'HomeTab', label: 'Home', activeIcon: 'home' as const, inactiveIcon: 'home-outline' as const },
-    { routeName: 'SchemesTab', label: 'Schemes', activeIcon: 'document-text' as const, inactiveIcon: 'document-text-outline' as const },
+    { routeName: 'SchemesTab', label: 'Schemes', activeIcon: 'grid' as const, inactiveIcon: 'grid-outline' as const },
     { isCenter: true },
     { routeName: 'EligibilityTab', label: 'Eligibility', activeIcon: 'checkmark-circle' as const, inactiveIcon: 'checkmark-circle-outline' as const },
     { routeName: 'ProfileTab', label: 'Profile', activeIcon: 'person' as const, inactiveIcon: 'person-outline' as const },
@@ -64,17 +64,19 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
           }
         };
 
-        const color = isFocused ? Colors.primary[600] : Colors.gray[400];
+        const color = isFocused ? Colors.primary[700] : Colors.gray[500];
         const iconName = isFocused ? tab.activeIcon : tab.inactiveIcon;
 
         return (
           <TouchableOpacity
             key={tab.routeName}
-            style={styles.tabItem}
+            style={[styles.tabItem, isFocused && styles.tabItemActive]}
             onPress={onPress}
             activeOpacity={0.7}
           >
-            <Ionicons name={iconName} size={24} color={color} />
+            <View style={[styles.iconPlate, isFocused && styles.iconPlateActive]}>
+              <Ionicons name={iconName} size={22} color={color} />
+            </View>
             <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
           </TouchableOpacity>
         );
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: Colors.white,
+    backgroundColor: '#F7FAF8',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingTop: 10,
@@ -109,19 +111,45 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
+    borderColor: '#E1E9E4',
     borderBottomWidth: 0,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 12,
+    shadowColor: '#0F2A1A',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 16,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderRadius: 20,
+    transform: [{ translateY: 0 }],
+  },
+  tabItemActive: {
+    transform: [{ translateY: -3 }],
+  },
+  iconPlate: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0F2A1A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  iconPlateActive: {
+    backgroundColor: '#EAF4EE',
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 5,
   },
   tabLabel: {
     fontSize: 11,
