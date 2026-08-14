@@ -322,6 +322,52 @@ export const SCHEME_TRANSLATIONS: Record<string, LocalizedSchemeContent> = {
       hi: 'वन विभाग',
       ahr: 'वन विभाग',
       kok: 'रान खातं',
+    },
+    overview: {
+      en: [
+        "Provides solar fencing (75% subsidy up to ₹15,000) and alternative livelihood support to farmers in villages within 2 km radius of tiger reserves and wildlife sanctuaries.",
+        "Aims to reduce human-wildlife conflict and dependency on forest resources by offering LPG gas cylinders and agri-supplementary business support."
+      ],
+      hi: [
+        "बाघ अभयारण्य और वन्यजीव अभयारण्यों के 2 किमी दायरे में गांवों के किसानों को सौर बाड़ (75% सब्सिडी ₹15,000 तक) और वैकल्पिक आजीविका सहायता प्रदान करता है।",
+        "एलपीजी गैस सिलेंडर और कृषि-पूरक व्यवसाय सहायता देकर मानव-वन्यजीव संघर्ष और वनों पर निर्भरता को कम करना मुख्य उद्देश्य है।"
+      ]
+    },
+    benefits: {
+      en: [
+        "75% Forest Department subsidy (up to ₹15,000) for solar power fencing setup.",
+        "Domestic LPG Gas cylinder and alternative agri-supplementary livelihood support."
+      ],
+      hi: [
+        "सौर ऊर्जा बाड़ लगाने के लिए 75% वन विभाग सब्सिडी (₹15,000 तक)।",
+        "घरेलू एलपीजी गैस सिलेंडर और कृषि-पूरक व्यवसाय सहायता।"
+      ]
+    },
+    eligibility: {
+      en: [
+        "Villagers and farmers living within a 2 km perimeter/radius of tiger reserves and wildlife sanctuaries."
+      ],
+      hi: [
+        "बाघ अभयारण्य और वन्यजीव अभयारण्य की 2 किमी परिधि में रहने वाले ग्रामीण व किसान।"
+      ]
+    },
+    howToApply: {
+      en: {
+        description: "Apply through the Forest Department / Eco-Development Committee (EDC).",
+        steps: [
+          "Contact the local Joint Forest Management Committee / Eco-Development Committee."
+        ]
+      },
+      hi: {
+        description: "वन विभाग / ग्राम पारिस्थितिकी विकास समिति (EDC) के माध्यम से आवेदन करें।",
+        steps: [
+          "स्थानीय संयुक्त वन प्रबंधन समिति से संपर्क करें।"
+        ]
+      }
+    },
+    documents: {
+      en: ["Aadhaar Card", "7/12 Land Extract", "Residence Certificate / Proof of staying within 2km Buffer Zone"],
+      hi: ["आधार कार्ड", "7/12 उतारा", "निवास प्रमाण पत्र / 2 किमी बफर क्षेत्र का प्रमाण"]
     }
   },
 
