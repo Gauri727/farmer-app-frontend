@@ -55,6 +55,7 @@ export type EligibilityStackParamList = {
 // ─── Profile Stack ────────────────────────────────────────────────────
 export type ProfileStackParamList = {
   Profile: undefined;
+  SignIn: undefined;
   Settings: undefined;
   LanguageSelection: undefined;
   Bookmarks: undefined;

@@ -15,7 +15,7 @@ import { ApiError } from '../types/api.types';
 
 // ── Placeholder Base URL ──────────────────────────────────────────────
 // Update this when the backend is deployed
-export const BASE_URL = 'https://api.farmervoice.example.com/api/v1';
+export const BASE_URL = 'http://10.62.140.87:8000/api/v1';
 
 // ── Token Storage Interface ───────────────────────────────────────────
 // This will be connected to expo-secure-store via AuthContext
@@ -113,8 +113,15 @@ apiClient.interceptors.response.use(
               refresh_token: refreshToken,
             });
 
-            const { access_token, refresh_token } = response.data.data;
-            await onTokenRefreshed(access_token, refresh_token);
+            const { access_token } = response.data.data;
+
+            const currentRefreshToken = await getRefreshToken();
+
+            if (!currentRefreshToken) {
+              throw new Error('No refresh token available');
+                }
+
+            await onTokenRefreshed(access_token, currentRefreshToken);
 
             processQueue(null, access_token);
 
