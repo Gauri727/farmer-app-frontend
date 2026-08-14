@@ -187,7 +187,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.centerContainer}>
           <Ionicons name="alert-circle-outline" size={56} color="#EF4444" />
           <Text style={[styles.errorTitle, { color: textColor }]}>
-            Unable to load scheme details.
+            {t('errorLoadScheme')}
           </Text>
           <TouchableOpacity
             style={styles.retryBtn}
@@ -300,7 +300,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="information-circle" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Overview
+              {t('overviewTab')}
             </Text>
           </View>
           {overviewParagraphs.length > 0 ? (
@@ -311,7 +311,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             ))
           ) : (
             <Text style={[styles.bodyText, { color: textColor }]}>
-              Official scheme overview information.
+              {t('schemeObjective')}
             </Text>
           )}
 
@@ -319,7 +319,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           {benefitsList.length > 0 ? (
             <View style={{ marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: borderColor }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: PRIMARY_GREEN, marginBottom: 8 }}>
-                💡 अनुदान व लाभ (Benefits & Subsidy)
+                {t('benefitsSubsidyHeader')}
               </Text>
               <View style={styles.listWrap}>
                 {benefitsList.map((item, index) => {
@@ -328,9 +328,9 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                   const isTableLine = itemStr.startsWith('|');
 
                   if (isTableLine) {
-                    const parts = itemStr.split('|').map(s => s.trim()).filter(Boolean);
+                    const parts = itemStr.split('|').map((s: string) => s.trim()).filter(Boolean);
                     if (parts.length >= 2 && !parts[0].includes('---')) {
-                      const isTableHeader = parts[0] === 'अपघाताची बाब';
+                      const isTableHeader = index === 0;
                       return (
                         <View
                           key={index}
@@ -383,7 +383,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="people" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Eligibility
+              {t('eligibilityTabName')}
             </Text>
           </View>
           {eligibilityList.length > 0 ? (
@@ -397,7 +397,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           ) : (
             <Text style={[styles.bodyText, { color: subTextColor, italic: true } as any]}>
-              सदर योजनेसाठी स्वतंत्र पात्रता निकष दिलेले नाहीत.
+              {t('noEligibilityCriteria')}
             </Text>
           )}
         </View>
@@ -409,7 +409,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="clipboard" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              How to Apply
+              {t('howToApplyTab')}
             </Text>
           </View>
           {howToApplyDesc ? (
@@ -419,10 +419,10 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           ) : null}
           <View style={styles.timelineList}>
             {(howToApplySteps.length > 0 ? howToApplySteps : [
-              "पात्रता निकष तपासा व आवश्यक माहिती खात्री करा.",
-              "आवश्यक कागदपत्रे आणि ७/१२ दाखला तयार ठेवा.",
-              "संबंधित कृषी विभाग कार्यालयात किंवा महाडीबीटी पोर्टलवर ऑनलाईन अर्ज करा.",
-              "अर्जाची छाननी व पूर्वसंमतीनंतर योजनेचा लाभ मिळवा."
+              t('defaultStep1'),
+              t('defaultStep2'),
+              t('defaultStep3'),
+              t('defaultStep4'),
             ]).map((step, idx) => (
               <View key={idx} style={styles.timelineItem}>
                 <View style={styles.stepBadge}>
@@ -453,7 +453,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="document-text" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Documents
+              {t('documentsTab')}
             </Text>
           </View>
           {documentsList.length > 0 ? (
@@ -493,7 +493,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           ) : (
             <Text style={[styles.bodyText, { color: subTextColor, italic: true } as any]}>
-              आवश्यक कागदपत्रांची यादी संबंधित कृषी कार्यालयात उपलब्ध आहे.
+              {t('noDocumentsAvailable')}
             </Text>
           )}
         </View>
@@ -505,7 +505,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="help-circle" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              FAQs
+              {t('faqsTab')}
             </Text>
           </View>
           <View style={styles.accordionContainer}>
@@ -547,7 +547,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="newspaper" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Government Resolution (GR)
+              {t('grSectionTitle')}
             </Text>
           </View>
           {hasGRUrl ? (
@@ -563,7 +563,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                     activeOpacity={0.85}
                   >
                     <Ionicons name="eye-outline" size={16} color="#FFFFFF" />
-                    <Text style={styles.grBtnViewText}>View GR</Text>
+                    <Text style={styles.grBtnViewText}>{t('viewGR')}</Text>
                   </TouchableOpacity>
                 ) : null}
                 {grDownloadUrl ? (
@@ -573,14 +573,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                     activeOpacity={0.85}
                   >
                     <Ionicons name="download-outline" size={16} color={PRIMARY_GREEN} />
-                    <Text style={[styles.grBtnDownloadText, { color: PRIMARY_GREEN }]}>Download GR</Text>
+                    <Text style={[styles.grBtnDownloadText, { color: PRIMARY_GREEN }]}>{t('downloadGR')}</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
             </View>
           ) : (
             <Text style={[styles.bodyText, { color: subTextColor }]}>
-              GR document will be available here.
+              {t('noGRAvailable')}
             </Text>
           )}
         </View>
@@ -592,7 +592,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons name="call" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Contact
+              {t('contactTab')}
             </Text>
           </View>
           {(contactPhone || contactEmail || contactAddress) ? (
@@ -635,21 +635,21 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           ) : (
             <Text style={[styles.bodyText, { color: textColor }]}>
-              Contact the nearest Agriculture Department office for assistance.
+              {t('contactFallback')}
             </Text>
           )}
         </View>
 
         {/* ── Bottom Official Source Section ── */}
         <View style={[styles.sourceCard, { backgroundColor: greenBg, borderColor: BORDER_GREEN }]}>
-          <Text style={[styles.sourceLabel, { color: subTextColor }]}>Source:</Text>
+          <Text style={[styles.sourceLabel, { color: subTextColor }]}>{t('sourceLabel')}</Text>
           <Text style={[styles.sourceName, { color: textColor }]}>{sourceName}</Text>
           <TouchableOpacity
             style={styles.officialSourceBtn}
             onPress={() => handleOpenUrl(sourceUrl)}
             activeOpacity={0.85}
           >
-            <Text style={styles.officialSourceBtnText}>View Official Source</Text>
+            <Text style={styles.officialSourceBtnText}>{t('viewOfficialSource')}</Text>
             <Ionicons name="open-outline" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>

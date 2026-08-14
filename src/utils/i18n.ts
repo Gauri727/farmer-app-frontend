@@ -216,6 +216,19 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     faqQ5: 'या योजनेचा लाभ कसा मिळतो?',
     faqA5: 'अर्ज मंजूर झाल्यावर अनुदानाची रक्कम थेट शेतकऱ्याच्या आधार-लिंक्ड बँक खात्यात (DBT द्वारे) जमा केली जाते.',
 
+    // ─── Scheme Detail Screen — Section Headers & Fallback Text ─────
+    benefitsSubsidyHeader: '💡 अनुदान व लाभ',
+    noEligibilityCriteria: 'सदर योजनेसाठी स्वतंत्र पात्रता निकष दिलेले नाहीत.',
+    noDocumentsAvailable: 'आवश्यक कागदपत्रांची यादी संबंधित कृषी कार्यालयात उपलब्ध आहे.',
+    contactFallback: 'सहाय्यासाठी जवळच्या कृषी विभाग कार्यालयाशी संपर्क साधा.',
+    sourceLabel: 'स्रोत:',
+    viewOfficialSource: 'अधिकृत स्रोत पहा',
+    defaultStep1: 'पात्रता निकष तपासा व आवश्यक माहिती खात्री करा.',
+    defaultStep2: 'आवश्यक कागदपत्रे आणि ७/१२ दाखला तयार ठेवा.',
+    defaultStep3: 'संबंधित कृषी विभाग कार्यालयात किंवा महाडीबीटी पोर्टलवर ऑनलाईन अर्ज करा.',
+    defaultStep4: 'अर्जाची छाननी व पूर्वसंमतीनंतर योजनेचा लाभ मिळवा.',
+    errorLoadScheme: 'योजनेची माहिती लोड करता आली नाही.',
+
     // ─── Categories ──────────────────────────────────────────────────
     catHorticulture: 'फळबाग व भाजीपाला',
     catTribalDevelopment: 'आदिवासी विकास',
@@ -691,6 +704,19 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     faqQ5: 'How is the scheme benefit disbursed?',
     faqA5: 'Upon approval, financial aid is directly transferred into the beneficiary Aadhaar-linked bank account via DBT.',
 
+    // ─── Scheme Detail Screen — Section Headers & Fallback Text ─────
+    benefitsSubsidyHeader: '💡 Benefits & Subsidy',
+    noEligibilityCriteria: 'Specific eligibility criteria for this scheme are not separately listed.',
+    noDocumentsAvailable: 'The list of required documents is available at the relevant Agriculture Department office.',
+    contactFallback: 'Contact the nearest Agriculture Department office for assistance.',
+    sourceLabel: 'Source:',
+    viewOfficialSource: 'View Official Source',
+    defaultStep1: 'Check the eligibility criteria and verify your qualification.',
+    defaultStep2: 'Keep required documents and 7/12 extract ready.',
+    defaultStep3: 'Apply online at the Agriculture Department office or MahaDBT portal.',
+    defaultStep4: 'After scrutiny and pre-approval, receive the scheme benefit.',
+    errorLoadScheme: 'Unable to load scheme details.',
+
     // ─── Categories ──────────────────────────────────────────────────
     catHorticulture: 'Horticulture',
     catTribalDevelopment: 'Tribal Development',
@@ -1159,6 +1185,19 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     faqA4: 'महाडीबीटी पोर्टल पर "आवेदन स्थिति" विकल्प में जाकर एप्लीकेशन नंबर दर्ज करें।',
     faqQ5: 'योजना का लाभ कैसे मिलता है?',
     faqA5: 'स्वीकृति के बाद सहायता राशि सीधे किसान के आधार-लिंक्ड बैंक खाते (DBT) में जमा होती है।',
+
+    // ─── Scheme Detail Screen — Section Headers & Fallback Text ─────
+    benefitsSubsidyHeader: '💡 लाभ एवं सब्सिडी',
+    noEligibilityCriteria: 'इस योजना के लिए अलग से पात्रता मानदंड नहीं दिए गए हैं।',
+    noDocumentsAvailable: 'आवश्यक दस्तावेजों की सूची संबंधित कृषि कार्यालय में उपलब्ध है।',
+    contactFallback: 'सहायता के लिए निकटतम कृषि विभाग कार्यालय से संपर्क करें।',
+    sourceLabel: 'स्रोत:',
+    viewOfficialSource: 'आधिकारिक स्रोत देखें',
+    defaultStep1: 'पात्रता मानदंड जांचें और अपनी योग्यता की पुष्टि करें।',
+    defaultStep2: 'आवश्यक दस्तावेज और 7/12 उतारा तैयार रखें।',
+    defaultStep3: 'कृषि विभाग कार्यालय या महाडीबीटी पोर्टल पर ऑनलाइन आवेदन करें।',
+    defaultStep4: 'जांच और पूर्व-अनुमोदन के बाद योजना का लाभ प्राप्त करें।',
+    errorLoadScheme: 'योजना विवरण लोड करने में असमर्थ।',
 
     // ─── Categories ──────────────────────────────────────────────────
     catHorticulture: 'फल-सब्जी बागवानी',
@@ -1630,6 +1669,19 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     faqQ5: 'योजनाना पैसा कसा मिळस?',
     faqA5: 'अर्ज मंजूर व्हयावर पैशा थेट शेतकरीना आधार बँक खाताम जमा व्हस.',
 
+    // ─── Scheme Detail Screen — Section Headers & Fallback Text ─────
+    benefitsSubsidyHeader: '💡 अनुदान अन लाभ',
+    noEligibilityCriteria: 'या योजनासाठी स्वतंत्र पात्रता निकष दिलेले नाही.',
+    noDocumentsAvailable: 'लागणारी कागदपत्रे कृषी कार्यालयात उपलब्ध हायेत.',
+    contactFallback: 'जवळच्या कृषी विभाग कार्यालयासाठी संपर्क करा.',
+    sourceLabel: 'स्रोत:',
+    viewOfficialSource: 'अधिकृत स्रोत पहा',
+    defaultStep1: 'पात्रता निकष तपासा अन माहिती खात्री करा.',
+    defaultStep2: 'लागणारी कागदपत्रे अन ७/१२ दाखला तयार ठेवा.',
+    defaultStep3: 'कृषी विभाग कार्यालयात किंवा महाडीबीटी पोर्टलवर अर्ज करा.',
+    defaultStep4: 'अर्जाची छाननी व्हयावर योजनाचा लाभ मिळवा.',
+    errorLoadScheme: 'योजनाची माहिती लोड व्हय नाही.',
+
     // ─── Categories ──────────────────────────────────────────────────
     catHorticulture: 'फळबाग अन भाजीपाला',
     catTribalDevelopment: 'आदिवासी विकास',
@@ -2099,6 +2151,19 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     faqA4: 'महाडीबीटी पोर्टलार वचून अर्ज नंबर घालून स्टेटस पळोवंक जाता.',
     faqQ5: 'योचनेचो लाभाचो पैसो कसा मेळटा?',
     faqA5: 'अर्ज मंजूर जाल्यार पैसो सीधा शेतकार्याच्या आधार बँक खात्यांत जमा जाता.',
+
+    // ─── Scheme Detail Screen — Section Headers & Fallback Text ─────
+    benefitsSubsidyHeader: '💡 अनदान आनी लाभ',
+    noEligibilityCriteria: 'ह्या येवजणे खातीर वेगळे पात्रता निकष दिवंक नात.',
+    noDocumentsAvailable: 'गरजेची कागदपत्रां कृषी कार्यालयांत उपलब्ध आसात.',
+    contactFallback: 'लागींच्या कृषी विभाग कार्यालयाकडेन संपर्क करात.',
+    sourceLabel: 'स्रोत:',
+    viewOfficialSource: 'अधिकृत स्रोत पळोवात',
+    defaultStep1: 'पात्रता निकष तपासात आनी माहिती खात्री करात.',
+    defaultStep2: 'गरजेची कागदपत्रां आनी ७/१२ दाखलो तयार दवरात.',
+    defaultStep3: 'कृषी विभाग कार्यालयांत वा महाडीबीटी पोर्टलार ऑनलायन अर्ज करात.',
+    defaultStep4: 'अर्जाची छाननी आनी मंजुरी उपरांत येवजणेचो लाभ मेळोवात.',
+    errorLoadScheme: 'येवजणेची माहिती लोड करूंक जायना.',
 
     // ─── Categories ──────────────────────────────────────────────────
     catHorticulture: 'फळबाग आनी भाजीपालो',

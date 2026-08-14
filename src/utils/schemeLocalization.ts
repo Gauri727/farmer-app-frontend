@@ -772,6 +772,24 @@ export const getLocalizedScheme = (scheme: Scheme | any, langCode?: string): Sch
   const localizedDepartment = getField('department') || scheme.department || (scheme.type === 'Central' ? getTranslation(lang, 'centralType') : getTranslation(lang, 'stateType'));
   const localizedCategory = getCategoryTranslation(scheme.category, lang);
 
+  // ── Localize Overview ──────────────────────────────────────────────
+  const localizedOverview = getField('overview') || scheme.overview;
+
+  // ── Localize How to Apply ──────────────────────────────────────────
+  const localizedHowToApply = getField('howToApply') || scheme.howToApply;
+
+  // ── Localize Documents ─────────────────────────────────────────────
+  const localizedDocuments = getField('documents') || scheme.documents || scheme.requiredDocuments;
+
+  // ── Localize FAQs ──────────────────────────────────────────────────
+  const localizedFaqs = getField('faqs') || scheme.faqs;
+
+  // ── Localize GR ────────────────────────────────────────────────────
+  const localizedGr = getField('gr') || scheme.gr;
+
+  // ── Localize Contact ───────────────────────────────────────────────
+  const localizedContact = getField('contact') || scheme.contact;
+
   return {
     ...scheme,
     title: localizedTitle,
@@ -780,12 +798,20 @@ export const getLocalizedScheme = (scheme: Scheme | any, langCode?: string): Sch
     shortDescription: localizedDesc,
     amount: localizedAmount,
     benefits: localizedBenefits,
+    benefit: localizedBenefits,
     eligibility_criteria: Array.isArray(localizedEligibility)
       ? localizedEligibility.join('\n• ')
       : localizedEligibility,
     eligibility: localizedEligibility,
     department: localizedDepartment,
     category: localizedCategory,
+    overview: localizedOverview,
+    howToApply: localizedHowToApply,
+    documents: localizedDocuments,
+    requiredDocuments: localizedDocuments,
+    faqs: localizedFaqs,
+    gr: localizedGr,
+    contact: localizedContact,
   };
 };
 

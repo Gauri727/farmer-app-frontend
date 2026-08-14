@@ -120,7 +120,9 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
     schemesQuery.data?.pages?.[0]?.data?.items || [
       {
         id: 'pmksy-per-drop-more-crop-css',
+        name: 'प्रधानमंत्री कृषी सिंचन योजना - प्रती थेंब अधिक पिक',
         title: 'प्रधानमंत्री कृषी सिंचन योजना - प्रती थेंब अधिक पिक',
+        englishName: 'PMKSY - Per Drop More Crop (Micro-Irrigation Component)',
         description: 'ठिबक व तुषार सिंचनासाठी लहान व अल्पभूधारक शेतकऱ्यांना ५५% तर इतर शेतकऱ्यांना ४५% अनुदान.',
         category: 'Irrigation',
         type: 'Central',
@@ -129,7 +131,9 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
       },
       {
         id: 'bhausaheb-fundkar-falbag-lagvad-yojana',
+        name: 'भाऊसाहेब फुंडकर फळबाग लागवड योजना',
         title: 'भाऊसाहेब फुंडकर फळबाग लागवड योजना',
+        englishName: 'Bhausaheb Fundkar Fruit Orchard Plantation Scheme',
         description: 'फळबाग लागवडीसाठी पहिल्या वर्षी ५०%, दुसऱ्या वर्षी ३०% आणि तिसऱ्या वर्षी २०% अनुदान.',
         category: 'Horticulture',
         type: 'State',
@@ -138,7 +142,9 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
       },
       {
         id: 'sub-mission-on-agricultural-mechanization-css',
+        name: 'कृषी यांत्रिकीकरण उप-अभियान (SMAM)',
         title: 'कृषी यांत्रिकीकरण उप-अभियान (SMAM)',
+        englishName: 'Sub-Mission on Agricultural Mechanization (SMAM)',
         description: 'ट्रॅक्टर, पॉवर टिलर, अवजारे खरेदीसाठी ५०% अनुदान व कस्टम हायरिंग केंद्रांसाठी ८०% सहाय्य.',
         category: 'Mechanization',
         type: 'Central',
@@ -147,7 +153,9 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
       },
       {
         id: 'dr-babasaheb-ambedkar-krushi-swavalamban-yojana',
+        name: 'डॉ. बाबासाहेब आंबेडकर कृषी स्वावलंबन योजना',
         title: 'डॉ. बाबासाहेब आंबेडकर कृषी स्वावलंबन योजना',
+        englishName: 'Dr. Babasaheb Ambedkar Krushi Swavalamban Yojana',
         description: 'अनुसूचित जाती (SC) व नवबौद्ध शेतकऱ्यांसाठी विहीर, विहीर दुरुस्ती, पंप व सूक्ष्म सिंचन अनुदान.',
         category: 'Farmer Welfare',
         type: 'State',
