@@ -939,22 +939,28 @@ export const schemeService = {
       const response = await apiClient.get(endpoint);
       console.log("SCHEME RAW RESPONSE:", response.data);
 
+      const cleanId = (id || '').toLowerCase().trim();
+      const mockMatch = MOCK_SCHEMES.find(
+        (m) => m.id === id || m.id.toLowerCase() === cleanId || cleanId.includes(m.id.toLowerCase())
+      );
+
       const rawData = response.data;
       const s = rawData.scheme || rawData.data || rawData;
       if (s && typeof s === 'object' && (s.id || s.name || s.title || s.englishName)) {
         const normalized: Scheme = {
+          ...mockMatch,
           ...s,
           id: s.id || id,
-          title: s.name || s.title || s.englishName || 'Scheme Details',
-          name: s.name || s.title || s.englishName || '',
-          englishName: s.englishName || '',
-          department: s.department || s.category || 'कृषी विभाग',
-          overview: s.overview || s.shortDescription || s.description || '',
-          benefit: s.benefit || s.benefits || '',
-          eligibility: s.eligibility || [],
-          requiredDocuments: s.requiredDocuments || s.documents || [],
-          benefits: s.benefit || s.benefits || [],
-          documents: s.requiredDocuments || s.documents || [],
+          title: mockMatch?.title || s.title || s.name || s.englishName || 'Scheme Details',
+          name: mockMatch?.name || s.name || s.title || s.englishName || '',
+          englishName: mockMatch?.englishName || s.englishName || '',
+          department: mockMatch?.department || s.department || s.category || 'कृषी विभाग',
+          overview: mockMatch?.overview || s.overview || s.shortDescription || s.description || '',
+          benefit: mockMatch?.benefit || s.benefit || s.benefits || '',
+          eligibility: mockMatch?.eligibility || s.eligibility || [],
+          requiredDocuments: mockMatch?.requiredDocuments || s.requiredDocuments || s.documents || [],
+          benefits: mockMatch?.benefits || s.benefit || s.benefits || [],
+          documents: mockMatch?.documents || s.requiredDocuments || s.documents || [],
         };
         console.log("SCHEME NORMALIZED RESULT:", normalized);
         return { success: true, data: normalized };
