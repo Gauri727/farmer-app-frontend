@@ -220,10 +220,33 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   // 5. How to Apply
-  const howToApplyObj = scheme.howToApply || {};
-  const howToApplyDesc = typeof howToApplyObj === 'string' ? howToApplyObj : (howToApplyObj.description || '');
-  const howToApplySteps: string[] = Array.isArray(howToApplyObj.steps) ? howToApplyObj.steps : [];
-  const officialApplyUrl = howToApplyObj.officialUrl || scheme.application_url || scheme.official_website;
+  const rawHowToApply = scheme.howToApply;
+  let howToApplySteps: string[] = [];
+  let howToApplyDesc = '';
+  if (Array.isArray(rawHowToApply)) {
+    howToApplySteps = rawHowToApply.map((s: any) => typeof s === 'string' ? s : String(s));
+  } else if (rawHowToApply && typeof rawHowToApply === 'object') {
+    howToApplyDesc = rawHowToApply.description || '';
+    howToApplySteps = Array.isArray(rawHowToApply.steps) ? rawHowToApply.steps : [];
+  } else if (typeof rawHowToApply === 'string' && rawHowToApply.trim()) {
+    howToApplySteps = rawHowToApply.split(/\n|;/).map(s => s.trim()).filter(Boolean);
+  }
+
+  // Fallback complete steps if empty
+  if (howToApplySteps.length === 0) {
+    howToApplySteps = [
+      "1) Visit the official MahaDBT Farmer Portal (mahadbt.maharashtra.gov.in).",
+      "2) Login with your Aadhaar number or User ID and Password.",
+      "3) Fill in your personal information and 7/12 & 8-A land extract details.",
+      "4) Select the target scheme component in the Agriculture Section.",
+      "5) Upload scanned copies of required documents (7/12, 8-A, Aadhaar Card, Bank Passbook).",
+      "6) Submit application and save acknowledgment receipt.",
+      "7) Await Pre-Sanction letter from Taluka Agriculture Officer before starting work.",
+      "8) Upload purchase invoices after completing work.",
+      "9) Subsidy will be directly credited to your bank account via Direct Benefit Transfer (DBT)."
+    ];
+  }
+  const officialApplyUrl = (rawHowToApply && typeof rawHowToApply === 'object' ? rawHowToApply.officialUrl : null) || scheme.application_url || scheme.official_website;
 
   // FAQs
   const faqsList: { question: string; answer: string }[] = Array.isArray(scheme.faqs) ? scheme.faqs : [];
