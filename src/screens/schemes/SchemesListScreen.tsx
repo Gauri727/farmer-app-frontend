@@ -2,7 +2,7 @@
  * Schemes List Screen — reference-style header, category pills, and scheme cards
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,140 +10,335 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
+import {
+  Colors,
+  Spacing,
+  BorderRadius,
+  Typography,
+} from '../../theme';
 import { SearchBar } from '../../components/layout/SearchBar';
 import { SchemeCard } from '../../components/cards/SchemeCard';
 import { SkeletonSchemeCard } from '../../components/common/SkeletonLoader';
 import { EmptyState } from '../../components/common/EmptyState';
-import { useSchemes, useSchemeCategories } from '../../hooks/useSchemes';
+import {
+  useSchemes,
+  useSchemeCategories,
+} from '../../hooks/useSchemes';
 import { SchemesScreenProps } from '../../navigation/types';
 import { Scheme } from '../../types/api.types';
 
 const ACCENT = Colors.primary[600];
 const ACCENT_LIGHT = Colors.mint[100];
 
-export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
-  navigation,
-  route,
-}) => {
+export const SchemesListScreen: React.FC<
+  SchemesScreenProps<'SchemesList'>
+> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const [selectedCategory, setSelectedCategory] = useState(route.params?.category || 'All');
-  const [searchQuery, setSearchQuery] = useState('');
+
+  const [selectedCategory, setSelectedCategory] =
+    useState(route.params?.category || 'All');
+
+  const [searchQuery, setSearchQuery] =
+    useState('');
 
   const categoriesQuery = useSchemeCategories();
+
   const schemesQuery = useSchemes({
-    category: selectedCategory !== 'All' ? selectedCategory : undefined,
+    category:
+      selectedCategory !== 'All'
+        ? selectedCategory
+        : undefined,
     search: searchQuery || undefined,
     limit: 10,
   });
 
-  const categories = categoriesQuery.data || [];
-  const totalSchemes = schemesQuery.data?.pages?.[0]?.data?.total || 0;
-  const allCategories = [{ id: 'all', name: 'All', count: totalSchemes }, ...categories];
-  const schemes = schemesQuery.data?.pages?.flatMap((page) => page.data.items) || [];
+  const categories =
+    categoriesQuery.data || [];
 
-  const handleSchemePress = (scheme: Scheme) => {
-    navigation.navigate('SchemeDetails', { schemeId: scheme.id });
+  const totalSchemes =
+    schemesQuery.data?.pages?.[0]?.data?.total || 0;
+
+  const allCategories = [
+    {
+      id: 'all',
+      name: 'All',
+      count: totalSchemes,
+    },
+    ...categories,
+  ];
+
+  const schemes =
+    schemesQuery.data?.pages?.flatMap(
+      (page) => page.data.items
+    ) || [];
+
+  const handleSchemePress = (
+    scheme: Scheme
+  ) => {
+    navigation.navigate(
+      'SchemeDetails',
+      {
+        schemeId: scheme.id,
+      }
+    );
   };
 
   const handleLoadMore = () => {
-    if (schemesQuery.hasNextPage && !schemesQuery.isFetchingNextPage) {
+    if (
+      schemesQuery.hasNextPage &&
+      !schemesQuery.isFetchingNextPage
+    ) {
       schemesQuery.fetchNextPage();
     }
   };
 
   const renderHeader = () => (
     <View style={styles.headerBlock}>
+
+      {/* =========================
+          TOP HEADER
+          ========================= */}
+
       <View style={styles.topRow}>
+
         <View style={styles.brandRow}>
+
+          {/* APP LOGO */}
           <View style={styles.brandIcon}>
-            <Text style={styles.brandIconText}>म</Text>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={styles.brandLogo}
+              resizeMode="contain"
+            />
           </View>
+
           <View>
-            <Text style={styles.screenTitle}>Schemes</Text>
-            <Text style={styles.screenSubtitle}>20 curated agriculture schemes</Text>
+            <Text style={styles.screenTitle}>
+              Schemes
+            </Text>
+
+            <Text style={styles.screenSubtitle}>
+              20 curated agriculture schemes
+            </Text>
           </View>
+
         </View>
+
+
+        {/* RIGHT ACTIONS */}
 
         <View style={styles.actionsRow}>
-          <TouchableOpacity style={styles.circleAction} activeOpacity={0.8}>
-            <Ionicons name="globe-outline" size={20} color="#5A3E2B" />
+
+          <TouchableOpacity
+            style={styles.circleAction}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="globe-outline"
+              size={20}
+              color="#5A3E2B"
+            />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.circleAction} activeOpacity={0.8}>
-            <Ionicons name="notifications-outline" size={20} color="#5A3E2B" />
+
+          <TouchableOpacity
+            style={styles.circleAction}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={20}
+              color="#5A3E2B"
+            />
           </TouchableOpacity>
+
         </View>
+
       </View>
 
+
+      {/* =========================
+          SEARCH
+          ========================= */}
+
       <View style={styles.searchWrap}>
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search schemes..." />
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search schemes..."
+        />
       </View>
+
+
+      {/* =========================
+          CATEGORY TABS
+          ========================= */}
 
       <FlatList
         data={allCategories}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryList}
-        keyExtractor={(item) => item.id || item.name}
+        contentContainerStyle={
+          styles.categoryList
+        }
+        keyExtractor={(item) =>
+          item.id || item.name
+        }
         renderItem={({ item }) => {
-          const isActive = selectedCategory === item.name;
+
+          const isActive =
+            selectedCategory === item.name;
 
           return (
             <TouchableOpacity
-              style={[styles.categoryTab, isActive && styles.categoryTabActive]}
-              onPress={() => setSelectedCategory(item.name)}
+              style={[
+                styles.categoryTab,
+                isActive &&
+                  styles.categoryTabActive,
+              ]}
+              onPress={() =>
+                setSelectedCategory(
+                  item.name
+                )
+              }
               activeOpacity={0.85}
             >
-              <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
+
+              <Text
+                style={[
+                  styles.categoryText,
+                  isActive &&
+                    styles.categoryTextActive,
+                ]}
+              >
                 {item.name}
               </Text>
-              {item.count ? <Text style={[styles.categoryCount, isActive && styles.categoryCountActive]}>{item.count}</Text> : null}
+
+              {item.count ? (
+                <Text
+                  style={[
+                    styles.categoryCount,
+                    isActive &&
+                      styles.categoryCountActive,
+                  ]}
+                >
+                  {item.count}
+                </Text>
+              ) : null}
+
             </TouchableOpacity>
           );
         }}
       />
 
-      <Text style={styles.countText}>{totalSchemes} schemes</Text>
+
+      <Text style={styles.countText}>
+        {totalSchemes} schemes
+      </Text>
+
     </View>
   );
 
+
+  /* =========================
+     LOADING
+     ========================= */
+
   if (schemesQuery.isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top + Spacing.sm }]}>
+      <View
+        style={[
+          styles.container,
+          {
+            paddingTop:
+              insets.top + Spacing.sm,
+          },
+        ]}
+      >
+
         {renderHeader()}
-        <View style={styles.loadingContainer}>
+
+        <View
+          style={styles.loadingContainer}
+        >
+
           {[1, 2].map((item) => (
-            <View key={item} style={styles.skeletonWrap}>
+            <View
+              key={item}
+              style={styles.skeletonWrap}
+            >
               <SkeletonSchemeCard />
             </View>
           ))}
+
         </View>
+
       </View>
     );
   }
 
+
+  /* =========================
+     MAIN SCREEN
+     ========================= */
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top + Spacing.sm }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop:
+            insets.top + Spacing.sm,
+        },
+      ]}
+    >
+
       <FlatList
         data={schemes}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.schemesList}
-        showsVerticalScrollIndicator={false}
+        keyExtractor={(item) =>
+          item.id
+        }
+
+        contentContainerStyle={
+          styles.schemesList
+        }
+
+        showsVerticalScrollIndicator={
+          false
+        }
+
         refreshControl={
           <RefreshControl
-            refreshing={schemesQuery.isRefetching}
-            onRefresh={() => schemesQuery.refetch()}
+            refreshing={
+              schemesQuery.isRefetching
+            }
+            onRefresh={() =>
+              schemesQuery.refetch()
+            }
             tintColor={ACCENT}
             colors={[ACCENT]}
           />
         }
+
         onEndReached={handleLoadMore}
+
         onEndReachedThreshold={0.5}
-        renderItem={({ item }) => <SchemeCard scheme={item} onPress={handleSchemePress} compact />}
-        ListHeaderComponent={renderHeader}
+
+        renderItem={({ item }) => (
+          <SchemeCard
+            scheme={item}
+            onPress={handleSchemePress}
+            compact
+          />
+        )}
+
+        ListHeaderComponent={
+          renderHeader
+        }
+
         ListEmptyComponent={
           <EmptyState
             icon="documents-outline"
@@ -151,134 +346,266 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
             message="Try a different category or search term."
           />
         }
+
         ListFooterComponent={
           schemesQuery.isFetchingNextPage ? (
-            <View style={styles.loadingMore}>
-              <Text style={styles.loadingText}>Loading more...</Text>
+            <View
+              style={styles.loadingMore}
+            >
+              <Text
+                style={styles.loadingText}
+              >
+                Loading more...
+              </Text>
             </View>
           ) : (
-            <View style={{ height: Spacing['5xl'] }} />
+            <View
+              style={{
+                height: Spacing['5xl'],
+              }}
+            />
           )
         }
       />
+
     </View>
   );
 };
 
+
+/* ============================================================
+   STYLES
+   ============================================================ */
+
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
-    backgroundColor: Colors.mint[100],
+    backgroundColor:
+      Colors.mint[100],
   },
+
+
   headerBlock: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal:
+      Spacing.lg,
+    paddingBottom:
+      Spacing.lg,
   },
+
+
+  /* =========================
+     TOP ROW
+     ========================= */
+
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
+    justifyContent:
+      'space-between',
+    marginBottom:
+      Spacing.lg,
   },
+
+
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
   },
+
+
+  /* =========================
+     APP LOGO
+     ========================= */
+
   brandIcon: {
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: ACCENT,
+
+    /*
+     * Transparent because the logo
+     * already contains its own
+     * green background.
+     */
+    backgroundColor:
+      'transparent',
+
     alignItems: 'center',
     justifyContent: 'center',
+
+    overflow: 'hidden',
   },
-  brandIconText: {
-    color: Colors.white,
-    fontSize: 24,
-    fontWeight: '800',
+
+
+  brandLogo: {
+    width: 54,
+    height: 54,
   },
+
+
   screenTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: Colors.text.primary,
+    color:
+      Colors.text.primary,
     lineHeight: 28,
   },
+
+
   screenSubtitle: {
     fontSize: 13,
-    color: Colors.text.secondary,
+    color:
+      Colors.text.secondary,
     marginTop: 2,
   },
+
+
+  /* =========================
+     RIGHT ACTIONS
+     ========================= */
+
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
   },
+
+
   circleAction: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: ACCENT_LIGHT,
+    backgroundColor:
+      ACCENT_LIGHT,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+
+  /* =========================
+     SEARCH
+     ========================= */
+
   searchWrap: {
-    marginBottom: Spacing.lg,
+    marginBottom:
+      Spacing.lg,
   },
+
+
+  /* =========================
+     CATEGORIES
+     ========================= */
+
   categoryList: {
     gap: Spacing.sm,
-    paddingBottom: Spacing.md,
+    paddingBottom:
+      Spacing.md,
   },
+
+
   categoryTab: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
+
     paddingVertical: 10,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
-    backgroundColor: ACCENT_LIGHT,
+    paddingHorizontal:
+      Spacing.md,
+
+    borderRadius:
+      BorderRadius.full,
+
+    backgroundColor:
+      ACCENT_LIGHT,
   },
+
+
   categoryTabActive: {
-    backgroundColor: ACCENT,
+    backgroundColor:
+      ACCENT,
   },
+
+
   categoryText: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.primary[700],
+    color:
+      Colors.primary[700],
   },
+
+
   categoryTextActive: {
-    color: Colors.white,
+    color:
+      Colors.white,
   },
+
+
   categoryCount: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.primary[700],
+    color:
+      Colors.primary[700],
   },
+
+
   categoryCountActive: {
-    color: Colors.white,
+    color:
+      Colors.white,
   },
+
+
   countText: {
     ...Typography.body,
-    color: Colors.text.secondary,
-    marginTop: Spacing.xs,
+    color:
+      Colors.text.secondary,
+    marginTop:
+      Spacing.xs,
   },
+
+
+  /* =========================
+     SCHEME LIST
+     ========================= */
+
   schemesList: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal:
+      Spacing.lg,
+    paddingBottom:
+      Spacing.xl,
   },
+
+
+  /* =========================
+     LOADING
+     ========================= */
+
   loadingContainer: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal:
+      Spacing.lg,
+    paddingBottom:
+      Spacing.xl,
   },
+
+
   skeletonWrap: {
-    marginBottom: Spacing.lg,
+    marginBottom:
+      Spacing.lg,
   },
+
+
   loadingMore: {
-    paddingVertical: Spacing.xl,
+    paddingVertical:
+      Spacing.xl,
     alignItems: 'center',
   },
+
+
   loadingText: {
     ...Typography.bodySm,
-    color: Colors.text.tertiary,
+    color:
+      Colors.text.tertiary,
   },
+
 });

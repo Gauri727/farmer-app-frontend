@@ -4,8 +4,11 @@
     "slug": "farmer-app",
     "version": "1.0.0",
     "orientation": "portrait",
+
     "icon": "./assets/icon.png",
+
     "userInterfaceStyle": "light",
+<<<<<<< HEAD
     "ios": {
       "supportsTablet": true
     },
@@ -16,11 +19,39 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
+=======
+    "newArchEnabled": true,
+
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#EAF7EE"
+    },
+
+    "ios": {
+      "supportsTablet": true
+    },
+
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#EAF7EE"
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
       },
       "predictiveBackGestureEnabled": false
     },
+
     "web": {
+<<<<<<< HEAD
       "favicon": "./assets/favicon.png"
     }
+=======
+      "favicon": "./assets/icon.png"
+    },
+
+    "plugins": [
+      "expo-secure-store"
+    ]
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
   }
 }

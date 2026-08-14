@@ -2,13 +2,34 @@
  * Eligibility Wizard Screen — Step-by-step eligibility flow
  */
 
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+=======
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../../theme';
 import { EligibilityScreenProps } from '../../navigation/types';
+<<<<<<< HEAD
 import { EligibilityResponse, EligibilityResult, Scheme } from '../../types/api.types';
+=======
+import {
+  EligibilityResponse,
+  EligibilityResult,
+  Scheme,
+} from '../../types/api.types';
+import { useLanguageContext } from '../../contexts/LanguageContext';
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
 
 type AnswerMap = Record<string, string>;
 
@@ -96,7 +117,8 @@ const buildResults = (answers: AnswerMap): EligibilityResponse => {
   const stScheme = createScheme({
     id: 'tribal-sub-plan-farmer-support',
     title: 'Tribal Sub-Plan Farmer Support Scheme',
-    description: 'Enhanced input & mechanization subsidy for tribal farmers.',
+    description:
+      'Enhanced input & mechanization subsidy for tribal farmers.',
     category: 'Tribal Farmer Schemes',
     type: 'Central',
   });
@@ -104,7 +126,8 @@ const buildResults = (answers: AnswerMap): EligibilityResponse => {
   const creditScheme = createScheme({
     id: 'kisan-credit-card',
     title: 'Kisan Credit Card (KCC)',
-    description: 'Short-term credit at 4% interest (with subvention) for crop needs.',
+    description:
+      'Short-term credit at 4% interest (with subvention) for crop needs.',
     category: 'Farmer Welfare & Insurance',
     type: 'Central',
   });
@@ -118,11 +141,23 @@ const buildResults = (answers: AnswerMap): EligibilityResponse => {
     });
   }
 
+<<<<<<< HEAD
   if (answers.interestArea === 'Credit' || answers.landOwnership === 'Yes') {
     results.push({
       scheme: creditScheme,
       is_eligible: true,
       match_percentage: answers.interestArea === 'Credit' ? 94 : 82,
+=======
+  if (
+    answers.interestArea === 'KCC Credit' ||
+    answers.landOwnership === 'Yes'
+  ) {
+    results.push({
+      scheme: creditScheme,
+      is_eligible: true,
+      match_percentage:
+        answers.interestArea === 'KCC Credit' ? 94 : 82,
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
       reasons: [
         answers.interestArea === 'Credit'
           ? 'Matches your interest (Credit)'
@@ -136,7 +171,8 @@ const buildResults = (answers: AnswerMap): EligibilityResponse => {
       scheme: createScheme({
         id: 'women-farmer-support',
         title: 'Women Farmer Support Program',
-        description: 'Targeted support for women-led farms and collectives.',
+        description:
+          'Targeted support for women-led farms and collectives.',
         category: 'Women Farmer Support',
         type: 'State',
       }),
@@ -161,6 +197,7 @@ const buildResults = (answers: AnswerMap): EligibilityResponse => {
   };
 };
 
+<<<<<<< HEAD
 export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm'>> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
@@ -192,14 +229,107 @@ export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm
     }
 
     setStep((current) => current + 1);
+=======
+export const EligibilityScreen: React.FC<
+  EligibilityScreenProps<'EligibilityForm'>
+> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const { selectedLanguage } = useLanguageContext();
+
+  const [answers, setAnswers] = useState<AnswerMap>({
+    landOwnership: 'Yes',
+    landSize: '<2 acres',
+    farmingActivity: 'Field Crops',
+    annualIncome: '< ₹1.5 Lakh',
+    socialCategory: 'General',
+    govtSupport: 'Yes',
+    womanFarmer: 'No',
+    interestArea: 'Crop Insurance',
+  });
+
+  const handlePillSelect = (key: string, value: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSubmit = () => {
+    navigation.navigate('EligibilityResult', {
+      results: buildResults(answers),
+    });
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
   };
 
   return (
     <View style={styles.container}>
+<<<<<<< HEAD
       <View style={styles.header}>
         <View style={[styles.headerTop, { paddingTop: insets.top + Spacing.lg }]}>
           <TouchableOpacity onPress={() => (step > 0 ? setStep(step - 1) : navigation.goBack())}>
             <Ionicons name="arrow-back" size={24} color={Colors.text.primary} />
+=======
+
+      {/* Header */}
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + Spacing.xs,
+          },
+        ]}
+      >
+        <View style={styles.headerRow}>
+
+          {/* APP LOGO */}
+          <View style={styles.avatarCircle}>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={styles.avatarLogo}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* HEADER TEXT */}
+          <View style={styles.headerTextCol}>
+            <Text style={styles.headerTitle}>
+              Check eligibility
+            </Text>
+
+            <Text style={styles.headerSubtitle}>
+              Share a few farm details and find matches
+            </Text>
+          </View>
+
+          {/* LANGUAGE */}
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() =>
+              navigation.navigate('ProfileTab' as any)
+            }
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="globe-outline"
+              size={18}
+              color={Colors.text.primary}
+            />
+          </TouchableOpacity>
+
+          {/* NOTIFICATIONS */}
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() =>
+              navigation.navigate('Notifications' as any)
+            }
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={18}
+              color={Colors.text.primary}
+            />
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Eligibility Wizard</Text>
           <View style={styles.headerSpacer} />
@@ -211,6 +341,7 @@ export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm
       </View>
 
       <ScrollView
+<<<<<<< HEAD
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing['5xl'] }]}
         showsVerticalScrollIndicator={false}
       >
@@ -240,6 +371,434 @@ export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm
             );
           })}
         </View>
+=======
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom: insets.bottom + 120,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* Voice Assistant Banner Card */}
+        <TouchableOpacity
+          style={styles.voiceBanner}
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate('VoiceAssistant' as any)
+          }
+        >
+          <View style={styles.voiceIconBadge}>
+            <Ionicons
+              name="sparkles"
+              size={20}
+              color="#1B5E20"
+            />
+          </View>
+
+          <View style={styles.voiceTextCol}>
+            <Text style={styles.voiceTitle}>
+              Prefer to talk? Ask Mitra by voice.
+            </Text>
+
+            <View style={styles.voiceLinkRow}>
+              <Ionicons
+                name="mic"
+                size={15}
+                color="#2E7D32"
+              />
+
+              <Text style={styles.voiceLinkText}>
+                Talk to Yojna Mitra →
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* Question 1 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Do you own agricultural land?
+          </Text>
+
+          <View style={styles.pillRow}>
+            {['Yes', 'No'].map((opt) => {
+              const isSelected =
+                answers.landOwnership === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnFlex,
+                    isSelected && styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'landOwnership',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 2 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Approximate land holding size?
+          </Text>
+
+          <View style={styles.pillGrid}>
+            {[
+              '<2 acres',
+              '2-5 acres',
+              '5-10 acres',
+              '>10 acres',
+            ].map((opt) => {
+              const isSelected =
+                answers.landSize === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnHalf,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'landSize',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 3 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Primary farming activity?
+          </Text>
+
+          <View style={styles.pillGrid}>
+            {[
+              'Field Crops',
+              'Horticulture',
+              'Dairy & Livestock',
+              'Fisheries',
+            ].map((opt) => {
+              const isSelected =
+                answers.farmingActivity === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnHalf,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'farmingActivity',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 4 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Annual farmer household income?
+          </Text>
+
+          <View style={styles.pillGrid}>
+            {[
+              '< ₹1.5 Lakh',
+              '₹1.5L - ₹3 Lakh',
+              '₹3L - ₹5 Lakh',
+              '> ₹5 Lakh',
+            ].map((opt) => {
+              const isSelected =
+                answers.annualIncome === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnHalf,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'annualIncome',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 5 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Your social category?
+          </Text>
+
+          <View style={styles.pillRow}>
+            {['General', 'SC', 'ST', 'OBC'].map((opt) => {
+              const isSelected =
+                answers.socialCategory === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnFlex,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'socialCategory',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 6 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Do you currently receive PM-KISAN support?
+          </Text>
+
+          <View style={styles.pillRow}>
+            {['Yes', 'No'].map((opt) => {
+              const isSelected =
+                answers.govtSupport === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnFlex,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'govtSupport',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 7 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Are you a woman farmer?
+          </Text>
+
+          <View style={styles.pillRow}>
+            {['Yes', 'No'].map((opt) => {
+              const isSelected =
+                answers.womanFarmer === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnFlex,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'womanFarmer',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Question 8 */}
+        <View style={styles.questionCard}>
+          <Text style={styles.questionTitle}>
+            Which support do you need most?
+          </Text>
+
+          <View style={styles.pillWrap}>
+            {[
+              'Irrigation',
+              'Machinery',
+              'Crop Insurance',
+              'KCC Credit',
+              'Fertilizers',
+            ].map((opt) => {
+              const isSelected =
+                answers.interestArea === opt;
+
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.pillBtn,
+                    styles.pillBtnAuto,
+                    isSelected &&
+                      styles.pillBtnSelected,
+                  ]}
+                  onPress={() =>
+                    handlePillSelect(
+                      'interestArea',
+                      opt
+                    )
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.pillText,
+                      isSelected &&
+                        styles.pillTextSelected,
+                    ]}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Submit Action Button */}
+        <TouchableOpacity
+          style={styles.submitBtn}
+          onPress={handleSubmit}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.submitBtnText}>
+            Check Eligible Schemes
+          </Text>
+
+          <Ionicons
+            name="arrow-forward"
+            size={18}
+            color="#FFFFFF"
+          />
+        </TouchableOpacity>
+
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
       </ScrollView>
     </View>
   );
@@ -250,6 +809,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
+
   header: {
     backgroundColor: Colors.mint[100],
     paddingHorizontal: Spacing.lg,
@@ -257,16 +817,49 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
   },
+<<<<<<< HEAD
   headerTop: {
+=======
+
+  headerRow: {
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
     paddingBottom: Spacing.md,
   },
+<<<<<<< HEAD
   headerSpacer: {
     width: 24,
+=======
+
+  /*
+   * APP LOGO
+   * Transparent background so there is no coloured
+   * placeholder behind your actual icon.
+   */
+  avatarCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
+
+  avatarLogo: {
+    width: 48,
+    height: 48,
+  },
+
+  headerTextCol: {
+    flex: 1,
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
+  },
+
   headerTitle: {
+<<<<<<< HEAD
     ...Typography.h3,
     color: Colors.text.primary,
     flex: 1,
@@ -308,10 +901,69 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['2xl'],
     paddingVertical: Spacing.xl,
     flexDirection: 'row',
+=======
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1C3123',
+  },
+
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#5A7263',
+    marginTop: 1,
+  },
+
+  iconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  scrollView: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    gap: Spacing.sm + 2,
+  },
+
+  voiceBanner: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#D0E7D7',
+    shadowColor: '#0F2A1A',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  voiceIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
     alignItems: 'center',
     justifyContent: 'space-between',
     ...Shadows.card,
   },
+<<<<<<< HEAD
   optionCardSelected: {
     borderColor: Colors.primary[500],
     backgroundColor: Colors.mint[50],
@@ -319,10 +971,139 @@ const styles = StyleSheet.create({
   optionText: {
     ...Typography.h5,
     color: Colors.text.primary,
+=======
+
+  voiceTextCol: {
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
     flex: 1,
     paddingRight: Spacing.lg,
   },
+<<<<<<< HEAD
   optionTextSelected: {
     color: Colors.primary[700],
+=======
+
+  voiceTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1C3123',
+    marginBottom: 2,
+  },
+
+  voiceLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+
+  voiceLinkText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2E7D32',
+  },
+
+  questionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E1EFE6',
+    shadowColor: '#0F2A1A',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  questionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1C3123',
+    marginBottom: 10,
+  },
+
+  pillRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+
+  pillGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+
+  pillWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+
+  pillBtn: {
+    height: 42,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: '#EAF5EE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  pillBtnFlex: {
+    flex: 1,
+  },
+
+  pillBtnHalf: {
+    width: '48.5%',
+  },
+
+  pillBtnAuto: {
+    paddingHorizontal: 14,
+  },
+
+  pillBtnSelected: {
+    backgroundColor: '#2E7D32',
+  },
+
+  pillText: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: '#1B5E20',
+    textAlign: 'center',
+  },
+
+  pillTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  submitBtn: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 24,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+    shadowColor: '#1B5E20',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  submitBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+>>>>>>> a899fda (Update Farmer AI UI and home screen)
   },
 });
