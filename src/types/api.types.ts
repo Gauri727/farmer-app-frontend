@@ -99,7 +99,7 @@ export interface Scheme {
   document_url?: string;
   created_at?: string;
   updated_at?: string;
-  overview?: string;
+  overview?: any;
   shortDescription?: string;
   name?: string;
   englishName?: string;

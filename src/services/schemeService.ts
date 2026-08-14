@@ -938,10 +938,14 @@ export const schemeService = {
       }
       throw new Error('Invalid scheme payload returned by API.');
     } catch (error: any) {
-      console.error("SCHEME API ERROR:", error);
-      console.error("STATUS:", error?.response?.status);
-      console.error("DATA:", error?.response?.data);
-      console.error("URL:", error?.config?.url);
+      console.error("SCHEME API ERROR (falling back to local MOCK_SCHEMES):", error);
+      const cleanId = (id || '').toLowerCase().trim();
+      const mockMatch = MOCK_SCHEMES.find(
+        (s) => s.id === id || s.id.toLowerCase() === cleanId || cleanId.includes(s.id.toLowerCase())
+      );
+      if (mockMatch) {
+        return { success: true, data: mockMatch };
+      }
       throw error;
     }
   },

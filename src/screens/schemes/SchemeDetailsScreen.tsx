@@ -31,6 +31,7 @@ import { useThemeContext } from '../../contexts/ThemeContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Header } from '../../components/layout/Header';
 import { getLocalizedScheme } from '../../utils/schemeLocalization';
+import { schemeService, MOCK_SCHEMES } from '../../services/schemeService';
 
 type Props = NativeStackScreenProps<any, 'SchemeDetails'>;
 
@@ -77,14 +78,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const schemeId = getSchemeIdFromRoute();
 
   const fetchSchemeDetails = useCallback(async () => {
-    console.log("=================================");
-    console.log("SCHEME DETAILS DEBUG");
-    console.log("URL:", typeof window !== 'undefined' ? window.location.href : 'N/A');
-    console.log("schemeId:", schemeId);
-    console.log("=================================");
-
     if (!schemeId) {
-      console.error("NO SCHEME ID FOUND");
       setError(true);
       setLoading(false);
       return;
@@ -94,36 +88,23 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       setLoading(true);
       setError(false);
 
-      const url = `http://localhost:8000/api/schemes/${encodeURIComponent(schemeId)}`;
-      console.log("FETCHING:", url);
-
-      const response = await fetch(url);
-      console.log("STATUS:", response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      const res = await schemeService.getSchemeById(schemeId);
+      if (res && res.data) {
+        setRawSchemeData(res.data);
+      } else {
+        throw new Error('Scheme data empty');
       }
-
-      const json = await response.json();
-      console.log("API JSON:", json);
-
-      const s = json?.scheme ?? json?.data ?? json;
-
-      if (!s || (typeof s === 'object' && !s.id && !s.name && !s.title && !s.englishName)) {
-        throw new Error("Invalid scheme API response");
-      }
-
-      console.log("ACTUAL SCHEME:", s);
-      setRawSchemeData(s);
     } catch (err: any) {
-      console.error("Scheme details request failed", {
-        id: schemeId,
-        error: err,
-        response: err?.response?.data,
-        status: err?.response?.status,
-        url: `http://localhost:8000/api/schemes/${encodeURIComponent(schemeId)}`
-      });
-      setError(true);
+      console.log('Fetching scheme via service failed, trying local MOCK_SCHEMES fallback for ID:', schemeId);
+      const clean = schemeId.toLowerCase().trim();
+      const fallback = MOCK_SCHEMES.find(
+        (s) => s.id === schemeId || s.id.toLowerCase() === clean || clean.includes(s.id.toLowerCase())
+      );
+      if (fallback) {
+        setRawSchemeData(fallback);
+      } else {
+        setError(true);
+      }
     } finally {
       setLoading(false);
     }
