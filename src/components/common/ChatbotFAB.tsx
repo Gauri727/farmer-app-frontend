@@ -17,8 +17,6 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
-  Modal,
-  Pressable,
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -308,154 +306,157 @@ export const ChatbotFAB: React.FC = () => {
   return (
     <>
       {/* ── Floating Action Button ── */}
-      <View
-        style={[styles.fabWrapper, { bottom: insets.bottom + 90 }]}
-        pointerEvents="box-none"
-      >
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => setIsOpen(true)}
-            activeOpacity={0.85}
-            accessibilityLabel="Open AI Chatbot"
-            accessibilityRole="button"
-          >
-            <Ionicons name="chatbubble-ellipses" size={24} color={Colors.white} />
-          </TouchableOpacity>
-        </Animated.View>
-        <Text style={styles.fabLabel}>Ask AI</Text>
-      </View>
-
-      {/* ── Chat Modal ── */}
-      <Modal
-        visible={isOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsOpen(false)}
-        statusBarTranslucent
-      >
-        <Pressable style={styles.backdrop} onPress={() => setIsOpen(false)} />
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalWrapper}
-          keyboardVerticalOffset={0}
+      {!isOpen && (
+        <View
+          style={[styles.fabWrapper, { bottom: insets.bottom + 90 }]}
+          pointerEvents="box-none"
         >
-          <View style={[styles.chatContainer, { paddingBottom: insets.bottom }]}>
+          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => setIsOpen(true)}
+              activeOpacity={0.85}
+              accessibilityLabel="Open AI Chatbot"
+              accessibilityRole="button"
+            >
+              <Ionicons name="chatbubble-ellipses" size={24} color={Colors.white} />
+            </TouchableOpacity>
+          </Animated.View>
+          <Text style={styles.fabLabel}>Ask AI</Text>
+        </View>
+      )}
 
-            {/* ── Header ── */}
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <View style={styles.headerAvatar}>
-                  <Ionicons name="leaf" size={18} color={Colors.white} />
-                </View>
-                <View>
-                  <Text style={styles.headerTitle}>Kisan AI Assistant</Text>
-                  <View style={styles.onlineRow}>
-                    <View style={styles.onlineDot} />
-                    <Text style={styles.onlineText}>Online · Farming Expert</Text>
+      {/* ── Chat Panel (in-frame overlay) ── */}
+      {isOpen && (
+        <View style={styles.chatOverlay} pointerEvents="box-none">
+          {/* Backdrop */}
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={() => setIsOpen(false)}
+          />
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalWrapper}
+            keyboardVerticalOffset={0}
+          >
+            <View style={[styles.chatContainer, { paddingBottom: insets.bottom }]}>
+
+              {/* ── Header ── */}
+              <View style={styles.header}>
+                <View style={styles.headerLeft}>
+                  <View style={styles.headerAvatar}>
+                    <Ionicons name="leaf" size={18} color={Colors.white} />
                   </View>
+                  <View>
+                    <Text style={styles.headerTitle}>Kisan AI Assistant</Text>
+                    <View style={styles.onlineRow}>
+                      <View style={styles.onlineDot} />
+                      <Text style={styles.onlineText}>Online · Farming Expert</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Language picker + close */}
+                <View style={styles.headerRight}>
+                  <LangPicker selected={activeLang} onSelect={handleLangChange} />
+                  <TouchableOpacity
+                    style={styles.closeBtn}
+                    onPress={() => setIsOpen(false)}
+                    accessibilityLabel="Close chatbot"
+                  >
+                    <Ionicons name="close" size={20} color={Colors.gray[600]} />
+                  </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Language picker + close */}
-              <View style={styles.headerRight}>
-                <LangPicker selected={activeLang} onSelect={handleLangChange} />
+              {/* ── Welcome banner ── */}
+              {messages.length === 0 && (
+                <View style={styles.welcomeBanner}>
+                  <Text style={styles.welcomeEmoji}>🌾</Text>
+                  <Text style={styles.welcomeTitle}>{lang.welcomeTitle}</Text>
+                  <Text style={styles.welcomeSub}>{lang.welcomeSub}</Text>
+
+                  {/* Active language badge */}
+                  <View style={styles.langBadge}>
+                    <Ionicons name="language-outline" size={13} color={Colors.primary[600]} />
+                    <Text style={styles.langBadgeText}>{lang.nativeLabel}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* ── Messages ── */}
+              <FlatList
+                ref={flatListRef}
+                data={messages}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => <MessageBubble message={item} />}
+                contentContainerStyle={styles.messagesList}
+                onContentSizeChange={scrollToBottom}
+                showsVerticalScrollIndicator={false}
+                ListFooterComponent={isLoading ? <TypingIndicator /> : null}
+              />
+
+              {/* ── Suggestion chips ── */}
+              {showSuggestions && (
+                <View style={styles.suggestionsContainer}>
+                  <Text style={styles.suggestionsLabel}>{lang.quickLabel}</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.suggestionsScroll}
+                  >
+                    {lang.suggestions.map(s => (
+                      <TouchableOpacity
+                        key={s}
+                        style={styles.chip}
+                        onPress={() => sendMessage(s)}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={styles.chipText}>{s}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* ── Input row ── */}
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.textInput}
+                  value={inputText}
+                  onChangeText={setInputText}
+                  placeholder={lang.placeholder}
+                  placeholderTextColor={Colors.gray[400]}
+                  multiline
+                  maxLength={500}
+                  returnKeyType="send"
+                  onSubmitEditing={() => sendMessage(inputText)}
+                  blurOnSubmit={false}
+                  editable={!isLoading}
+                />
                 <TouchableOpacity
-                  style={styles.closeBtn}
-                  onPress={() => setIsOpen(false)}
-                  accessibilityLabel="Close chatbot"
+                  style={[
+                    styles.sendBtn,
+                    (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
+                  ]}
+                  onPress={() => sendMessage(inputText)}
+                  disabled={!inputText.trim() || isLoading}
+                  activeOpacity={0.8}
+                  accessibilityLabel="Send message"
                 >
-                  <Ionicons name="close" size={20} color={Colors.gray[600]} />
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Ionicons name="send" size={18} color={Colors.white} />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
-
-            {/* ── Welcome banner ── */}
-            {messages.length === 0 && (
-              <View style={styles.welcomeBanner}>
-                <Text style={styles.welcomeEmoji}>🌾</Text>
-                <Text style={styles.welcomeTitle}>{lang.welcomeTitle}</Text>
-                <Text style={styles.welcomeSub}>{lang.welcomeSub}</Text>
-
-                {/* Active language badge */}
-                <View style={styles.langBadge}>
-                  <Ionicons name="language-outline" size={13} color={Colors.primary[600]} />
-                  <Text style={styles.langBadgeText}>{lang.nativeLabel}</Text>
-                </View>
-              </View>
-            )}
-
-            {/* ── Messages ── */}
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => <MessageBubble message={item} />}
-              contentContainerStyle={styles.messagesList}
-              onContentSizeChange={scrollToBottom}
-              showsVerticalScrollIndicator={false}
-              ListFooterComponent={isLoading ? <TypingIndicator /> : null}
-            />
-
-            {/* ── Suggestion chips ── */}
-            {showSuggestions && (
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionsLabel}>{lang.quickLabel}</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.suggestionsScroll}
-                >
-                  {lang.suggestions.map(s => (
-                    <TouchableOpacity
-                      key={s}
-                      style={styles.chip}
-                      onPress={() => sendMessage(s)}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={styles.chipText}>{s}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* ── Input row ── */}
-            <View style={styles.inputRow}>
-              <TextInput
-                style={styles.textInput}
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder={lang.placeholder}
-                placeholderTextColor={Colors.gray[400]}
-                multiline
-                maxLength={500}
-                returnKeyType="send"
-                onSubmitEditing={() => sendMessage(inputText)}
-                blurOnSubmit={false}
-                editable={!isLoading}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.sendBtn,
-                  (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
-                ]}
-                onPress={() => sendMessage(inputText)}
-                disabled={!inputText.trim() || isLoading}
-                activeOpacity={0.8}
-                accessibilityLabel="Send message"
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color={Colors.white} />
-                ) : (
-                  <Ionicons name="send" size={18} color={Colors.white} />
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+          </KeyboardAvoidingView>
+        </View>
+      )}
     </>
   );
 };
@@ -492,7 +493,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Modal
+  // In-frame chat overlay
+  chatOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+    elevation: 9999,
+  },
   backdrop: {
     position: 'absolute',
     top: 0,
