@@ -1,346 +1,471 @@
-/**
- * Voice Assistant Screen
- * Clean 3D green sphere mic button matching reference structure with theme colors
- */
-
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+  Easing,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
-import { useVoiceQuery } from '../../hooks/useVoice';
+import { Header } from '../../components/layout/Header';
+import { Colors } from '../../theme';
 import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
 import { HomeScreenProps } from '../../navigation/types';
 
 export const VoiceAssistantScreen: React.FC<HomeScreenProps<'VoiceAssistant'>> = ({
   navigation,
 }) => {
-  const insets = useSafeAreaInsets();
-  const { selectedLanguage } = useLanguageContext();
-  const voiceQuery = useVoiceQuery();
+  const { t, selectedLanguage } = useLanguageContext();
+  const { isDarkMode, colors: themeColors } = useThemeContext();
 
-  const [isRecording, setIsRecording] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'success'>('idle');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
 
-  // Animated bars for waveform
-  const barAnims = useRef(
-    Array.from({ length: 7 }, () => new Animated.Value(0.3))
-  ).current;
+  // Questions dictionary dynamically based on language
+  const quickQuestions = [
+    { question: t('q1'), response: t('ansQ1') },
+    { question: t('q2'), response: t('ansQ2') },
+    { question: t('q3'), response: t('ansQ3') },
+    { question: t('q4'), response: t('ansQ4') },
+  ];
 
-  // Subtle pulse animation for 3D mic ambient glow
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (isRecording) {
-      const animations = barAnims.map((anim, i) =>
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(anim, {
-              toValue: Math.random() * 0.7 + 0.3,
-              duration: 200 + i * 50,
-              useNativeDriver: true,
-            }),
-            Animated.timing(anim, {
-              toValue: 0.3,
-              duration: 200 + i * 50,
-              useNativeDriver: true,
-            }),
-          ])
-        )
-      );
-      animations.forEach((a) => a.start());
-      return () => animations.forEach((a) => a.stop());
-    }
-  }, [isRecording]);
+  const ripple1Val = useRef(new Animated.Value(0)).current;
+  const ripple2Val = useRef(new Animated.Value(0)).current;
+  const ripple3Val = useRef(new Animated.Value(0)).current;
+  const micScaleVal = useRef(new Animated.Value(1)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    let pulseLoop: Animated.CompositeAnimation | null = null;
-    if (isRecording) {
-      pulseLoop = Animated.loop(
+    let breathing: Animated.CompositeAnimation;
+    if (status === 'idle') {
+      breathing = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.08,
-            duration: 800,
+          Animated.timing(micScaleVal, {
+            toValue: 1.06,
+            duration: 1400,
             useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
           }),
-          Animated.timing(pulseAnim, {
+          Animated.timing(micScaleVal, {
             toValue: 1,
-            duration: 800,
+            duration: 1400,
             useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
           }),
         ])
       );
-      pulseLoop.start();
+      breathing.start();
+    } else if (status === 'listening') {
+      breathing = Animated.loop(
+        Animated.sequence([
+          Animated.timing(micScaleVal, {
+            toValue: 1.15,
+            duration: 700,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          Animated.timing(micScaleVal, {
+            toValue: 1,
+            duration: 700,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ])
+      );
+      breathing.start();
     } else {
-      pulseAnim.setValue(1);
+      Animated.spring(micScaleVal, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
     }
-    return () => {
-      if (pulseLoop) pulseLoop.stop();
-    };
-  }, [isRecording]);
 
-  const handleMicPress = async () => {
-    if (isRecording) {
-      setIsRecording(false);
-    } else {
-      setIsRecording(true);
+    return () => {
+      if (breathing) breathing.stop();
+    };
+  }, [status]);
+
+  useEffect(() => {
+    let ripples: Animated.CompositeAnimation;
+    const animateRing = (val: Animated.Value, delay: number) => {
+      val.setValue(0);
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(val, {
+            toValue: 1,
+            duration: 2200,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+        ])
+      );
+    };
+
+    ripples = Animated.parallel([
+      animateRing(ripple1Val, 0),
+      animateRing(ripple2Val, 700),
+      animateRing(ripple3Val, 1400),
+    ]);
+    ripples.start();
+
+    return () => {
+      if (ripples) ripples.stop();
+    };
+  }, []);
+
+  const triggerMockQuery = (questionText: string, replyText: string) => {
+    setStatus('processing');
+    setTranscript(questionText);
+    setResponse('');
+
+    setTimeout(() => {
+      setStatus('success');
+      setResponse(replyText);
+      setTimeout(() => {
+        setStatus('idle');
+      }, 1500);
+    }, 1200);
+  };
+
+  const handleMicPress = () => {
+    if (status === 'idle') {
+      setStatus('listening');
       setTranscript('');
       setResponse('');
+      setTimeout(() => {
+        const randomQ = quickQuestions[Math.floor(Math.random() * quickQuestions.length)];
+        triggerMockQuery(randomQ.question, randomQ.response);
+      }, 2000);
     }
   };
 
+  const getRippleStyle = (val: Animated.Value) => {
+    return {
+      transform: [
+        {
+          scale: val.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 2.2],
+          }),
+        },
+      ],
+      opacity: val.interpolate({
+        inputRange: [0, 0.7, 1],
+        outputRange: [0.4, 0.15, 0],
+      }),
+    };
+  };
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Background Soft Mint Tint Accent */}
-      <LinearGradient
-        colors={['#F7FAF8', '#EAF5EE', '#DEEFE5']}
-        style={StyleSheet.absoluteFillObject}
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <Header
+        showBack
+        onBackPress={() => navigation.goBack()}
+        title={t('agriMitraTab')}
+        showLanguageSelector
       />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Voice Assistant</Text>
-        <View style={styles.langBadge}>
-          <Text style={styles.langText}>{selectedLanguage.name}</Text>
-        </View>
-      </View>
-
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Waveform */}
-        {isRecording && (
-          <View style={styles.waveform}>
-            {barAnims.map((anim, i) => (
-              <Animated.View
-                key={i}
-                style={[
-                  styles.waveBar,
-                  {
-                    transform: [{ scaleY: anim }],
-                  },
-                ]}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Transcript */}
-        {transcript ? (
-          <View style={styles.messageCard}>
-            <View style={styles.messageHeader}>
-              <Ionicons name="person-circle-outline" size={20} color={Colors.primary[600]} />
-              <Text style={styles.messageLabel}>You said</Text>
+        <View style={styles.bannerWrapper}>
+          <LinearGradient
+            colors={themeColors.bannerBg}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.assistantBannerCard, { borderColor: isDarkMode ? '#065F46' : '#DCFCE7' }]}
+          >
+            <View style={styles.bannerTextWrap}>
+              <View style={styles.assistantBadge}>
+                <Ionicons name="add-circle" size={14} color="#15803D" />
+                <Text style={styles.assistantBadgeText}>{t('agriMitraTab')}</Text>
+              </View>
+              <Text style={[styles.assistantTitle, { color: isDarkMode ? '#F9FAFB' : '#14532D' }]}>
+                {t('appName')}
+              </Text>
+              <Text style={[styles.assistantSubtitle, { color: isDarkMode ? '#D1D5DB' : '#475569' }]}>
+                {t('voiceTapToSpeak')}
+              </Text>
             </View>
-            <Text style={styles.messageText}>{transcript}</Text>
+
+            <View style={styles.leafWrap}>
+              <Ionicons name="leaf-outline" size={72} color={isDarkMode ? '#059669' : '#A7F3D0'} />
+            </View>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.micSection}>
+          <Text style={[styles.micMainInstruction, { color: themeColors.textPrimary }]}>
+            {status === 'listening' ? t('voiceListening') : t('voiceTapToSpeak')}
+          </Text>
+
+          <View style={styles.micContainer}>
+            <Animated.View style={[styles.rippleRing, getRippleStyle(ripple1Val)]} />
+            <Animated.View style={[styles.rippleRing, getRippleStyle(ripple2Val)]} />
+            <Animated.View style={[styles.rippleRing, getRippleStyle(ripple3Val)]} />
+
+            <Animated.View style={{ transform: [{ scale: micScaleVal }] }}>
+              <TouchableOpacity
+                onPress={handleMicPress}
+                activeOpacity={0.85}
+                style={styles.micButtonTouchable}
+              >
+                <LinearGradient
+                  colors={['#4ADE80', '#16A34A']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.micCircle}
+                >
+                  <Ionicons name="mic" size={42} color="#FFFFFF" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+
+          <Text style={[styles.micTapLabel, { color: themeColors.textPrimary }]}>{t('voiceTapToSpeak')}</Text>
+          <TouchableOpacity onPress={handleMicPress}>
+            <Text style={styles.micSubLabel}>{t('agriMitraTab')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {(transcript || response || status === 'processing') ? (
+          <View style={styles.chatSection}>
+            {transcript ? (
+              <View style={[styles.userCard, { backgroundColor: isDarkMode ? '#064E3B' : '#F0F9F1', borderColor: isDarkMode ? '#047857' : '#DCFCE7' }]}>
+                <Ionicons name="person-circle-outline" size={18} color="#16A34A" />
+                <Text style={[styles.userCardText, { color: themeColors.textPrimary }]}>{transcript}</Text>
+              </View>
+            ) : null}
+
+            {status === 'processing' && (
+              <View style={[styles.aiCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <Ionicons name="leaf" size={18} color="#16A34A" />
+                <Text style={[styles.aiCardText, { color: themeColors.textPrimary }]}>{t('loading')}</Text>
+              </View>
+            )}
+
+            {response ? (
+              <View style={[styles.aiCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <Ionicons name="leaf" size={18} color="#16A34A" />
+                <Text style={[styles.aiCardText, { color: themeColors.textPrimary }]}>{response}</Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
-        {/* AI Response */}
-        {response ? (
-          <View style={[styles.messageCard, styles.responseCard]}>
-            <View style={styles.messageHeader}>
-              <Ionicons name="leaf" size={20} color={Colors.primary[600]} />
-              <Text style={styles.messageLabel}>Farmer AI</Text>
-            </View>
-            <Text style={styles.messageText}>{response}</Text>
-          </View>
-        ) : null}
+        <View style={styles.quickQuestionsSection}>
+          <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>{t('suggestedQuestionsTitle')}</Text>
 
-        {/* Suggestion chips when idle */}
-        {!isRecording && !transcript && (
-          <View style={styles.suggestions}>
-            <Text style={styles.suggestionsTitle}>Try asking</Text>
-            {[
-              'Which schemes am I eligible for?',
-              'How to apply for PM Kisan?',
-              'What is the weather forecast?',
-              'Tell me about crop insurance',
-            ].map((suggestion, idx) => (
-              <TouchableOpacity key={idx} style={styles.suggestionChip}>
-                <Ionicons name="mic-outline" size={16} color={Colors.primary[600]} />
-                <Text style={styles.suggestionText}>{suggestion}</Text>
+          <View style={styles.questionGrid}>
+            {quickQuestions.map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.questionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                activeOpacity={0.8}
+                onPress={() => triggerMockQuery(item.question, item.response)}
+              >
+                <View style={styles.micBadge}>
+                  <Ionicons name="mic" size={14} color="#16A34A" />
+                </View>
+                <Text style={[styles.questionText, { color: themeColors.textPrimary }]}>{item.question}</Text>
               </TouchableOpacity>
             ))}
           </View>
-        )}
+        </View>
       </ScrollView>
-
-      {/* 3D Green Sphere Mic Button */}
-      <View style={styles.micContainer}>
-        <Animated.View
-          style={[
-            styles.micOuterGlow,
-            isRecording && styles.micOuterGlowRecording,
-            { transform: [{ scale: pulseAnim }] },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={handleMicPress}
-            activeOpacity={0.9}
-            style={styles.micTouchArea}
-          >
-            <LinearGradient
-              colors={
-                isRecording
-                  ? ['#FF4D4D', '#E53935', '#B71C1C']
-                  : ['#5CB85C', '#2E7D32', '#144D1E']
-              }
-              start={{ x: 0.35, y: 0.05 }}
-              end={{ x: 0.65, y: 0.95 }}
-              style={[
-                styles.micSphere,
-                isRecording ? styles.micSphereRecording : styles.micSphereIdle,
-              ]}
-            >
-              <Ionicons
-                name={isRecording ? 'stop' : 'mic'}
-                size={64}
-                color="#FFFFFF"
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
-        <Text style={styles.micHint}>
-          {isRecording ? 'Tap to stop' : 'Tap to start speaking'}
-        </Text>
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 45,
+  },
+  bannerWrapper: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+  },
+  assistantBannerCard: {
+    borderRadius: 18,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-  },
-  backBtn: { padding: Spacing.xs },
-  headerTitle: { ...Typography.h5, color: Colors.text.primary, flex: 1 },
-  langBadge: {
-    backgroundColor: '#E8F5E9',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
-  },
-  langText: { ...Typography.labelSm, color: '#1B5E20' },
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.xs, paddingBottom: 310 },
-  waveform: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    height: 60,
-    marginBottom: Spacing['3xl'],
-  },
-  waveBar: {
-    width: 6,
-    height: 50,
-    backgroundColor: Colors.primary[500],
-    borderRadius: 3,
-  },
-  messageCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
+    justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#C8E6C9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  responseCard: {
-    backgroundColor: '#E8F5E9',
-    borderColor: '#A5D6A7',
+  bannerTextWrap: {
+    flex: 1,
+    paddingRight: 10,
   },
-  messageHeader: {
+  assistantBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    gap: 4,
+    backgroundColor: '#DCFCE7',
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    marginBottom: 6,
   },
-  messageLabel: { ...Typography.labelSm, color: Colors.text.secondary },
-  messageText: { ...Typography.body, color: Colors.text.primary, lineHeight: 22 },
-  suggestions: { marginTop: Spacing.xs },
-  suggestionsTitle: {
-    ...Typography.label,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.sm,
+  assistantBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#15803D',
   },
-  suggestionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.lg,
-    backgroundColor: '#FFFFFF',
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.xs,
-    borderWidth: 1,
-    borderColor: '#C8E6C9',
-  },
-  suggestionText: { ...Typography.body, color: Colors.text.primary },
-  micContainer: {
-    position: 'absolute',
-    bottom: 110,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  micOuterGlow: {
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-  },
-  micOuterGlowRecording: {
-    backgroundColor: 'rgba(229, 57, 53, 0.12)',
-  },
-  micTouchArea: {
-    width: 176,
-    height: 176,
-    borderRadius: 88,
-  },
-  micSphere: {
-    width: 176,
-    height: 176,
-    borderRadius: 88,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 18,
-  },
-  micSphereIdle: {
-    shadowColor: '#1B5E20',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.45,
-    shadowRadius: 28,
-  },
-  micSphereRecording: {
-    shadowColor: '#B71C1C',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.45,
-    shadowRadius: 28,
-  },
-  micHint: {
+  assistantTitle: {
     fontSize: 18,
+    fontWeight: '800',
+    lineHeight: 24,
+  },
+  assistantSubtitle: {
+    fontSize: 11,
     fontWeight: '500',
-    color: '#263238',
-    marginTop: 18,
+    marginTop: 2,
+  },
+  leafWrap: {
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  micSection: {
+    alignItems: 'center',
+    marginTop: 14,
+    paddingHorizontal: 14,
+  },
+  micMainInstruction: {
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  micContainer: {
+    width: 140,
+    height: 140,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    marginVertical: 6,
+  },
+  rippleRing: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#86EFAC',
+  },
+  micButtonTouchable: {
+    borderRadius: 48,
+    elevation: 8,
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+  },
+  micCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  micTapLabel: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  micSubLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#D97706',
+    marginTop: 2,
+  },
+  chatSection: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+    gap: 10,
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  userCardText: {
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
+  },
+  aiCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  aiCardText: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+    lineHeight: 18,
+  },
+  quickQuestionsSection: {
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 12,
+  },
+  questionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  questionCard: {
+    width: '48%',
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderWidth: 1,
+    minHeight: 70,
+  },
+  micBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#DCFCE7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  questionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
+    lineHeight: 18,
   },
 });

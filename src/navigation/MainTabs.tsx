@@ -1,55 +1,187 @@
-/**
- * Main Bottom Tab Navigator
- * Custom floating tab dock with center Voice Assistant button
- */
-
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MainTabParamList } from './types';
 import { HomeStack } from './HomeStack';
 import { SchemesStack } from './SchemesStack';
 import { EligibilityStack } from './EligibilityStack';
 import { ProfileStack } from './ProfileStack';
 import { Colors } from '../theme';
+import { useThemeContext } from '../contexts/ThemeContext';
+import { useLanguageContext } from '../contexts/LanguageContext';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+const FloatingCenterFab: React.FC<{ onPress: () => void; isFocused?: boolean }> = ({ onPress, isFocused }) => {
+  const { t } = useLanguageContext();
+  const { isDarkMode } = useThemeContext();
+  const pulseAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const scale = pulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.4],
+  });
+
+  const opacity = pulseAnim.interpolate({
+    inputRange: [0, 0.7, 1],
+    outputRange: [0.4, 0.15, 0],
+  });
+
+  const labelColor = isFocused
+    ? (isDarkMode ? '#6EE7B7' : '#187A3D')
+    : (isDarkMode ? '#9CA3AF' : '#5F6B7A');
+
+  return (
+    <View style={styles.centerItemContainer}>
+      <TouchableOpacity
+        style={styles.centerFabTouchable}
+        activeOpacity={0.85}
+        onPress={onPress}
+      >
+        <Animated.View
+          style={[
+            styles.rippleRing,
+            {
+              backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.2)' : '#EAF6EE',
+              transform: [{ scale }],
+              opacity,
+            },
+          ]}
+        />
+        <LinearGradient
+          colors={isDarkMode ? ['#10B981', '#059669'] : ['#22C55E', '#187A3D']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.centerFab}
+        >
+          <Ionicons name="mic" size={26} color={Colors.white} />
+        </LinearGradient>
+      </TouchableOpacity>
+      <Text style={[styles.centerLabel, { color: labelColor }, isFocused && styles.centerLabelActive]}>
+        {t('agriMitraTab')}
+      </Text>
+    </View>
+  );
+};
+
+const TabItem: React.FC<{
+  isFocused: boolean;
+  label: string;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+  inactiveIcon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+}> = ({ isFocused, label, activeIcon, inactiveIcon, onPress }) => {
+  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const scaleValue = React.useRef(new Animated.Value(isFocused ? 1.1 : 1)).current;
+
+  React.useEffect(() => {
+    Animated.spring(scaleValue, {
+      toValue: isFocused ? 1.08 : 1,
+      useNativeDriver: true,
+      friction: 7,
+      tension: 40,
+    }).start();
+  }, [isFocused]);
+
+  const activeColor = isDarkMode ? '#6EE7B7' : '#187A3D';
+  const inactiveColor = isDarkMode ? '#9CA3AF' : '#5F6B7A';
+  const activePillBg = isDarkMode ? '#064E3B' : '#EAF6EE';
+  const color = isFocused ? activeColor : inactiveColor;
+  const iconName = isFocused ? activeIcon : inactiveIcon;
+
+  return (
+    <TouchableOpacity
+      style={styles.tabItem}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Animated.View
+        style={[
+          styles.tabItemInner,
+          isFocused && { backgroundColor: activePillBg },
+          { transform: [{ scale: scaleValue }] },
+        ]}
+      >
+        <Ionicons name={iconName} size={21} color={color} />
+        <Text style={[styles.tabLabel, { color }]}>{label}</Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+type RegularTab = {
+  isCenter?: false;
+  routeName: keyof MainTabParamList;
+  label: string;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+  inactiveIcon: keyof typeof Ionicons.glyphMap;
+};
+
+type CenterTab = {
+  isCenter: true;
+};
+
+type TabConfig = RegularTab | CenterTab;
+
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const insets = useSafeAreaInsets();
+  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const { t } = useLanguageContext();
 
-  const tabs = [
-    { routeName: 'HomeTab', label: 'Home', activeIcon: 'home' as const, inactiveIcon: 'home-outline' as const },
-    { routeName: 'SchemesTab', label: 'Schemes', activeIcon: 'grid' as const, inactiveIcon: 'grid-outline' as const },
+  const currentRouteName = state.routes[state.index]?.name;
+  const currentChildRoute = (state.routes[state.index]?.state as any)?.routes?.[(state.routes[state.index]?.state as any)?.index || 0]?.name;
+  const isVoiceAssistantFocused = currentRouteName === 'HomeTab' && currentChildRoute === 'VoiceAssistant';
+
+  const tabs: TabConfig[] = [
+    { routeName: 'HomeTab', label: t('homeTab'), activeIcon: 'home', inactiveIcon: 'home-outline' },
+    { routeName: 'SchemesTab', label: t('schemesTab'), activeIcon: 'apps', inactiveIcon: 'apps-outline' },
     { isCenter: true },
-    { routeName: 'EligibilityTab', label: 'Eligibility', activeIcon: 'checkmark-circle' as const, inactiveIcon: 'checkmark-circle-outline' as const },
-    { routeName: 'ProfileTab', label: 'Profile', activeIcon: 'person' as const, inactiveIcon: 'person-outline' as const },
+    { routeName: 'EligibilityTab', label: t('eligibilityTab'), activeIcon: 'checkmark-circle', inactiveIcon: 'checkmark-circle-outline' },
+    { routeName: 'ProfileTab', label: t('profileTab'), activeIcon: 'person', inactiveIcon: 'person-outline' },
   ];
 
   return (
-    <View style={[styles.tabBarContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View
+      style={[
+        styles.tabBarFloatingContainer,
+        {
+          backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+          borderColor: isDarkMode ? '#374151' : '#DDE5E0',
+          bottom: Math.max(insets.bottom, 6),
+        },
+      ]}
+    >
       {tabs.map((tab, index) => {
         if (tab.isCenter) {
           return (
-            <View key="center-fab" style={styles.centerItemContainer}>
-              <TouchableOpacity
-                style={styles.centerFab}
-                activeOpacity={0.85}
-                onPress={() => {
-                  navigation.navigate('HomeTab', { screen: 'VoiceAssistant' });
-                }}
-              >
-                <Ionicons name="mic" size={28} color={Colors.white} />
-              </TouchableOpacity>
-              <Text style={styles.centerLabel}>Farmer AI</Text>
-            </View>
+            <FloatingCenterFab
+              key="center-fab"
+              isFocused={isVoiceAssistantFocused}
+              onPress={() => {
+                navigation.navigate('HomeTab', { screen: 'VoiceAssistant' });
+              }}
+            />
           );
         }
 
-        const routeIndex = state.routes.findIndex(r => r.name === tab.routeName);
-        const isFocused = state.index === routeIndex;
+        const regularTab = tab as RegularTab;
+        const routeIndex = state.routes.findIndex(r => r.name === regularTab.routeName);
+        const isFocused = state.index === routeIndex && !isVoiceAssistantFocused;
         const route = state.routes[routeIndex];
 
         const onPress = () => {
@@ -59,26 +191,30 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
             canPreventDefault: true,
           });
 
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+          if (!event.defaultPrevented) {
+            if (regularTab.routeName === 'ProfileTab') {
+              navigation.navigate('ProfileTab', { screen: 'Profile' });
+            } else if (regularTab.routeName === 'HomeTab') {
+              navigation.navigate('HomeTab', { screen: 'Home' });
+            } else if (regularTab.routeName === 'SchemesTab') {
+              navigation.navigate('SchemesTab', { screen: 'SchemesList' });
+            } else if (regularTab.routeName === 'EligibilityTab') {
+              navigation.navigate('EligibilityTab', { screen: 'EligibilityForm' });
+            } else {
+              navigation.navigate(route.name);
+            }
           }
         };
 
-        const color = isFocused ? Colors.primary[700] : Colors.gray[500];
-        const iconName = isFocused ? tab.activeIcon : tab.inactiveIcon;
-
         return (
-          <TouchableOpacity
-            key={tab.routeName}
-            style={[styles.tabItem, isFocused && styles.tabItemActive]}
+          <TabItem
+            key={regularTab.routeName}
+            isFocused={isFocused}
+            label={regularTab.label}
+            activeIcon={regularTab.activeIcon}
+            inactiveIcon={regularTab.inactiveIcon}
             onPress={onPress}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconPlate, isFocused && styles.iconPlateActive]}>
-              <Ionicons name={iconName} size={22} color={color} />
-            </View>
-            <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
-          </TouchableOpacity>
+          />
         );
       })}
     </View>
@@ -98,87 +234,79 @@ export const MainTabs: React.FC = () => (
 );
 
 const styles = StyleSheet.create({
-  tabBarContainer: {
+  tabBarFloatingContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    backgroundColor: '#F7FAF8',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: 10,
+    alignItems: 'center',
+    borderRadius: 36,
+    paddingTop: 4,
+    paddingBottom: 6,
     paddingHorizontal: 8,
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    left: 14,
+    right: 14,
     borderWidth: 1,
-    borderColor: '#E1E9E4',
-    borderBottomWidth: 0,
-    shadowColor: '#0F2A1A',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    elevation: 16,
+    shadowColor: '#187A3D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    borderRadius: 20,
-    transform: [{ translateY: 0 }],
+    paddingVertical: 2,
   },
-  tabItemActive: {
-    transform: [{ translateY: -3 }],
-  },
-  iconPlate: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  tabItemInner: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#0F2A1A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  iconPlateActive: {
-    backgroundColor: '#EAF4EE',
-    shadowOpacity: 0.16,
-    shadowRadius: 8,
-    elevation: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    marginTop: 4,
+    fontWeight: '700',
+    marginTop: 2,
   },
   centerItemContainer: {
-    flex: 1,
+    flex: 1.2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -28,
+    height: 50,
+  },
+  centerFabTouchable: {
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -30,
+    position: 'relative',
   },
   centerFab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.primary[600],
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary[900],
+    shadowColor: '#187A3D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
-    elevation: 8,
+    elevation: 6,
+  },
+  rippleRing: {
+    position: 'absolute',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   centerLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.primary[600],
-    marginTop: 4,
+    marginTop: 2,
+  },
+  centerLabelActive: {
+    fontWeight: '800',
   },
 });
