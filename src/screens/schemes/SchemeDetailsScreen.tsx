@@ -183,12 +183,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // ── Extract Core 4 Standardized Scheme Fields ──────────────────────────────────
+  // ── Extract Core Standardized Scheme Fields ──────────────────────────────────
   // 1. Overview
   const rawOverview = scheme.overview || scheme.description || scheme.about || '';
   const overviewParagraphs: string[] = Array.isArray(rawOverview)
     ? rawOverview
-    : (typeof rawOverview === 'string' && rawOverview.trim() ? [rawOverview] : []);
+    : (typeof rawOverview === 'string' && rawOverview.trim()
+      ? rawOverview.split(/\n\n+/).map(p => p.trim()).filter(Boolean)
+      : []);
 
   // 2. Benefits
   const rawBenefits = scheme.benefit || scheme.benefits;
@@ -196,21 +198,26 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   if (Array.isArray(rawBenefits)) {
     benefitsList = rawBenefits;
   } else if (typeof rawBenefits === 'string' && rawBenefits.trim()) {
-    benefitsList = rawBenefits.split(';').map(s => s.trim()).filter(Boolean);
+    benefitsList = rawBenefits.split(/\n|;|•/).map(s => s.trim()).filter(Boolean);
   }
 
   // 3. Eligibility
-  const rawEligibility = scheme.eligibility;
+  const rawEligibility = scheme.eligibility || scheme.eligibility_criteria;
   let eligibilityList: string[] = [];
   if (Array.isArray(rawEligibility)) {
     eligibilityList = rawEligibility.map((e: any) => typeof e === 'string' ? e : (e.text || e.title || String(e)));
-  } else if (scheme.eligibility_criteria) {
-    eligibilityList = String(scheme.eligibility_criteria).split(';').map((s: string) => s.trim()).filter(Boolean);
+  } else if (typeof rawEligibility === 'string' && rawEligibility.trim()) {
+    eligibilityList = rawEligibility.split(/\n|;|•/).map((s: string) => s.trim()).filter(Boolean);
   }
 
   // 4. Required Documents
   const rawDocs = scheme.requiredDocuments || scheme.documents || scheme.documents_required;
-  let documentsList: any[] = Array.isArray(rawDocs) ? rawDocs : [];
+  let documentsList: any[] = [];
+  if (Array.isArray(rawDocs)) {
+    documentsList = rawDocs;
+  } else if (typeof rawDocs === 'string' && rawDocs.trim()) {
+    documentsList = rawDocs.split(/\n|;|•/).map(s => s.trim()).filter(Boolean);
+  }
 
   // 5. How to Apply
   const howToApplyObj = scheme.howToApply || {};
