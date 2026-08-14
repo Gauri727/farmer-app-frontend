@@ -99,6 +99,21 @@ export interface Scheme {
   document_url?: string;
   created_at?: string;
   updated_at?: string;
+  overview?: string;
+  shortDescription?: string;
+  name?: string;
+  englishName?: string;
+  sections?: any[];
+  benefit?: any;
+  requiredDocuments?: any;
+  eligibility?: any;
+  howToApply?: any;
+  official_website?: string;
+  documents?: any;
+  faqs?: any[];
+  gr?: any;
+  contact?: any;
+  source?: any;
 }
 
 export interface SchemeCategory {

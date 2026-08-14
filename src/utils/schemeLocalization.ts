@@ -876,12 +876,12 @@ export const getLocalizedScheme = (scheme: Scheme, langCode?: string): Scheme =>
     return fallbackValue || '';
   };
 
-  const title = getField('title', scheme.title) || scheme.title;
-  const description = getField('description', scheme.description) || scheme.description;
-  const amount = getField('amount', scheme.amount) || scheme.amount;
-  const benefits = getField('benefits', scheme.benefits) || scheme.benefits;
-  const eligibility_criteria = getField('eligibility_criteria', scheme.eligibility_criteria) || scheme.eligibility_criteria;
-  const department = getField('department', scheme.department) || scheme.department || (scheme.type === 'Central' ? getTranslation(lang, 'centralType') : getTranslation(lang, 'stateType'));
+  const title = (scheme.name || scheme.title) || getField('title', scheme.title);
+  const description = (scheme.shortDescription || scheme.description || (Array.isArray(scheme.overview) ? scheme.overview[0] : scheme.overview)) || getField('description', scheme.description);
+  const amount = scheme.amount || getField('amount');
+  const benefits = scheme.benefits || scheme.benefit || getField('benefits');
+  const eligibility_criteria = scheme.eligibility_criteria || (Array.isArray(scheme.eligibility) ? scheme.eligibility.join('; ') : scheme.eligibility) || getField('eligibility_criteria');
+  const department = scheme.department || getField('department') || (scheme.type === 'Central' ? getTranslation(lang, 'centralType') : getTranslation(lang, 'stateType'));
   const category = getCategoryTranslation(scheme.category, lang);
 
   return {

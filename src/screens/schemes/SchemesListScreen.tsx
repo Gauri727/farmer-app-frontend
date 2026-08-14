@@ -52,15 +52,23 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
   const rawSchemes = schemesQuery.data?.pages?.flatMap((page) => page.data.items) || [];
 
   // Filter & Localize schemes
-  const schemes = rawSchemes.map((s) => getLocalizedScheme(s, selectedLanguage.code)).filter((s) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase().trim();
-    return (
-      s.title.toLowerCase().includes(q) ||
-      s.description.toLowerCase().includes(q) ||
-      (s.category && s.category.toLowerCase().includes(q))
-    );
-  });
+  const schemes = rawSchemes
+    .map((s) => getLocalizedScheme(s, selectedLanguage.code))
+    .filter((s) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const marathiName = ((s as any).name || s.title || '').toLowerCase();
+      const englishName = ((s as any).englishName || '').toLowerCase();
+      const department = ((s as any).department || s.category || '').toLowerCase();
+      const description = (s.description || '').toLowerCase();
+
+      return (
+        marathiName.includes(q) ||
+        englishName.includes(q) ||
+        department.includes(q) ||
+        description.includes(q)
+      );
+    });
 
   const handleSchemePress = (scheme: Scheme) => {
     navigation.navigate('SchemeDetails', { schemeId: scheme.id });
@@ -79,7 +87,7 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
         <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder={t('searchPlaceholder') || 'योजना किंवा विषय शोधा...'}
+          placeholder={t('searchPlaceholder') || 'योजना किंवा विभाग शोधा (Search by name or department)...'}
           iconColor={PRIMARY_GREEN}
           containerStyle={{
             ...styles.searchContainerStyle,
@@ -169,7 +177,7 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
           { color: isDarkMode ? '#6EE7B7' : PRIMARY_GREEN },
         ]}
       >
-        {t('schemesCount', { count: totalSchemes })}
+        {t('schemesCount', { count: schemes.length || totalSchemes })}
       </Text>
     </View>
   );
@@ -186,12 +194,34 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
         />
         {renderHeader()}
         <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: themeColors.textSecondary, marginBottom: 12, textAlign: 'center' }]}>
+            {t('loadingSchemes') || 'Loading schemes...'}
+          </Text>
           {[1, 2].map((item) => (
             <View key={item} style={styles.skeletonWrap}>
               <SkeletonSchemeCard />
             </View>
           ))}
         </View>
+      </View>
+    );
+  }
+
+  if (schemesQuery.isError) {
+    return (
+      <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+        <Header
+          title={t('schemesPageTitle') || 'शासकीय योजना'}
+          subtitle={t('schemesPageSubtitle') || '२० निवडक कृषी योजना'}
+          showLanguageSelector
+        />
+        <EmptyState
+          icon="alert-circle-outline"
+          title={t('unableToLoadSchemes') || 'Unable to load schemes. Please try again.'}
+          message={t('networkErrorMessage') || 'कृपया इंटरनेट कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.'}
+          actionLabel={t('retry') || 'Retry'}
+          onAction={() => schemesQuery.refetch()}
+        />
       </View>
     );
   }
@@ -225,8 +255,8 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
         ListEmptyComponent={
           <EmptyState
             icon="documents-outline"
-            title={t('noSchemesFound')}
-            message={t('noSchemesSub')}
+            title={t('noSchemesAvailable') || 'No schemes available.'}
+            message={t('noSchemesSub') || 'दिलेल्या निकषानुसार कोणत्याही योजना सापडल्या नाहीत.'}
           />
         }
         ListFooterComponent={

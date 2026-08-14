@@ -25,7 +25,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 const isWeb = Platform.OS === 'web';
 
 const linking = {
-  prefixes: ['http://localhost:8081', 'farmerai://', '/'],
+  prefixes: ['http://localhost:8081', 'http://localhost:8082', 'http://localhost:8083', 'farmerai://', '/'],
   config: {
     screens: {
       Main: {
@@ -33,6 +33,7 @@ const linking = {
           HomeTab: {
             screens: {
               Home: '',
+              SchemeDetails: 'SchemeDetails',
               CropSelection: 'crop-selection',
               DiseaseDiagnosis: 'disease-diagnosis',
               Weather: 'weather',
@@ -45,6 +46,7 @@ const linking = {
           SchemesTab: {
             screens: {
               SchemesList: 'schemes-list',
+              SchemeDetails: 'scheme-details',
             },
           },
           EligibilityTab: {
