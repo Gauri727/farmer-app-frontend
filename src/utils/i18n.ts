@@ -11,13 +11,13 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Bottom Tab Bar ───────────────────────────────────────────────
     homeTab: 'घर',
     schemesTab: 'योजना',
-    agriMitraTab: 'कृषी मित्र',
+    agriMitraTab: 'Farmer AI',
     eligibilityTab: 'पात्रता',
     profileTab: 'प्रोफाइल',
 
     // ─── Header & General App ─────────────────────────────────────────
     appName: 'Farmer AI',
-    krishiMitra: 'कृषी मित्र',
+    krishiMitra: 'Farmer AI',
     splashTagline: 'तुमचा स्मार्ट शेती साथीदार',
     smartFarmingCompanion: 'तुमचा स्मार्ट शेती साथीदार',
     welcomeFarmer: 'स्वागत आहे, शेतकरी',
@@ -63,7 +63,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     pill12Languages: '१२ भाषा',
     pillInstantReply: 'झटपट उत्तरे',
     pillFreeToUse: 'मोफत वापर',
-    howCanHelp: 'आज कृषी मित्र तुम्हाला कशी मदत करू शकते?',
+    howCanHelp: 'आज Farmer AI तुम्हाला कशी मदत करू शकते?',
     todayFarmingInfo: 'आजची शेती माहिती',
     aiSubtitle: 'AI च्या मदतीने अधिक उत्पादन, अधिक नफा.',
     quickServices: 'झटपट सेवा',
@@ -74,18 +74,18 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     knowMore: 'अधिक माहिती →',
     recentUpdatesHeader: 'नवीन अपडेट्स',
     newBadge: 'नवीन',
-    askKrishiMitra: 'कृषी मित्राला विचारा',
+    askKrishiMitra: 'Farmer AI ला विचारा',
     askKrishiMitraSub: 'तुमच्या भाषेत योजना, शेती मार्गदर्शन आणि प्रश्नांची उत्तरे मिळवा.',
     askSearchPlaceholder: 'उदा. ठिबक सिंचन अनुदान, पीक विमा...',
 
     // ─── Large Voice Hero Card ─────────────────────────────────────────
     trustedAgriLabel: 'विश्वसनीय कृषी माहितीवर आधारित',
     heroMainHeading: 'शेतकऱ्यांच्या सर्व प्रश्नांची\nउत्तरे, आता आवाजाद्वारे',
-    heroMainSub: 'कृषी मित्राशी बोला, तुमच्या शेतीसाठी माहिती मिळवा, योग्य सल्ला घ्या आणि तुमच्या प्रश्नांची उत्तरे मिळवा.',
+    heroMainSub: 'Farmer AI शी बोला, तुमच्या शेतीसाठी माहिती मिळवा, योग्य सल्ला घ्या आणि तुमच्या प्रश्नांची उत्तरे मिळवा.',
     tapToSpeak: 'बोलण्यासाठी टॅप करा',
-    talkToAgriMitra: 'कृषी मित्राशी बोला',
+    talkToAgriMitra: 'Farmer AI शी बोला',
     listeningStatus: 'ऐकत आहे...',
-    thinkingStatus: 'कृषी मित्र विचार करत आहे...',
+    thinkingStatus: 'Farmer AI विचार करत आहे...',
     youSaid: 'तुम्ही म्हणालात:',
 
     // ─── Section 1: Quick Questions ("पटकन विचारा") ─────────────────────
@@ -299,7 +299,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     checkEligibilityBtn: 'पात्रता तपासा',
     modifyDetailsBtn: 'माहिती बदला',
     viewDetails: 'अधिक माहिती',
-    askVoiceBtn: 'कृषी मित्राला विचारा',
+    askVoiceBtn: 'Farmer AI ला विचारा',
 
     resultsFound: 'तुमच्यासाठी {count} योजना उपलब्ध आहेत',
     eligibleBadge: '१००% पात्र',
@@ -352,7 +352,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     symptoms: 'लक्षणे:',
     organicRemedy: 'जैविक उपाय (Organic):',
     chemicalRemedy: 'रासायनिक उपाय (Chemical):',
-    askAgriMitraDisease: 'कृषी मित्राला रोगाबद्दल विचारा',
+    askAgriMitraDisease: 'Farmer AIाला रोगाबद्दल विचारा',
     affectedCrops: 'प्रभावित पिके:',
     severityHigh: 'गंभीर',
     severityMed: 'मध्यम',
@@ -417,7 +417,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     emiCalculatorTitle: 'ट्रॅक्टर व शेती कर्ज EMI कॅल्क्युलेटर',
     monthlyEmiLabel: 'अंदाजे मासिक हप्ता (Monthly EMI)',
     selectLoanAmount: 'कर्ज रक्कम निवडा:',
-    consultLoanAgriMitra: 'कर्ज पात्रतेबाबत कृषी मित्राशी बोला',
+    consultLoanAgriMitra: 'कर्ज पात्रतेबाबत Farmer AI शी बोला',
 
     // ─── Fertilizer Advice Screen (/fertilizer-advice) ────────────────
     selectCropForFertilizer: 'पिकाची निवड करा',
@@ -486,13 +486,13 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Bottom Tab Bar ───────────────────────────────────────────────
     homeTab: 'Home',
     schemesTab: 'Schemes',
-    agriMitraTab: 'Agri Mitra',
+    agriMitraTab: 'Farmer AI',
     eligibilityTab: 'Eligibility',
     profileTab: 'Profile',
 
     // ─── Header & General App ─────────────────────────────────────────
     appName: 'Farmer AI',
-    krishiMitra: 'Krishi Mitra',
+    krishiMitra: 'Farmer AI',
     splashTagline: 'Your smart farming companion',
     smartFarmingCompanion: 'Your smart farming companion',
     welcomeFarmer: 'Welcome, Farmer',
@@ -535,10 +535,10 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     heroSubTitle: 'Your AI assistant for government schemes & agri guidance.',
     tapToSpeakTitle: 'Tap to Speak',
     tapToSpeakSub: 'Ask anything in your language. Available in 12 regional languages.',
-    pill12Languages: '12 Languages',
+    pill12Languages: '5 Languages',
     pillInstantReply: 'Instant Reply',
     pillFreeToUse: 'Free to Use',
-    howCanHelp: 'How can Krishi Mitra help you today?',
+    howCanHelp: 'How can Farmer AI help you today?',
     todayFarmingInfo: "Today's Farming Info",
     aiSubtitle: 'More yield, more profit with AI assistance.',
     quickServices: 'Quick Services',
@@ -549,18 +549,18 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     knowMore: 'Know More →',
     recentUpdatesHeader: 'Recent Updates',
     newBadge: 'NEW',
-    askKrishiMitra: 'Ask Krishi Mitra',
+    askKrishiMitra: 'Ask Farmer AI',
     askKrishiMitraSub: 'Get schemes, farming guidance and answers in your language.',
     askSearchPlaceholder: 'e.g. Drip irrigation, PM-Kisan subsidy...',
 
     // ─── Large Voice Hero Card ─────────────────────────────────────────
     trustedAgriLabel: 'Based on Trusted Agricultural Information',
     heroMainHeading: 'Answers to all your farming questions,\nnow through your voice',
-    heroMainSub: 'Talk to Krishi Mitra, get farming information, expert advice, and answers to your questions.',
+    heroMainSub: 'Talk to Farmer AI, get farming information, expert advice, and answers to your questions.',
     tapToSpeak: 'Tap to speak',
-    talkToAgriMitra: 'Talk to Krishi Mitra',
+    talkToAgriMitra: 'Talk to Farmer AI',
     listeningStatus: 'Listening...',
-    thinkingStatus: 'Krishi Mitra is thinking...',
+    thinkingStatus: 'Farmer AI is thinking...',
     youSaid: 'You said:',
 
     // ─── Section 1: Quick Questions ("Quick Questions") ─────────────────
@@ -774,7 +774,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     checkEligibilityBtn: 'Check Eligibility',
     modifyDetailsBtn: 'Modify Details',
     viewDetails: 'View Details',
-    askVoiceBtn: 'Ask Agri Mitra',
+    askVoiceBtn: 'Ask Farmer AI',
 
     resultsFound: '{count} schemes are available for you',
     eligibleBadge: '100% Eligible',
@@ -827,7 +827,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     symptoms: 'Symptoms:',
     organicRemedy: 'Organic Remedy:',
     chemicalRemedy: 'Chemical Remedy:',
-    askAgriMitraDisease: 'Ask Agri Mitra About Disease',
+    askAgriMitraDisease: 'Ask Farmer AI About Disease',
     affectedCrops: 'Affected Crops:',
     severityHigh: 'High',
     severityMed: 'Medium',
@@ -892,7 +892,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     emiCalculatorTitle: 'Tractor & Farm Loan EMI Calculator',
     monthlyEmiLabel: 'Estimated Monthly EMI',
     selectLoanAmount: 'Select Loan Amount:',
-    consultLoanAgriMitra: 'Consult Agri Mitra About Loan',
+    consultLoanAgriMitra: 'Consult Farmer AI About Loan',
 
     // ─── Fertilizer Advice Screen (/fertilizer-advice) ────────────────
     selectCropForFertilizer: 'Select Crop',
@@ -961,13 +961,13 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Bottom Tab Bar ───────────────────────────────────────────────
     homeTab: 'मुख्यपृष्ठ',
     schemesTab: 'योजनाएं',
-    agriMitraTab: 'कृषि मित्र',
+    agriMitraTab: 'Farmer AI',
     eligibilityTab: 'पात्रता',
     profileTab: 'प्रोफ़ाइल',
 
     // ─── Header & General App ─────────────────────────────────────────
     appName: 'Farmer AI',
-    krishiMitra: 'कृषि मित्र',
+    krishiMitra: 'Farmer AI',
     splashTagline: 'आपका स्मार्ट खेती साथी',
     smartFarmingCompanion: 'आपका स्मार्ट खेती साथी',
     welcomeFarmer: 'स्वागत है, किसान',
@@ -1013,7 +1013,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     pill12Languages: '12 भाषाएं',
     pillInstantReply: 'तुरंत जवाब',
     pillFreeToUse: 'मुफ्त उपयोग',
-    howCanHelp: 'आज कृषि मित्र आपकी कैसे मदद कर सकता है?',
+    howCanHelp: 'आज Farmer AI आपकी कैसे मदद कर सकता है?',
     todayFarmingInfo: 'आज की खेती की जानकारी',
     aiSubtitle: 'एआई की मदद से अधिक पैदावार, अधिक मुनाफा।',
     quickServices: 'त्वरित सेवाएं',
@@ -1025,11 +1025,11 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Large Voice Hero Card ─────────────────────────────────────────
     trustedAgriLabel: 'विश्वसनीय कृषि जानकारी पर आधारित',
     heroMainHeading: 'किसानों के सभी सवालों के जवाब,\nअब आवाज के जरिए',
-    heroMainSub: 'कृषि मित्र से बात करें, अपनी खेती के लिए जानकारी प्राप्त करें, सही सलाह लें और अपने प्रश्नों के उत्तर पाएं।',
+    heroMainSub: 'Farmer AI से बात करें, अपनी खेती के लिए जानकारी प्राप्त करें, सही सलाह लें और अपने प्रश्नों के उत्तर पाएं।',
     tapToSpeak: 'बोलने के लिए टैप करें',
-    talkToAgriMitra: 'कृषि मित्र से बात करें',
+    talkToAgriMitra: 'Farmer AI से बात करें',
     listeningStatus: 'सुन रहा है...',
-    thinkingStatus: 'कृषि मित्र सोच रहा है...',
+    thinkingStatus: 'Farmer AI सोच रहा है...',
     youSaid: 'आपने कहा:',
 
     // ─── Section 1: Quick Questions ("जल्दी पूछें") ─────────────────────
@@ -1243,7 +1243,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     checkEligibilityBtn: 'पात्रता जांचें',
     modifyDetailsBtn: 'विवरण बदलें',
     viewDetails: 'अधिक जानकारी',
-    askVoiceBtn: 'कृषि मित्र से पूछें',
+    askVoiceBtn: 'Farmer AI से पूछें',
 
     resultsFound: 'आपके लिए {count} योजनाएं उपलब्ध हैं',
     eligibleBadge: '१००% पात्र',
@@ -1296,7 +1296,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     symptoms: 'लक्षण:',
     organicRemedy: 'जैविक उपाय:',
     chemicalRemedy: 'रासायनिक उपाय:',
-    askAgriMitraDisease: 'कृषि मित्र से बीमारी के बारे में पूछें',
+    askAgriMitraDisease: 'Farmer AI से बीमारी के बारे में पूछें',
     affectedCrops: 'प्रभावित फसलें:',
     severityHigh: 'गंभीर',
     severityMed: 'मध्यम',
@@ -1361,7 +1361,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     emiCalculatorTitle: 'ट्रैक्टर एवं कृषि ऋण ईएमआई कैलकुलेटर',
     monthlyEmiLabel: 'अनुमानित मासिक किस्त (Monthly EMI)',
     selectLoanAmount: 'ऋण राशि चुनें:',
-    consultLoanAgriMitra: 'ऋण पात्रता हेतु कृषि मित्र से बात करें',
+    consultLoanAgriMitra: 'ऋण पात्रता हेतु Farmer AI से बात करें',
 
     // ─── Fertilizer Advice Screen (/fertilizer-advice) ────────────────
     selectCropForFertilizer: 'फसल का चयन करें',
@@ -1431,13 +1431,13 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Bottom Tab Bar ───────────────────────────────────────────────
     homeTab: 'घर',
     schemesTab: 'योजना',
-    agriMitraTab: 'कृषी मित्र',
+    agriMitraTab: 'Farmer AI',
     eligibilityTab: 'पात्रता',
     profileTab: 'प्रोफाईल',
 
     // ─── Header & General App ─────────────────────────────────────────
     appName: 'Farmer AI',
-    krishiMitra: 'कृषी मित्र',
+    krishiMitra: 'Farmer AI',
     splashTagline: 'तुमना स्मार्ट शेती सोबती',
     smartFarmingCompanion: 'तुमना स्मार्ट शेती सोबती',
     welcomeFarmer: 'स्वागत शेतकरी भाऊ',
@@ -1483,7 +1483,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     pill12Languages: '१२ भाषा',
     pillInstantReply: 'झटपट उत्तरे',
     pillFreeToUse: 'मोफत वापर',
-    howCanHelp: 'आज कृषी मित्र तुमले कशी मदत करी शकी?',
+    howCanHelp: 'आज Farmer AI तुमले कशी मदत करी शकी?',
     todayFarmingInfo: 'आजनी शेती माहिती',
     aiSubtitle: 'एआईना मदतीन जास्त उत्पन्न, जास्त फायदा.',
     quickServices: 'झटपट सेवा',
@@ -1495,11 +1495,11 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Large Voice Hero Card ─────────────────────────────────────────
     trustedAgriLabel: 'विश्वसनीय शेती माहितीवर आधारित',
     heroMainHeading: 'शेतकऱ्यांच्या सगळा प्रश्नाना उत्तरे,\nआता आवाजले',
-    heroMainSub: 'कृषी मित्राशी बोला, तुमना शेतीसाठी माहिती मिळवा, योग्य सल्ला घ्या अन प्रश्नाना उत्तर मिळवा.',
+    heroMainSub: 'Farmer AI शी बोला, तुमना शेतीसाठी माहिती मिळवा, योग्य सल्ला घ्या अन प्रश्नाना उत्तर मिळवा.',
     tapToSpeak: 'बोलण्यासाठी टॅप करा',
-    talkToAgriMitra: 'कृषी मित्राशी बोला',
+    talkToAgriMitra: 'Farmer AI शी बोला',
     listeningStatus: 'ऐकत शे...',
-    thinkingStatus: 'कृषी मित्र विचार करत शे...',
+    thinkingStatus: 'Farmer AI विचार करत शे...',
     youSaid: 'तुम्ही म्हणात:',
 
     // ─── Section 1: Quick Questions ("पटकन विचारा") ─────────────────────
@@ -1713,7 +1713,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     checkEligibilityBtn: 'पात्रता तपासा',
     modifyDetailsBtn: 'माहिती बदला',
     viewDetails: 'अधिक माहिती',
-    askVoiceBtn: 'कृषी मित्राला विचारा',
+    askVoiceBtn: 'Farmer AI ला विचारा',
 
     resultsFound: 'तुमनासाठी {count} योजना उपलब्ध शत',
     eligibleBadge: '१००% पात्र',
@@ -1766,7 +1766,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     symptoms: 'लक्षणे:',
     organicRemedy: 'जैविक उपाय:',
     chemicalRemedy: 'रासायनिक उपाय:',
-    askAgriMitraDisease: 'कृषी मित्राला रोगाबद्दल विचारा',
+    askAgriMitraDisease: 'Farmer AIाला रोगाबद्दल विचारा',
     affectedCrops: 'प्रभावित पिके:',
     severityHigh: 'गंभीर',
     severityMed: 'मध्यम',
@@ -1831,7 +1831,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     emiCalculatorTitle: 'ट्रॅक्टर अन शेती कर्ज EMI कॅल्क्युलेटर',
     monthlyEmiLabel: 'अंदाजे महिनाना हप्ता (Monthly EMI)',
     selectLoanAmount: 'कर्ज रक्कम निवडा:',
-    consultLoanAgriMitra: 'कर्ज माहितीसाठी कृषी मित्राशी बोला',
+    consultLoanAgriMitra: 'कर्ज माहितीसाठी Farmer AI शी बोला',
 
     // ─── Fertilizer Advice Screen (/fertilizer-advice) ────────────────
     selectCropForFertilizer: 'पिकाची निवड करा',
@@ -1901,13 +1901,13 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Bottom Tab Bar ───────────────────────────────────────────────
     homeTab: 'घर',
     schemesTab: 'योचना',
-    agriMitraTab: 'कृषी मित्र',
+    agriMitraTab: 'Farmer AI',
     eligibilityTab: 'पात्रता',
     profileTab: 'प्रोफाइल',
 
     // ─── Header & General App ─────────────────────────────────────────
     appName: 'Farmer AI',
-    krishiMitra: 'कृषी मित्र',
+    krishiMitra: 'Farmer AI',
     splashTagline: 'तुमचो स्मार्ट शेती सांगाती',
     smartFarmingCompanion: 'तुमचो स्मार्ट शेती सांगाती',
     welcomeFarmer: 'येयात, शेतकार',
@@ -1953,7 +1953,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     pill12Languages: '१२ भासो',
     pillInstantReply: 'रोखडीं उतरां',
     pillFreeToUse: 'फुकट वापर',
-    howCanHelp: 'आज कृषी मित्र तुमकां कशी मदत करूंक शकता?',
+    howCanHelp: 'आज Farmer AI तुमकां कशी मदत करूंक शकता?',
     todayFarmingInfo: 'आजची शेतकाम माहिती',
     aiSubtitle: 'एआईच्या आधाराने चड पिक, चड फायदो.',
     quickServices: 'रोख्यो सेवा',
@@ -1965,11 +1965,11 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     // ─── Large Voice Hero Card ─────────────────────────────────────────
     trustedAgriLabel: 'पात्यायेवपा सारक्या कृषी माहितीचेर आदारीत',
     heroMainHeading: 'शेतकार्यांच्या सगळ्या प्रस्नांची उतरां,\nआता आवाजा वरवीं',
-    heroMainSub: 'कृषी मित्रा वांगडा उलोवयात, तुमच्या शेतकामा खातीर माहिती मेळवयात, योग्य सल्लो घेयात आनी प्रस्नांची उतरां मेळवयात.',
+    heroMainSub: 'Farmer AIा वांगडा उलोवयात, तुमच्या शेतकामा खातीर माहिती मेळवयात, योग्य सल्लो घेयात आनी प्रस्नांची उतरां मेळवयात.',
     tapToSpeak: 'उलोवपा खातीर टॅप करा',
-    talkToAgriMitra: 'कृषी मित्रा वांगडा उलोवयात',
+    talkToAgriMitra: 'Farmer AIा वांगडा उलोवयात',
     listeningStatus: 'आयकता...',
-    thinkingStatus: 'कृषी मित्र विचार करता...',
+    thinkingStatus: 'Farmer AI विचार करता...',
     youSaid: 'तुमी म्हळात:',
 
     // ─── Section 1: Quick Questions ("वेगान विचारात") ───────────────────
@@ -2183,7 +2183,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     checkEligibilityBtn: 'पात्रता तपासात',
     modifyDetailsBtn: 'माहिती बदल्यात',
     viewDetails: 'आणखी माहिती',
-    askVoiceBtn: 'कृषी मित्राक विचारात',
+    askVoiceBtn: 'Farmer AIाक विचारात',
 
     resultsFound: 'तुमच्या खातीर {count} योचना उपलब्ध आसात',
     eligibleBadge: '१००% पात्र',
@@ -2236,7 +2236,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     symptoms: 'लक्षणां:',
     organicRemedy: 'जैविक उपाय:',
     chemicalRemedy: 'रासायनिक उपाय:',
-    askAgriMitraDisease: 'कृषी मित्राक दूयेंसाविशीं विचारात',
+    askAgriMitraDisease: 'Farmer AIाक दूयेंसाविशीं विचारात',
     affectedCrops: 'बाधित पिकां:',
     severityHigh: 'गंभीर',
     severityMed: 'मध्यम',
@@ -2301,7 +2301,7 @@ export const translations: Record<SupportedLanguage, Record<string, string>> = {
     emiCalculatorTitle: 'ट्रॅक्टर आनी शेती रीण EMI कॅल्क्युलेटर',
     monthlyEmiLabel: 'मासीक हप्तो (Monthly EMI)',
     selectLoanAmount: 'रीण रक्कम निवडा:',
-    consultLoanAgriMitra: 'रीण पात्रतेविशीं कृषी मित्रा कडे उलोवयात',
+    consultLoanAgriMitra: 'रीण पात्रतेविशीं Farmer AIा कडे उलोवयात',
 
     // ─── Fertilizer Advice Screen (/fertilizer-advice) ────────────────
     selectCropForFertilizer: 'पिकाची निवड करा',
@@ -2374,7 +2374,15 @@ export const getTranslation = (
   params?: Record<string, any>
 ): string => {
   const code = (['mr', 'en', 'hi', 'ahr', 'kok'].includes(langCode) ? langCode : 'mr') as SupportedLanguage;
-  let text = translations[code]?.[key] || translations['mr']?.[key] || translations['en']?.[key] || key;
+    let text = translations[code]?.[key] || translations['mr']?.[key] || translations['en']?.[key];
+
+  if (!text) {
+    // Human-readable title-case fallback: never output raw camelCase keys!
+    text = key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  }
 
   if (params) {
     Object.keys(params).forEach((paramKey) => {

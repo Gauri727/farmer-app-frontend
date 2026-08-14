@@ -1,6 +1,8 @@
 /**
  * Eligibility Screen — पात्रता तपासा (Check Eligibility)
- * Clean Green Farmer AI Theme, Step-by-step Scheme Matching Flow & i18n
+ * Single Vertically Scrollable Page Questionnaire with White Question Cards,
+ * 2-Column Pill Selection Grid, Voice Banner & Full-Width Green Action Button.
+ * Fixed Bottom Navigation Bar & Responsive Mobile Layout.
  */
 
 import React, { useState } from 'react';
@@ -10,7 +12,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,45 +26,39 @@ import { EligibilityScreenProps } from '../../navigation/types';
 import { Scheme } from '../../types/api.types';
 
 // Green Theme Tokens
-const PRIMARY_GREEN = '#16803A';
-const DARK_GREEN = '#0B5D2A';
-const LIGHT_GREEN_BG = '#EAF7EC';
-const VERY_LIGHT_BG = '#F5FBF5';
-const BORDER_GREEN = '#D1E7D6';
+const PRIMARY_GREEN = '#2E7D32';
+const DARK_GREEN = '#155D2C';
+const PALE_GREEN_BG = '#EAF5EC';
+const PALE_GREEN_BORDER = '#D4EAD8';
+const LIGHT_PAGE_BG = '#F4F7F4';
+const WHITE_CARD_BG = '#FFFFFF';
 
 export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm'>> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { isDarkMode, colors: themeColors } = useThemeContext();
   const { t, selectedLanguage } = useLanguageContext();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  // Single-Page Form State
+  const [ownsLand, setOwnsLand] = useState<'yes' | 'no'>('yes');
+  const [landHolding, setLandHolding] = useState<string>('1to2');
+  const [cropType, setCropType] = useState<string>('fieldCrops');
+  const [annualIncome, setAnnualIncome] = useState<string>('1.5to2.5L');
+  const [category, setCategory] = useState<string>('general');
+  const [pmKisanSupport, setPmKisanSupport] = useState<'yes' | 'no'>('yes');
+  const [isWomanFarmer, setIsWomanFarmer] = useState<'yes' | 'no'>('no');
+  const [supportNeeded, setSupportNeeded] = useState<string>('irrigation');
 
-  // Form State (Preserved across language switching)
-  const [age, setAge] = useState('35');
-  const [gender, setGender] = useState('male');
-  const [category, setCategory] = useState('general');
-  const [farmerType, setFarmerType] = useState('small');
-  const [landHolding, setLandHolding] = useState('1to2');
-  const [cropType, setCropType] = useState('cotton');
-  const [annualIncome, setAnnualIncome] = useState('1to2_5L');
-  const [district, setDistrict] = useState('pune');
-  const [taluka, setTaluka] = useState('haveli');
+  // Results View Toggle
+  const [showResults, setShowResults] = useState<boolean>(false);
 
   // Results calculation
   const getMatchingSchemes = (): Scheme[] => {
     return MOCK_SCHEMES.filter((scheme) => {
-      // Category specific filter
       if (category === 'st' && scheme.category === 'Tribal Development') return true;
       if (category === 'sc' && scheme.id.includes('ambedkar')) return true;
-
-      // Crop specific filter
-      if (cropType === 'cotton' && (scheme.id.includes('cotton') || scheme.category === 'Irrigation')) return true;
-      if (cropType === 'sugarcane' && (scheme.id.includes('sugarcane') || scheme.category === 'Mechanization')) return true;
-
-      // Land & Farmer type filter
-      if ((farmerType === 'marginal' || farmerType === 'small') && scheme.type === 'State') return true;
-
-      // General fallback
+      if (supportNeeded === 'irrigation' && scheme.category === 'Irrigation') return true;
+      if (supportNeeded === 'machinery' && scheme.category === 'Mechanization') return true;
+      if (isWomanFarmer === 'yes' && scheme.type === 'State') return true;
       return scheme.is_featured || scheme.category === 'Irrigation' || scheme.category === 'Farmer Welfare';
     }).map((scheme) => getLocalizedScheme(scheme, selectedLanguage.code));
   };
@@ -77,343 +72,239 @@ export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm
     } as any);
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepProgressContainer}>
-      <View style={styles.stepHeaderRow}>
-        <Text style={styles.stepHeaderTitle}>
-          {step === 1 && t('step1')}
-          {step === 2 && t('step2')}
-          {step === 3 && t('step3')}
-          {step === 4 && t('step4')}
-        </Text>
-        <Text style={styles.stepCountText}>{step} / 4</Text>
-      </View>
-
-      <View style={styles.stepsBarTrack}>
-        {[1, 2, 3, 4].map((s) => {
-          const isDone = s < step;
-          const isCurrent = s === step;
-          return (
-            <View key={s} style={styles.stepSegmentWrap}>
-              <View
-                style={[
-                  styles.stepSegment,
-                  isDone && styles.stepSegmentDone,
-                  isCurrent && styles.stepSegmentCurrent,
-                ]}
-              />
-            </View>
-          );
-        })}
-      </View>
+  // Helper for 2-column pill selection grid
+  const renderPillGrid = (
+    options: { id: string; label: string }[],
+    selectedValue: string,
+    onSelect: (val: any) => void
+  ) => (
+    <View style={styles.twoColumnGrid}>
+      {options.map((opt) => {
+        const isSelected = selectedValue === opt.id;
+        return (
+          <TouchableOpacity
+            key={opt.id}
+            activeOpacity={0.82}
+            style={[
+              styles.gridPill,
+              isSelected
+                ? { backgroundColor: PRIMARY_GREEN, borderColor: PRIMARY_GREEN }
+                : {
+                    backgroundColor: isDarkMode ? '#1E293B' : PALE_GREEN_BG,
+                    borderColor: isDarkMode ? '#334155' : PALE_GREEN_BORDER,
+                  },
+            ]}
+            onPress={() => onSelect(opt.id)}
+          >
+            <Text
+              style={[
+                styles.gridPillText,
+                isSelected
+                  ? { color: '#FFFFFF', fontWeight: '800' }
+                  : { color: isDarkMode ? '#CBD5E1' : DARK_GREEN, fontWeight: '700' },
+              ]}
+              numberOfLines={1}
+            >
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? themeColors.background : VERY_LIGHT_BG }]}>
-      {/* Header */}
+    <View style={[styles.container, { backgroundColor: isDarkMode ? themeColors.background : LIGHT_PAGE_BG }]}>
+      {/* Fixed Top Header */}
       <Header
-        title={t('appName')}
-        subtitle={t('appSubtitle')}
+        title={t('checkEligibility') || 'Check eligibility'}
+        subtitle={t('eligibilitySubtitle') || 'Share a few farm details and find matches'}
         onNotificationPress={() => navigation.navigate('HomeTab', { screen: 'Notifications' } as any)}
         onProfilePress={() => navigation.navigate('ProfileTab', { screen: 'Profile' } as any)}
       />
 
+      {/* Single Vertically Scrollable Page */}
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 110 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 130 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Page Title & Green Profile Icon Header */}
-        <View style={styles.pageTitleHeader}>
-          <View style={styles.headerIconCircle}>
-            <Ionicons name="checkmark-circle" size={26} color="#FFF" />
+        {/* Voice Assistance Banner */}
+        <TouchableOpacity
+          activeOpacity={0.88}
+          style={[
+            styles.voiceBannerCard,
+            {
+              backgroundColor: isDarkMode ? '#1E293B' : WHITE_CARD_BG,
+              borderColor: isDarkMode ? '#334155' : '#E4EDE6',
+            },
+          ]}
+          onPress={() => navigation.navigate('HomeTab', { screen: 'VoiceAssistant' } as any)}
+        >
+          <View style={[styles.voiceIconCircle, { backgroundColor: isDarkMode ? '#064E3B' : PALE_GREEN_BG }]}>
+            <Ionicons name="sparkles" size={18} color={PRIMARY_GREEN} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.pageTitleText, { color: isDarkMode ? '#F9FAFB' : DARK_GREEN }]}>
-              {t('checkEligibility')}
+          <View style={styles.voiceTextGroup}>
+            <Text style={[styles.voiceMainText, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
+              {t('introCardText') || 'Prefer to talk? Ask Farmer AI by voice.'}
             </Text>
-            <Text style={[styles.pageSubtitleText, { color: isDarkMode ? '#9CA3AF' : '#2D5A3B' }]}>
-              {t('eligibilitySubtitle')}
+            <Text style={[styles.voiceLinkText, { color: PRIMARY_GREEN }]}>
+              Talk to Farmer AI →
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
-        {/* Intro Card */}
-        <View style={[styles.introCard, { backgroundColor: isDarkMode ? '#1F2937' : LIGHT_GREEN_BG, borderColor: isDarkMode ? '#065F46' : BORDER_GREEN }]}>
-          <View style={styles.introIconBox}>
-            <Ionicons name="sparkles-outline" size={22} color={PRIMARY_GREEN} />
-          </View>
-          <Text style={[styles.introText, { color: isDarkMode ? '#E5E7EB' : DARK_GREEN }]}>
-            {t('introCardText')}
-          </Text>
-        </View>
-
-        {/* Step Tracker */}
-        {renderStepIndicator()}
-
-        {/* STEP 1: Personal Details */}
-        {step === 1 && (
-          <View style={[styles.formCard, { backgroundColor: isDarkMode ? '#1F2937' : '#F7FCF8', borderColor: isDarkMode ? '#374151' : BORDER_GREEN }]}>
-            <Text style={[styles.formCardTitle, { color: isDarkMode ? '#F9FAFB' : DARK_GREEN }]}>
-              {t('step1Title')}
-            </Text>
-
-            {/* Age Input */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                1. {t('age')}
+        {!showResults ? (
+          <View style={styles.formSection}>
+            {/* Question 1: Land Ownership */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qOwnLand') || 'Do you own agricultural land?'}
               </Text>
-              <TextInput
-                style={[styles.textInput, { backgroundColor: isDarkMode ? '#111827' : '#F9FAFB', borderColor: isDarkMode ? '#374151' : BORDER_GREEN, color: isDarkMode ? '#FFF' : '#000' }]}
-                value={age}
-                onChangeText={setAge}
-                keyboardType="numeric"
-                placeholder="35"
-                placeholderTextColor="#9CA3AF"
-              />
+              {renderPillGrid(
+                [
+                  { id: 'yes', label: t('optYes') || 'Yes' },
+                  { id: 'no', label: t('optNo') || 'No' },
+                ],
+                ownsLand,
+                setOwnsLand
+              )}
             </View>
 
-            {/* Gender Select */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                2. {t('gender')}
+            {/* Question 2: Land Holding Size */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qLandSize') || 'Approximate land holding size?'}
               </Text>
-              <View style={styles.pillsRow}>
-                {[
-                  { id: 'male', label: t('male') },
-                  { id: 'female', label: t('female') },
-                  { id: 'other', label: t('other') },
-                ].map((g) => (
-                  <TouchableOpacity
-                    key={g.id}
-                    style={[styles.pill, gender === g.id && styles.pillActive]}
-                    onPress={() => setGender(g.id)}
-                  >
-                    <Text style={[styles.pillText, gender === g.id && styles.pillTextActive]}>{g.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {renderPillGrid(
+                [
+                  { id: 'under1', label: t('optUnder1') || '< 2 acres' },
+                  { id: '1to2', label: t('opt1to2') || '2 - 5 acres' },
+                  { id: '2to5', label: t('opt2to5') || '5 - 10 acres' },
+                  { id: 'above5', label: t('optAbove5') || '> 10 acres' },
+                ],
+                landHolding,
+                setLandHolding
+              )}
             </View>
 
-            {/* Social Category Select */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                3. {t('category')}
+            {/* Question 3: Primary Farming Activity */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qPrimaryActivity') || 'Primary farming activity?'}
               </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'general', label: t('general') },
-                  { id: 'sc', label: t('sc') },
-                  { id: 'st', label: t('st') },
-                  { id: 'obc', label: t('obc') },
-                ].map((c) => (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={[styles.pill, category === c.id && styles.pillActive]}
-                    onPress={() => setCategory(c.id)}
-                  >
-                    <Text style={[styles.pillText, category === c.id && styles.pillTextActive]}>{c.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {renderPillGrid(
+                [
+                  { id: 'fieldCrops', label: t('optFieldCrops') || 'Field Crops' },
+                  { id: 'horticulture', label: t('optHorticulture') || 'Horticulture' },
+                  { id: 'dairy', label: t('optDairy') || 'Dairy & Livestock' },
+                  { id: 'fisheries', label: t('optFisheries') || 'Fisheries' },
+                ],
+                cropType,
+                setCropType
+              )}
             </View>
 
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => setStep(2)} activeOpacity={0.85}>
-              <Text style={styles.primaryBtnText}>{t('continueBtn')}</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
+            {/* Question 4: Annual Household Income */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qAnnualIncome') || 'Annual farmer household income?'}
+              </Text>
+              {renderPillGrid(
+                [
+                  { id: 'under1.5L', label: t('optIncomeUnder1_5L') || '< ₹1.5 Lakh' },
+                  { id: '1.5to2.5L', label: t('optIncome1_5to2_5L') || '₹1.5L - ₹3 Lakh' },
+                  { id: '2.5to5L', label: t('optIncome2_5to5L') || '₹3L - ₹5 Lakh' },
+                  { id: 'above5L', label: t('optIncomeAbove5L') || '> ₹5 Lakh' },
+                ],
+                annualIncome,
+                setAnnualIncome
+              )}
+            </View>
+
+            {/* Question 5: Social Category */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qCategory') || 'Your social category?'}
+              </Text>
+              {renderPillGrid(
+                [
+                  { id: 'general', label: t('optGeneral') || 'General' },
+                  { id: 'sc', label: t('optSC') || 'SC' },
+                  { id: 'st', label: t('optST') || 'ST' },
+                  { id: 'obc', label: t('optOBC') || 'OBC' },
+                ],
+                category,
+                setCategory
+              )}
+            </View>
+
+            {/* Question 6: PM-KISAN Support */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qPmKisan') || 'Do you currently receive PM-KISAN support?'}
+              </Text>
+              {renderPillGrid(
+                [
+                  { id: 'yes', label: t('optYes') || 'Yes' },
+                  { id: 'no', label: t('optNo') || 'No' },
+                ],
+                pmKisanSupport,
+                setPmKisanSupport
+              )}
+            </View>
+
+            {/* Question 7: Woman Farmer */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qWomanFarmer') || 'Are you a woman farmer?'}
+              </Text>
+              {renderPillGrid(
+                [
+                  { id: 'yes', label: t('optYes') || 'Yes' },
+                  { id: 'no', label: t('optNo') || 'No' },
+                ],
+                isWomanFarmer,
+                setIsWomanFarmer
+              )}
+            </View>
+
+            {/* Question 8: Support Needed Most */}
+            <View style={[styles.questionCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E6EFE8' }]}>
+              <Text style={[styles.questionTitle, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
+                {t('qSupportNeeded') || 'Which support do you need most?'}
+              </Text>
+              {renderPillGrid(
+                [
+                  { id: 'irrigation', label: t('optIrrigation') || 'Irrigation' },
+                  { id: 'machinery', label: t('optMachinery') || 'Machinery' },
+                  { id: 'pond', label: t('optPond') || 'Farm Pond' },
+                  { id: 'cropInputs', label: t('optCropInputs') || 'Seeds & Fertilizer' },
+                ],
+                supportNeeded,
+                setSupportNeeded
+              )}
+            </View>
+
+            {/* Final Large Green Action Button */}
+            <TouchableOpacity
+              activeOpacity={0.88}
+              style={[styles.bigGreenButton, { backgroundColor: PRIMARY_GREEN }]}
+              onPress={() => setShowResults(true)}
+            >
+              <Text style={styles.bigGreenButtonText}>
+                {t('btnCheckEligible') || 'Check Eligible Schemes →'}
+              </Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* STEP 2: Farm Details */}
-        {step === 2 && (
-          <View style={[styles.formCard, { backgroundColor: isDarkMode ? '#1F2937' : '#F7FCF8', borderColor: isDarkMode ? '#374151' : BORDER_GREEN }]}>
-            <Text style={[styles.formCardTitle, { color: isDarkMode ? '#F9FAFB' : DARK_GREEN }]}>
-              {t('step2Title')}
-            </Text>
-
-            {/* Farmer Type */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                1. {t('farmerType')}
-              </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'marginal', label: t('marginal') },
-                  { id: 'small', label: t('small') },
-                  { id: 'medium', label: t('medium') },
-                  { id: 'large', label: t('large') },
-                ].map((f) => (
-                  <TouchableOpacity
-                    key={f.id}
-                    style={[styles.pill, farmerType === f.id && styles.pillActive]}
-                    onPress={() => setFarmerType(f.id)}
-                  >
-                    <Text style={[styles.pillText, farmerType === f.id && styles.pillTextActive]}>{f.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Land Holding */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                2. {t('landHolding')}
-              </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'under1', label: t('landUnder1') },
-                  { id: '1to2', label: t('land1to2') },
-                  { id: '2to5', label: t('land2to5') },
-                  { id: 'above5', label: t('landAbove5') },
-                ].map((l) => (
-                  <TouchableOpacity
-                    key={l.id}
-                    style={[styles.pill, landHolding === l.id && styles.pillActive]}
-                    onPress={() => setLandHolding(l.id)}
-                  >
-                    <Text style={[styles.pillText, landHolding === l.id && styles.pillTextActive]}>{l.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Crop Type */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                3. {t('cropType')}
-              </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'cotton', label: t('cotton') },
-                  { id: 'soybean', label: t('soybean') },
-                  { id: 'sugarcane', label: t('sugarcane') },
-                  { id: 'wheat', label: t('wheat') },
-                  { id: 'onion', label: t('onion') },
-                  { id: 'vegetables', label: t('vegetables') },
-                ].map((cr) => (
-                  <TouchableOpacity
-                    key={cr.id}
-                    style={[styles.pill, cropType === cr.id && styles.pillActive]}
-                    onPress={() => setCropType(cr.id)}
-                  >
-                    <Text style={[styles.pillText, cropType === cr.id && styles.pillTextActive]}>{cr.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Annual Income */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                4. {t('annualIncome')}
-              </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'under1L', label: t('incomeUnder1L') },
-                  { id: '1to2_5L', label: t('income1to2_5L') },
-                  { id: '2_5to5L', label: t('income2_5to5L') },
-                  { id: 'above5L', label: t('incomeAbove5L') },
-                ].map((inc) => (
-                  <TouchableOpacity
-                    key={inc.id}
-                    style={[styles.pill, annualIncome === inc.id && styles.pillActive]}
-                    onPress={() => setAnnualIncome(inc.id)}
-                  >
-                    <Text style={[styles.pillText, annualIncome === inc.id && styles.pillTextActive]}>{inc.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.btnRow}>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setStep(1)}>
-                <Text style={styles.secondaryBtnText}>{t('backBtn')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }]} onPress={() => setStep(3)}>
-                <Text style={styles.primaryBtnText}>{t('continueBtn')}</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* STEP 3: Location Details */}
-        {step === 3 && (
-          <View style={[styles.formCard, { backgroundColor: isDarkMode ? '#1F2937' : '#F7FCF8', borderColor: isDarkMode ? '#374151' : BORDER_GREEN }]}>
-            <Text style={[styles.formCardTitle, { color: isDarkMode ? '#F9FAFB' : DARK_GREEN }]}>
-              {t('step3Title')}
-            </Text>
-
-            {/* District Selector */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                1. {t('district')}
-              </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'pune', label: selectedLanguage.code === 'en' ? 'Pune' : 'पुणे' },
-                  { id: 'nashik', label: selectedLanguage.code === 'en' ? 'Nashik' : 'नाशिक' },
-                  { id: 'latur', label: selectedLanguage.code === 'en' ? 'Latur' : 'लातूर' },
-                  { id: 'akola', label: selectedLanguage.code === 'en' ? 'Akola' : 'अकोला' },
-                  { id: 'solapur', label: selectedLanguage.code === 'en' ? 'Solapur' : 'सोलापूर' },
-                  { id: 'nagpur', label: selectedLanguage.code === 'en' ? 'Nagpur' : 'नागपूर' },
-                ].map((d) => (
-                  <TouchableOpacity
-                    key={d.id}
-                    style={[styles.pill, district === d.id && styles.pillActive]}
-                    onPress={() => setDistrict(d.id)}
-                  >
-                    <Text style={[styles.pillText, district === d.id && styles.pillTextActive]}>{d.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Taluka Selector */}
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#D1D5DB' : '#374151' }]}>
-                2. {t('taluka')}
-              </Text>
-              <View style={styles.pillsWrap}>
-                {[
-                  { id: 'haveli', label: selectedLanguage.code === 'en' ? 'Haveli' : 'हवेली' },
-                  { id: 'baramati', label: selectedLanguage.code === 'en' ? 'Baramati' : 'बारामती' },
-                  { id: 'dindori', label: selectedLanguage.code === 'en' ? 'Dindori' : 'दिंडोरी' },
-                  { id: 'udgir', label: selectedLanguage.code === 'en' ? 'Udgir' : 'उदगीर' },
-                ].map((tItem) => (
-                  <TouchableOpacity
-                    key={tItem.id}
-                    style={[styles.pill, taluka === tItem.id && styles.pillActive]}
-                    onPress={() => setTaluka(tItem.id)}
-                  >
-                    <Text style={[styles.pillText, taluka === tItem.id && styles.pillTextActive]}>{tItem.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.btnRow}>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setStep(2)}>
-                <Text style={styles.secondaryBtnText}>{t('backBtn')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }]} onPress={() => setStep(4)}>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#FFF" />
-                <Text style={styles.primaryBtnText}>{t('checkEligibilityBtn')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* STEP 4: Results */}
-        {step === 4 && (
+        ) : (
+          /* Results View */
           <View style={styles.resultsContainer}>
             {matchingSchemes.length > 0 ? (
               <>
-                <View style={styles.resultsBadgeHeader}>
+                <View style={[styles.resultsBadgeHeader, { backgroundColor: PALE_GREEN_BG, borderColor: PALE_GREEN_BORDER }]}>
                   <Ionicons name="sparkles" size={20} color={PRIMARY_GREEN} />
-                  <Text style={styles.resultsBadgeText}>
-                    {t('resultsFound', { count: matchingSchemes.length })}
+                  <Text style={[styles.resultsBadgeText, { color: DARK_GREEN }]}>
+                    {`Found ${matchingSchemes.length} Eligible Schemes`}
                   </Text>
                 </View>
 
@@ -426,19 +317,31 @@ export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm
                   />
                 ))}
 
-                <TouchableOpacity style={styles.modifyBtn} onPress={() => setStep(1)}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[styles.modifyBtn, { borderColor: PRIMARY_GREEN, backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF' }]}
+                  onPress={() => setShowResults(false)}
+                >
                   <Ionicons name="create-outline" size={18} color={PRIMARY_GREEN} />
-                  <Text style={styles.modifyBtnText}>{t('modifyDetailsBtn')}</Text>
+                  <Text style={[styles.modifyBtnText, { color: PRIMARY_GREEN }]}>
+                    Modify Questionnaire Answers
+                  </Text>
                 </TouchableOpacity>
               </>
             ) : (
-              <View style={styles.emptyStateCard}>
+              <View style={[styles.emptyStateCard, { backgroundColor: isDarkMode ? '#1F2937' : WHITE_CARD_BG, borderColor: isDarkMode ? '#374151' : '#E5E7EB' }]}>
                 <Ionicons name="alert-circle-outline" size={48} color="#D97706" />
-                <Text style={styles.emptyTitle}>{t('noMatchTitle')}</Text>
-                <Text style={styles.emptySub}>{t('noMatchSub')}</Text>
+                <Text style={styles.emptyTitle}>No Direct Matches Found</Text>
+                <Text style={styles.emptySub}>Try adjusting your parameters to see more schemes.</Text>
 
-                <TouchableOpacity style={styles.primaryBtn} onPress={() => setStep(1)}>
-                  <Text style={styles.primaryBtnText}>{t('modifyDetailsBtn')}</Text>
+                <TouchableOpacity
+                  activeOpacity={0.88}
+                  style={[styles.bigGreenButton, { backgroundColor: PRIMARY_GREEN, width: '100%', marginTop: 12 }]}
+                  onPress={() => setShowResults(false)}
+                >
+                  <Text style={styles.bigGreenButtonText}>
+                    Modify Answers
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -455,190 +358,111 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 45,
+    paddingTop: 10,
+    paddingBottom: 130, // Ensures bottom padding so action button & last cards are never obscured
   },
 
-  /* Page Header Title Block */
-  pageTitleHeader: {
+  /* Voice Assistance Banner */
+  voiceBannerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-  },
-  headerIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: DARK_GREEN,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pageTitleText: {
-    fontSize: 20,
-    fontWeight: '800',
-    lineHeight: 24,
-  },
-  pageSubtitleText: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 1,
-  },
-
-  /* Intro Banner Card */
-  introCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 12,
+    marginBottom: 14,
     borderWidth: 1,
-    marginBottom: 12,
+    shadowColor: '#16803A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  introIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#FFF',
+  voiceIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 10,
   },
-  introText: {
+  voiceTextGroup: {
     flex: 1,
+  },
+  voiceMainText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     lineHeight: 16,
   },
-
-  /* Step Progress Tracker */
-  stepProgressContainer: {
-    marginBottom: 12,
-  },
-  stepHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  stepHeaderTitle: {
+  voiceLinkText: {
     fontSize: 13,
     fontWeight: '800',
-    color: DARK_GREEN,
-  },
-  stepCountText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: PRIMARY_GREEN,
-  },
-  stepsBarTrack: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  stepSegmentWrap: {
-    flex: 1,
-  },
-  stepSegment: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#E5E7EB',
-  },
-  stepSegmentDone: {
-    backgroundColor: PRIMARY_GREEN,
-  },
-  stepSegmentCurrent: {
-    backgroundColor: DARK_GREEN,
+    marginTop: 2,
   },
 
-  /* Form Cards */
-  formCard: {
-    borderRadius: 18,
+  /* Form & Question Cards */
+  formSection: {
+    gap: 2,
+  },
+  questionCard: {
+    borderRadius: 20,
     padding: 14,
-    borderWidth: 1.5,
     marginBottom: 12,
-  },
-  formCardTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 12,
-  },
-  fieldGroup: {
-    marginBottom: 12,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  textInput: {
-    height: 48,
-    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    fontWeight: '600',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  pillsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pillsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  pillActive: {
-    backgroundColor: PRIMARY_GREEN,
-    borderColor: PRIMARY_GREEN,
-  },
-  pillText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#374151',
-  },
-  pillTextActive: {
-    color: '#FFFFFF',
-  },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
-  },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: PRIMARY_GREEN,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-  },
-  primaryBtnText: {
-    color: '#FFF',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  secondaryBtn: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: PRIMARY_GREEN,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  secondaryBtnText: {
-    color: PRIMARY_GREEN,
+  questionTitle: {
     fontSize: 14,
     fontWeight: '800',
+    marginBottom: 10,
+    lineHeight: 18,
+  },
+
+  /* 2-Column Responsive Grid */
+  twoColumnGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  gridPill: {
+    width: '48%',
+    marginHorizontal: '1%',
+    marginBottom: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  gridPillText: {
+    fontSize: 13,
+    textAlign: 'center',
+  },
+
+  /* Big Green Action Button */
+  bigGreenButton: {
+    width: '100%',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+    shadowColor: PRIMARY_GREEN,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bigGreenButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 
   /* Results Section */
@@ -649,43 +473,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: LIGHT_GREEN_BG,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: BORDER_GREEN,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   resultsBadgeText: {
     fontSize: 15,
     fontWeight: '800',
-    color: DARK_GREEN,
   },
   modifyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: PRIMARY_GREEN,
-    borderRadius: 16,
+    paddingVertical: 13,
+    borderWidth: 1.5,
+    borderRadius: 24,
     marginTop: 8,
   },
   modifyBtnText: {
-    color: PRIMARY_GREEN,
     fontSize: 14,
     fontWeight: '800',
   },
   emptyStateCard: {
-    backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   emptyTitle: {
     fontSize: 16,

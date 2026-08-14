@@ -1,4 +1,7 @@
-/**
+const fs = require('fs');
+const path = require('path');
+
+const code = `/**
  * Scheme Localization Utility Module
  * Complete Multi-Lingual Scheme Data Localizer for all 5 languages (mr, en, hi, ahr, kok).
  * Ensures instant, complete language switching across Titles, Overview, Benefits,
@@ -780,9 +783,8 @@ export const getLocalizedScheme = (scheme: Scheme | any, langCode?: string): Sch
     shortDescription: localizedDesc,
     amount: localizedAmount,
     benefits: localizedBenefits,
-    eligibility_criteria: Array.isArray(localizedEligibility)
-      ? localizedEligibility.join('\n• ')
-      : localizedEligibility,
+    benefit: localizedBenefits,
+    eligibility_criteria: Array.isArray(localizedEligibility) ? localizedEligibility.join('\n• ') : localizedEligibility,
     eligibility: localizedEligibility,
     department: localizedDepartment,
     category: localizedCategory,
@@ -800,3 +802,8 @@ export const getLocalizedCategoryName = (categoryName: string, langCode?: string
   }
   return getCategoryTranslation(categoryName, lang);
 };
+`;
+
+const file = path.join(__dirname, '..', 'src', 'utils', 'schemeLocalization.ts');
+fs.writeFileSync(file, code, 'utf8');
+console.log('✅ Updated src/utils/schemeLocalization.ts with multi-lingual translations!');

@@ -134,61 +134,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [fetchSchemeDetails]);
 
   const scheme = rawSchemeData
-    ? {
-      ...rawSchemeData,
-      title:
-        selectedLanguage.code === 'mr'
-          ? rawSchemeData.name || rawSchemeData.title || rawSchemeData.englishName
-          : rawSchemeData.englishName || rawSchemeData.name || rawSchemeData.title,
-
-      description:
-        rawSchemeData.overview ||
-        rawSchemeData.shortDescription ||
-        rawSchemeData.description ||
-        '',
-
-      overview:
-        rawSchemeData.overview ||
-        rawSchemeData.description ||
-        rawSchemeData.shortDescription ||
-        '',
-
-      department: rawSchemeData.department || rawSchemeData.category || '',
-
-      benefit: rawSchemeData.benefit || rawSchemeData.benefits || '',
-
-      benefits: Array.isArray(rawSchemeData.benefits)
-        ? rawSchemeData.benefits
-        : (Array.isArray(rawSchemeData.benefit) ? rawSchemeData.benefit : (typeof rawSchemeData.benefit === 'string' ? [rawSchemeData.benefit] : [])),
-
-      eligibility: Array.isArray(rawSchemeData.eligibility)
-        ? rawSchemeData.eligibility
-        : (rawSchemeData.eligibility_criteria ? [rawSchemeData.eligibility_criteria] : []),
-
-      requiredDocuments: Array.isArray(rawSchemeData.requiredDocuments)
-        ? rawSchemeData.requiredDocuments
-        : (Array.isArray(rawSchemeData.documents) ? rawSchemeData.documents : []),
-
-      howToApply: rawSchemeData.howToApply || {
-        description: '',
-        steps: [],
-        officialUrl: rawSchemeData.application_url || 'https://mahadbt2.maharashtra.gov.in/farmer',
-      },
-
-      documents: Array.isArray(rawSchemeData.requiredDocuments)
-        ? rawSchemeData.requiredDocuments
-        : (Array.isArray(rawSchemeData.documents) ? rawSchemeData.documents : []),
-
-      faqs: Array.isArray(rawSchemeData.faqs)
-        ? rawSchemeData.faqs
-        : [],
-
-      gr: rawSchemeData.gr || {},
-
-      contact: rawSchemeData.contact || {},
-
-      source: rawSchemeData.source || {},
-    }
+    ? getLocalizedScheme(rawSchemeData, selectedLanguage.code)
     : null;
 
   // Background and Card colors

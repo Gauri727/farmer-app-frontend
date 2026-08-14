@@ -1,12 +1,12 @@
 /**
- * Production-Ready Reanimated Splash Screen — Krishi Mitra / Farmer AI
+ * Production-Ready Reanimated Splash Screen — Farmer AI / Farmer AI
  * 
  * Features:
  * - Uses react-native-reanimated for 60fps spring & fade entrance/exit animations
  * - Interacts with expo-splash-screen to prevent white/black flash
  * - Respects global language state from LanguageContext (AsyncStorage app_selected_language)
  * - Respects global theme state from ThemeContext (defaults to Light Mode)
- * - Renders Krishi Mitra leaf logo with soft outer pulse ring and subtle agricultural decorations
+ * - Renders Farmer AI leaf logo with soft outer pulse ring and subtle agricultural decorations
  * - Props: { onFinish?: () => void }
  * - Exported as default component matching specification
  */
@@ -208,7 +208,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, navigation
 
           {/* App Name & Branding */}
           <Animated.View style={[styles.titleWrapper, titleAnimatedStyle]}>
-            <Text style={[styles.appTitle, { color: themeColors.textPrimary }]}>{t('krishiMitra') || 'Krishi Mitra'}</Text>
+            <Text style={[styles.appTitle, { color: themeColors.textPrimary }]}>{t('krishiMitra') || 'Farmer AI'}</Text>
 
             <View style={[styles.brandBadge, { backgroundColor: isDarkMode ? '#064E3B' : '#EAF6EE', borderColor: isDarkMode ? '#047857' : '#C8E6D1' }]}>
               <Ionicons name="hardware-chip-outline" size={13} color={greenAccent} />

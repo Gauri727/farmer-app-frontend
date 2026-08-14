@@ -27,9 +27,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
     { icon: 'language-outline' as const, label: t('language'), screen: 'LanguageSelection' },
     { icon: 'bookmark-outline' as const, label: t('bookmarks'), screen: 'Bookmarks' },
     { icon: 'chatbubbles-outline' as const, label: t('conversationHistory'), screen: 'ConversationHistory' },
-    { icon: 'help-circle-outline' as const, label: t('helpSupport'), screen: 'Help' },
-    { icon: 'shield-checkmark-outline' as const, label: t('privacyPolicy'), screen: 'PrivacyPolicy' },
-    { icon: 'document-text-outline' as const, label: t('termsConditions'), screen: 'TermsConditions' },
   ];
 
   const handleLogout = async () => {

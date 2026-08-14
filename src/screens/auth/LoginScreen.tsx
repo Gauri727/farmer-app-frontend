@@ -1,5 +1,5 @@
 /**
- * Login / Signup Screen — Farmer AI / Krishi Mitra
+ * Login / Signup Screen — Farmer AI / Farmer AI
  * Clean, modern, trustworthy, mobile-first card-based authentication.
  * Fully localized across 5 languages & theme-aware (Light / Dark).
  */

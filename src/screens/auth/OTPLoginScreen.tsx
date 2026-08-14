@@ -1,5 +1,5 @@
 /**
- * OTP Verification Screen — Krishi Mitra / Farmer AI
+ * OTP Verification Screen — Farmer AI / Farmer AI
  * Clean, mobile-first, 6-digit OTP verification card matching reference layout.
  * Features auto-focus between boxes, countdown timer, resend OTP, and theme/i18n support.
  */

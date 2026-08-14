@@ -1,7 +1,7 @@
 {
   "name": "krishi-mitra-backend",
   "version": "1.0.0",
-  "description": "Krishi Mitra Phase 1 Government Schemes API Service",
+  "description": "Farmer AI Phase 1 Government Schemes API Service",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

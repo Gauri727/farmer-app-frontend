@@ -1,5 +1,5 @@
 /**
- * Krishi Mitra Backend Server — Phase 1 Government Schemes Module
+ * Farmer AI Backend Server — Phase 1 Government Schemes Module
  * Powered by Express & Node.js
  */
 
@@ -20,7 +20,7 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Krishi Mitra API is running"
+    message: "Farmer AI API is running"
   });
 });
 
@@ -38,7 +38,7 @@ app.use((req, res) => {
 // Start Server
 app.listen(PORT, () => {
   console.log(`==================================================`);
-  console.log(`  🌾 Krishi Mitra API Server running on port ${PORT}`);
+  console.log(`  🌾 Farmer AI API Server running on port ${PORT}`);
   console.log(`  Health Check: http://localhost:${PORT}/api/health`);
   console.log(`  Schemes List: http://localhost:${PORT}/api/schemes`);
   console.log(`==================================================`);
