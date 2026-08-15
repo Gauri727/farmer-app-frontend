@@ -148,7 +148,7 @@ export const EligibilityScreen: React.FC<EligibilityScreenProps<'EligibilityForm
               {t('introCardText') || 'Prefer to talk? Ask Farmer AI by voice.'}
             </Text>
             <Text style={[styles.voiceLinkText, { color: PRIMARY_GREEN }]}>
-              Talk to Farmer AI →
+              {t('talkToAgriMitraArrow') || 'Talk to Farmer AI →'}
             </Text>
           </View>
         </TouchableOpacity>

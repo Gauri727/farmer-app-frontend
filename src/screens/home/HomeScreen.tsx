@@ -281,7 +281,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
               </Text>
 
               <Text style={[styles.tapToSpeakSub, { color: isDarkMode ? '#9CA3AF' : '#5F6B7A' }]}>
-                {t('tapToSpeakSub') || 'तुमच्या भाषेत काहीही विचारा. १२ प्रादेशिक भाषांमध्ये उपलब्ध.'}
+                {t('tapToSpeakSub') || 'तुमच्या भाषेत काहीही विचारा. ५ प्रादेशिक भाषांमध्ये उपलब्ध.'}
               </Text>
 
               {/* Audio Waveform Bars Visualizer */}
@@ -301,7 +301,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
               <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#111827' : '#FFFFFF' }]}>
                 <Ionicons name="document-text-outline" size={15} color={PRIMARY_GREEN} />
                 <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-                  {t('pill12Languages') || '१२ भाषा'}
+                  {t('pill12Languages') || '५ भाषा'}
                 </Text>
               </View>
 
@@ -473,30 +473,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
           </View>
         </View>
 
-        {/* 6. TODAY'S FARMING ADVISORY SECTION */}
-        <View style={[styles.sectionContainer, { marginBottom: 20 }]}>
-          <View
-            style={[
-              styles.advisoryCardContainer,
-              {
-                backgroundColor: isDarkMode ? '#374151' : '#FFFDF0',
-                borderColor: isDarkMode ? '#4B5563' : '#FEF08A',
-              },
-            ]}
-          >
-            <View style={styles.advisoryIconWrap}>
-              <Ionicons name="sunny-outline" size={24} color="#D97706" />
-            </View>
-            <View style={styles.advisoryTextWrap}>
-              <Text style={[styles.advisoryTitle, { color: isDarkMode ? '#F59E0B' : '#92400E' }]}>
-                {t('todayTip') || "Today's Farming Advisory"}
-              </Text>
-              <Text style={[styles.advisoryBody, { color: isDarkMode ? '#E5E7EB' : '#4B5563' }]}>
-                {t('tipText') || 'Drip irrigation today can save 40-60% water.'}
-              </Text>
-            </View>
-          </View>
-        </View>
+
       </ScrollView>
     </View>
   );

@@ -235,15 +235,10 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   // Fallback complete steps if empty
   if (howToApplySteps.length === 0) {
     howToApplySteps = [
-      "1) Visit the official MahaDBT Farmer Portal (mahadbt.maharashtra.gov.in).",
-      "2) Login with your Aadhaar number or User ID and Password.",
-      "3) Fill in your personal information and 7/12 & 8-A land extract details.",
-      "4) Select the target scheme component in the Agriculture Section.",
-      "5) Upload scanned copies of required documents (7/12, 8-A, Aadhaar Card, Bank Passbook).",
-      "6) Submit application and save acknowledgment receipt.",
-      "7) Await Pre-Sanction letter from Taluka Agriculture Officer before starting work.",
-      "8) Upload purchase invoices after completing work.",
-      "9) Subsidy will be directly credited to your bank account via Direct Benefit Transfer (DBT)."
+      t('defaultStep1'),
+      t('defaultStep2'),
+      t('defaultStep3'),
+      t('defaultStep4'),
     ];
   }
   const officialApplyUrl = (rawHowToApply && typeof rawHowToApply === 'object' ? rawHowToApply.officialUrl : null) || scheme.application_url || scheme.official_website;
@@ -260,7 +255,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   // Contact
   const contactObj = scheme.contact || {};
-  const contactPhone = contactObj.phone || contactObj.helpline;
+  const contactPhone = contactObj.phone || contactObj.helpline || '022-61316429';
   const contactEmail = contactObj.email;
   const contactAddress = contactObj.address || contactObj.office;
 

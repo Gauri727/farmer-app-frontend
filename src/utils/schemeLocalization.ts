@@ -3,6 +3,8 @@ import SCHEME_TRANSLATIONS_JSON from '../constants/schemeTranslations.json';
 export type LanguageCode = 'mr' | 'en' | 'hi' | 'ahr' | 'kok';
 
 export interface LocalizedSchemeContent {
+  contact?: Record<string, { phone?: string; email?: string; address?: string }>;
+  faqs?: Record<string, Array<{ question: string; answer: string }>>;
   title?: Record<string, string>;
   description?: Record<string, string>;
   amount?: Record<string, string>;
@@ -79,19 +81,45 @@ export const getLocalizedCategoryName = (categoryName: string, langCode: string)
   return categoryName;
 };
 
+const SCHEME_ALIASES: Record<string, string> = {
+  "dr-shyamaprasad-mukherjee-jan-van-vikas-yojana": "dr-shyamprasad-mukherjee-jan-van-vikas-scheme",
+  "dr-shyamprasad-mukherjee-jan-van-vikas-scheme": "dr-shyamprasad-mukherjee-jan-van-vikas-scheme",
+  "shyamaprasad-mukherjee-jan-van-vikas": "dr-shyamprasad-mukherjee-jan-van-vikas-scheme",
+
+  "birsa-munda-krishi-kranti-outside-tribal-sub-plan": "birsa-munda-krishi-kranti-tribal-sub-plan",
+  "birsa-munda-krishi-kranti-yojana": "birsa-munda-krishi-kranti-tribal-sub-plan",
+  "birsa-munda-krushi-kranti-yojana": "birsa-munda-krishi-kranti-tribal-sub-plan",
+
+  "national-food-security-mission": "nfsm-food-grains-css",
+  "national-food-security-mission-nfsm-css": "nfsm-food-grains-css",
+
+  "mission-for-integrated-development-of-horticulture-midh-css": "mission-for-integrated-development-of-horticulture",
+  "midh-css": "mission-for-integrated-development-of-horticulture",
+
+  "state-agriculture-mechanization-scheme": "state-sponsored-agriculture-mechanization",
+  "rajya-krishi-yantrikikaran": "state-sponsored-agriculture-mechanization",
+
+  "rainfed-area-development-rad-scheme": "pmrkvy-rainfed-area-development",
+  "rad-dryland-development": "pmrkvy-rainfed-area-development",
+
+  "gopinath-munde-farmer-accident-insurance-scheme": "gopinath-munde-shetkari-apghat-suraksha-yojana",
+  "gopinath-munde-farmer-accident": "gopinath-munde-shetkari-apghat-suraksha-yojana",
+};
+
 export const getLocalizedScheme = (scheme: any, langCode: string): any => {
   if (!scheme) return scheme;
   const lang = normalizeLangCode(langCode);
 
-  const schemeId = (scheme.id || '').toLowerCase().trim();
-  const localizedData = SCHEME_TRANSLATIONS[schemeId] || SCHEME_TRANSLATIONS[scheme.id];
+  const rawId = (scheme.id || '').toLowerCase().trim();
+  const resolvedId = SCHEME_ALIASES[rawId] || rawId;
+  const localizedData = SCHEME_TRANSLATIONS[resolvedId] || SCHEME_TRANSLATIONS[rawId] || SCHEME_TRANSLATIONS[scheme.id];
 
   const getField = (fieldName: keyof LocalizedSchemeContent, fallbackValue?: any): any => {
     if (localizedData && localizedData[fieldName]) {
       const fieldDict = localizedData[fieldName]!;
-      if (fieldDict[lang]) return fieldDict[lang];
-      if (lang === 'en' && fieldDict['en']) return fieldDict['en'];
-      if (lang === 'hi' && fieldDict['hi']) return fieldDict['hi'];
+      if (fieldDict[lang] !== undefined && fieldDict[lang] !== null) return fieldDict[lang];
+      if (fieldDict['mr'] !== undefined && fieldDict['mr'] !== null) return fieldDict['mr'];
+      if (fieldDict['en'] !== undefined && fieldDict['en'] !== null) return fieldDict['en'];
     }
     return fallbackValue;
   };
@@ -104,6 +132,8 @@ export const getLocalizedScheme = (scheme: any, langCode: string): any => {
   const localizedDepartment = getField('department') || scheme.department;
   const localizedCategory = getLocalizedCategoryName(scheme.category || scheme.department || 'General', lang);
   const localizedOverview = getField('overview') || scheme.overview;
+  const localizedFaqs = getField('faqs') || scheme.faqs || [];
+  const localizedContact = getField('contact') || scheme.contact || { phone: '020-25530012' };
   const localizedHowToApply = getField('howToApply') || scheme.howToApply;
   const localizedDocuments = getField('documents') || scheme.documents || scheme.requiredDocuments;
 
@@ -125,6 +155,8 @@ export const getLocalizedScheme = (scheme: any, langCode: string): any => {
     overview: localizedOverview,
     howToApply: localizedHowToApply,
     documents: localizedDocuments,
-    requiredDocuments: localizedDocuments
+    requiredDocuments: localizedDocuments,
+    faqs: localizedFaqs,
+    contact: localizedContact
   };
 };

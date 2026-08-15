@@ -8,6 +8,8 @@ import { View, TextInput, StyleSheet, TouchableOpacity, ViewStyle } from 'react-
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
 
+import { useThemeContext } from '../../contexts/ThemeContext';
+
 interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
@@ -26,27 +28,41 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onSubmit,
   onFocus,
   autoFocus = false,
-  iconColor = Colors.gray[400],
+  iconColor,
   containerStyle,
 }) => {
+  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const effectiveIconColor = iconColor || (isDarkMode ? '#9CA3AF' : '#6B7280');
+
   return (
-    <View style={[styles.container, containerStyle]}>
-      <Ionicons name="search-outline" size={20} color={iconColor} style={styles.icon} />
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: themeColors.card,
+          borderColor: themeColors.border,
+        },
+        containerStyle,
+      ]}
+    >
+      <Ionicons name="search-outline" size={20} color={effectiveIconColor} style={styles.icon} />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: themeColors.textPrimary }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={Colors.gray[400]}
+        placeholderTextColor={themeColors.textSecondary}
         returnKeyType="search"
         onSubmitEditing={onSubmit}
         onFocus={onFocus}
         autoFocus={autoFocus}
+        autoCapitalize="none"
+        autoCorrect={false}
         accessibilityLabel="Search"
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Ionicons name="close-circle" size={18} color={iconColor} />
+        <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton} activeOpacity={0.7}>
+          <Ionicons name="close-circle" size={18} color={effectiveIconColor} />
         </TouchableOpacity>
       )}
     </View>
@@ -57,10 +73,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
     paddingHorizontal: Spacing.md,
     height: 48,
   },
@@ -70,8 +84,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...Typography.body,
-    color: Colors.text.primary,
     padding: 0,
+    fontSize: 15,
   },
   clearButton: {
     padding: Spacing.xs,
