@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Ionicons name="globe-outline" size={15} color="#16A34A" />
               <Text style={[styles.languageText, { color: themeColors.textPrimary }]}>
-                {selectedLanguage.name || selectedLanguage}
+                {selectedLanguage?.name || 'मराठी'}
               </Text>
               <Ionicons name="chevron-down" size={13} color={themeColors.textSecondary} />
             </TouchableOpacity>
