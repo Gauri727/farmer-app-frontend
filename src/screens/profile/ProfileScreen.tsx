@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CommonActions } from '@react-navigation/native';
 import {
   Colors,
   Spacing,
@@ -33,15 +34,21 @@ interface MenuItem {
   badge?: string;
 }
 
+/*
+ * PROFILE MENU
+ *
+ * Removed:
+ * - Chat History
+ * - Help & Support
+ * - Privacy Policy
+ * - Terms & Conditions
+ */
 const MENU_ITEMS: MenuItem[] = [
-  // Your Applied Schemes option
   {
     icon: 'paper-plane-outline',
     label: 'Applied Schemes',
     screen: 'SchemesTab',
   },
-
-  // Gauri's latest menu items
   {
     icon: 'settings-outline',
     label: 'Settings',
@@ -58,29 +65,9 @@ const MENU_ITEMS: MenuItem[] = [
     screen: 'Bookmarks',
   },
   {
-    icon: 'chatbubbles-outline',
-    label: 'Chat History',
-    screen: 'ConversationHistory',
-  },
-  {
-    icon: 'help-circle-outline',
-    label: 'Help & Support',
-    screen: 'Help',
-  },
-  {
     icon: 'information-circle-outline',
     label: 'About',
     screen: 'About',
-  },
-  {
-    icon: 'shield-checkmark-outline',
-    label: 'Privacy Policy',
-    screen: 'PrivacyPolicy',
-  },
-  {
-    icon: 'document-text-outline',
-    label: 'Terms & Conditions',
-    screen: 'TermsConditions',
   },
 ];
 
@@ -90,17 +77,55 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuthContext();
   const logoutMutation = useLogout();
+
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  // Guest mode
+  /*
+   * Guest mode
+   */
   const isGuest = !user || user.id === 'guest_user';
 
+  /*
+   * SIGN IN NAVIGATION
+   *
+   * ProfileScreen is inside:
+   *
+   * RootNavigator
+   *   └── Main
+   *       └── MainTabs
+   *           └── ProfileStack
+   *
+   * Login is inside:
+   *
+   * RootNavigator
+   *   └── Auth
+   *       └── AuthStack
+   *           └── Login
+   *
+   * Therefore we navigate to Auth and open Login.
+   */
+  const handleSignIn = () => {
+    navigation.dispatch(
+      CommonActions.navigate({
+        name: 'Auth',
+        params: {
+          screen: 'Login',
+        },
+      })
+    );
+  };
+
+  /*
+   * Logout
+   */
   const handleLogout = async () => {
     setShowLogoutDialog(false);
 
     try {
       await logoutMutation.mutateAsync();
-    } catch {}
+    } catch {
+      // Ignore logout mutation error
+    }
 
     await logout();
   };
@@ -120,7 +145,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
       >
         {/* =========================================
             PROFILE HEADER
-            Farmer AI logo + Profile
            ========================================= */}
 
         <View style={styles.headerBar}>
@@ -132,7 +156,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
             />
 
             <View style={styles.headerTextContainer}>
-              <Text style={styles.screenTitle}>Profile</Text>
+              <Text style={styles.screenTitle}>
+                Profile
+              </Text>
 
               <Text style={styles.profileSubtitle}>
                 Manage your account and preferences
@@ -141,6 +167,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
           </View>
 
           <View style={styles.headerRightActions}>
+            {/* Language */}
             <TouchableOpacity
               style={styles.actionIconButton}
               onPress={() =>
@@ -156,6 +183,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
               />
             </TouchableOpacity>
 
+            {/* Notifications */}
             <TouchableOpacity
               style={styles.actionIconButton}
               onPress={() => {}}
@@ -198,7 +226,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
 
             <TouchableOpacity
               style={styles.signInButton}
-              onPress={() => navigation.navigate('SignIn')}
+              onPress={handleSignIn}
               activeOpacity={0.85}
             >
               <Ionicons
@@ -250,13 +278,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
         )}
 
         {/* =========================================
-            MENU ITEMS
+            PROFILE MENU
            ========================================= */}
 
         <View style={styles.menuContainer}>
-          {MENU_ITEMS.map((item, idx) => (
+          {MENU_ITEMS.map((item) => (
             <TouchableOpacity
-              key={idx}
+              key={item.screen}
               style={styles.menuItem}
               onPress={() =>
                 navigation.navigate(item.screen as any)

@@ -194,17 +194,9 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
 
         <View style={styles.heroCard}>
 
-<<<<<<< HEAD
-          {/* Greeting Titles */}
-          <Text style={styles.greetingTitle}>
-            Namaste! 🌱{'\n'}
-            <Text style={styles.greetingBold}>{greeting}</Text>
-          </Text>
-=======
           {/* -------------------------------------------------
               FARM LANDSCAPE BACKGROUND
               ------------------------------------------------- */}
->>>>>>> a899fda (Update Farmer AI UI and home screen)
 
           <View
             pointerEvents="none"

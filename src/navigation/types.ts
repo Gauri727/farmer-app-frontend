@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Navigation type definitions
  * Type-safe param lists for all navigators
  */
@@ -9,13 +9,13 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { EligibilityResponse } from '../types/api.types';
 
-// ─── Root Stack ───────────────────────────────────────────────────────
+// â”€â”€â”€ Root Stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
 };
 
-// ─── Auth Stack ───────────────────────────────────────────────────────
+// â”€â”€â”€ Auth Stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type AuthStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
@@ -23,7 +23,7 @@ export type AuthStackParamList = {
   OTPLogin: { mobile?: string };
 };
 
-// ─── Main Bottom Tabs ─────────────────────────────────────────────────
+// â”€â”€â”€ Main Bottom Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type MainTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
   SchemesTab: NavigatorScreenParams<SchemesStackParamList>;
@@ -31,7 +31,7 @@ export type MainTabParamList = {
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };
 
-// ─── Home Stack ───────────────────────────────────────────────────────
+// â”€â”€â”€ Home Stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type HomeStackParamList = {
   Home: undefined;
   Search: undefined;
@@ -40,21 +40,22 @@ export type HomeStackParamList = {
   Notifications: undefined;
 };
 
-// ─── Schemes Stack ────────────────────────────────────────────────────
+// â”€â”€â”€ Schemes Stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type SchemesStackParamList = {
   SchemesList: { category?: string };
   SchemeDetails: { schemeId: string };
 };
 
-// ─── Eligibility Stack ────────────────────────────────────────────────
+// â”€â”€â”€ Eligibility Stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type EligibilityStackParamList = {
   EligibilityForm: undefined;
   EligibilityResult: { results: EligibilityResponse };
 };
 
-// ─── Profile Stack ────────────────────────────────────────────────────
+// â”€â”€â”€ Profile Stack â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type ProfileStackParamList = {
   Profile: undefined;
+  SignIn: undefined;
   Settings: undefined;
   LanguageSelection: undefined;
   Bookmarks: undefined;
@@ -65,7 +66,7 @@ export type ProfileStackParamList = {
   TermsConditions: undefined;
 };
 
-// ─── Screen Props Helpers ─────────────────────────────────────────────
+// â”€â”€â”€ Screen Props Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
   NativeStackScreenProps<RootStackParamList, T>;
 
@@ -95,3 +96,4 @@ export type ProfileScreenProps<T extends keyof ProfileStackParamList> =
     NativeStackScreenProps<ProfileStackParamList, T>,
     BottomTabScreenProps<MainTabParamList>
   >;
+
