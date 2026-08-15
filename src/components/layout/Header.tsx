@@ -71,11 +71,11 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
+          <Text style={[styles.title, { color: isDarkMode ? '#F9FAFB' : '#172033' }]} numberOfLines={1} ellipsizeMode="tail">
             {title || 'Farmer AI'}
           </Text>
           {!showBack && (
-            <Text style={[styles.subtitle, { color: isDarkMode ? '#9CA3AF' : '#8C9BAB' }]}>
+            <Text style={[styles.subtitle, { color: isDarkMode ? '#9CA3AF' : '#8C9BAB' }]} numberOfLines={1} ellipsizeMode="tail">
               {subtitle || 'VOICE ASSISTANT'}
             </Text>
           )}
@@ -214,9 +214,11 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   left: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    marginRight: 6,
   },
   backButton: {
     padding: 6,
@@ -232,17 +234,18 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   titleContainer: {
+    flex: 1,
     justifyContent: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
-    lineHeight: 22,
+    lineHeight: 21,
   },
   subtitle: {
     fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     marginTop: 1,
     textTransform: 'uppercase',
   },
@@ -250,6 +253,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 0,
     zIndex: 100,
   },
   languageWrapper: {
