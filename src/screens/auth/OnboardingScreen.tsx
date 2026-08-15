@@ -17,13 +17,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
 import { Button } from '../../components/common/Button';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { useLanguageContext } from '../../contexts/LanguageContext';
 import { AuthScreenProps } from '../../navigation/types';
 
 interface OnboardingItem {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
   color: string;
 }
 
@@ -31,25 +32,22 @@ const ONBOARDING_DATA: OnboardingItem[] = [
   {
     id: '1',
     icon: 'leaf',
-    title: 'Discover Schemes',
-    description:
-      'Find government schemes tailored for farmers. Get information about eligibility, benefits, and how to apply.',
+    titleKey: 'onboarding1Title',
+    descKey: 'onboarding1Desc',
     color: Colors.primary[500],
   },
   {
     id: '2',
     icon: 'mic',
-    title: 'Ask in Your Language',
-    description:
-      'Talk to our AI assistant in 12 regional languages. Just speak and get instant answers about farming and schemes.',
+    titleKey: 'onboarding2Title',
+    descKey: 'onboarding2Desc',
     color: Colors.primary[600],
   },
   {
     id: '3',
     icon: 'checkmark-circle',
-    title: 'Check Eligibility',
-    description:
-      'Quickly check your eligibility for various schemes. Save time by knowing what you qualify for before applying.',
+    titleKey: 'onboarding3Title',
+    descKey: 'onboarding3Desc',
     color: Colors.primary[700],
   },
 ];
@@ -58,6 +56,7 @@ export const OnboardingScreen: React.FC<AuthScreenProps<'Onboarding'>> = ({
   navigation,
 }) => {
   const { completeOnboarding } = useAuthContext();
+  const { t } = useLanguageContext();
   const { width: windowWidth } = useWindowDimensions();
   const slideWidth = Math.min(windowWidth, 450);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -94,8 +93,8 @@ export const OnboardingScreen: React.FC<AuthScreenProps<'Onboarding'>> = ({
       <View style={[styles.iconContainer, { backgroundColor: item.color + '15' }]}>
         <Ionicons name={item.icon} size={64} color={item.color} />
       </View>
-      <Text style={styles.slideTitle}>{item.title}</Text>
-      <Text style={styles.slideDescription}>{item.description}</Text>
+      <Text style={styles.slideTitle}>{t(item.titleKey)}</Text>
+      <Text style={styles.slideDescription}>{t(item.descKey)}</Text>
     </View>
   );
 
@@ -133,14 +132,14 @@ export const OnboardingScreen: React.FC<AuthScreenProps<'Onboarding'>> = ({
       <View style={styles.buttons}>
         {!isLastSlide && (
           <Button
-            title="Skip"
+            title={t('skip')}
             onPress={handleGetStarted}
             variant="ghost"
             size="md"
           />
         )}
         <Button
-          title={isLastSlide ? 'Get Started' : 'Next'}
+          title={isLastSlide ? t('getStarted') : t('next')}
           onPress={handleNext}
           variant="primary"
           size="lg"

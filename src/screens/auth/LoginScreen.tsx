@@ -1,40 +1,42 @@
 /**
- * Login Screen
- * Google + OTP login options
- *
- * Functionality preserved:
- * - Mobile number input
- * - 10-digit validation before OTP navigation
- * - Existing Google login mutation
- * - Existing AuthStack navigation
+ * Login / Signup Screen — Farmer AI
+ * Localized across 5 languages and theme-aware.
+ * Mobile number → OTP Login + Google Login.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
-  Image,
-  Alert,
+  TouchableOpacity,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  ActivityIndicator,
+  Animated,
+  Alert,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  Colors,
-  Typography,
-} from '../../theme';
-
 import { useGoogleLogin } from '../../hooks/useAuth';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
+import { Language } from '../../types/api.types';
 import { AuthScreenProps } from '../../navigation/types';
+
+const LANGUAGES: Language[] = [
+  { code: 'mr', name: 'मराठी' },
+  { code: 'en', name: 'English' },
+  { code: 'hi', name: 'हिंदी' },
+  { code: 'ahr', name: 'अहिराणी' },
+  { code: 'kok', name: 'कोंकणी' },
+];
 
 export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({
   navigation,
@@ -42,53 +44,84 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({
   const insets = useSafeAreaInsets();
 
   const { login } = useAuthContext();
+
+  const {
+    t,
+    selectedLanguage,
+    setLanguage,
+  } = useLanguageContext();
+
+  const {
+    isDarkMode,
+    toggleTheme,
+    colors: themeColors,
+  } = useThemeContext();
+
   const googleLoginMutation = useGoogleLogin();
 
-  const [mobile, setMobile] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  /* =========================================
-     MOBILE NUMBER
-  ========================================= */
+  const fadeAnim = useRef(
+    new Animated.Value(0)
+  ).current;
 
-  const handleMobileChange = (text: string) => {
-    // Allow numbers only
-    const numbersOnly = text.replace(/[^0-9]/g, '');
+  const scaleAnim = useRef(
+    new Animated.Value(0.95)
+  ).current;
 
-    // Maximum 10 digits
-    setMobile(numbersOnly.slice(0, 10));
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 450,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim]);
+
+  const handleSelectLanguage = (
+    lang: Language
+  ) => {
+    setLanguage(lang);
+    setDropdownOpen(false);
   };
 
-  /* =========================================
-     SEND OTP
-  ========================================= */
+  const handleSendOTP = () => {
+    const cleanNum = mobileNumber.replace(/\D/g, '');
 
-  const handleOTPLogin = () => {
-    // Do NOT navigate without a mobile number
-    if (mobile.length === 0) {
-      Alert.alert(
-        'Mobile Number Required',
-        'Please enter your mobile number first.'
+    if (cleanNum.length !== 10) {
+      setErrorMsg(
+        t('mobilePlaceholder') ||
+          'Please enter a valid 10-digit mobile number.'
       );
       return;
     }
 
-    // Do NOT navigate with an incomplete number
-    if (mobile.length !== 10) {
-      Alert.alert(
-        'Invalid Mobile Number',
-        'Please enter a valid 10-digit mobile number.'
+    setErrorMsg('');
+    setIsSubmitting(true);
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+
+      navigation.navigate(
+        'OTPLogin',
+        {
+          mobile: cleanNum,
+        }
       );
-      return;
-    }
-
-    // Only navigate after valid 10-digit number
-    navigation.navigate('OTPLogin', {});
+    }, 300);
   };
-
-  /* =========================================
-     GOOGLE LOGIN
-  ========================================= */
 
   const handleGoogleLogin = async () => {
     if (isGoogleLoading) {
@@ -98,18 +131,11 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({
     try {
       setIsGoogleLoading(true);
 
-      /*
-       * Keep your existing Google login API flow.
-       *
-       * IMPORTANT:
-       * Your original project currently uses a placeholder
-       * Google ID token. Real Google OAuth requires
-       * expo-auth-session / Google OAuth configuration.
-       */
-
-      const result = await googleLoginMutation.mutateAsync({
-        id_token: 'google_id_token_placeholder',
-      });
+      const result =
+        await googleLoginMutation.mutateAsync({
+          id_token:
+            'google_id_token_placeholder',
+        });
 
       if (result.success) {
         await login(
@@ -119,7 +145,10 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({
         );
       }
     } catch (error) {
-      console.log('Google login error:', error);
+      console.log(
+        'Google login error:',
+        error
+      );
 
       Alert.alert(
         'Google Sign In',
@@ -130,447 +159,1004 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({
     }
   };
 
-  /* =========================================
-     UI
-  ========================================= */
-
   return (
-    <KeyboardAvoidingView
+    <View
       style={[
         styles.container,
         {
+          backgroundColor: isDarkMode
+            ? '#111827'
+            : '#F7FAF8',
           paddingTop: insets.top,
         },
       ]}
-      behavior={
-        Platform.OS === 'ios'
-          ? 'padding'
-          : undefined
-      }
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      {/* Background */}
+      <View
+        style={[
+          styles.bgCircle1,
+          {
+            backgroundColor: isDarkMode
+              ? 'rgba(6, 78, 59, 0.25)'
+              : 'rgba(220, 252, 231, 0.45)',
+          },
+        ]}
+      />
 
-        <View style={styles.card}>
+      <View
+        style={[
+          styles.bgCircle2,
+          {
+            backgroundColor: isDarkMode
+              ? 'rgba(17, 24, 39, 0.4)'
+              : 'rgba(240, 253, 244, 0.7)',
+          },
+        ]}
+      />
 
-          {/* =================================
-              APP ICON
-          ================================= */}
+      {/* Header */}
+      <View style={styles.topHeader}>
+        <View
+          style={[
+            styles.brandTag,
+            {
+              backgroundColor:
+                themeColors.card,
+              borderColor:
+                themeColors.border,
+            },
+          ]}
+        >
+          <Ionicons
+            name="leaf"
+            size={16}
+            color="#15803D"
+          />
 
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/icon.png')}
-              style={styles.appIcon}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* =================================
-              TITLE
-          ================================= */}
-
-          <Text style={styles.title}>
-            Welcome, Farmer
-          </Text>
-
-          <Text style={styles.subtitle}>
-            Discover government schemes with your voice.
-          </Text>
-
-          {/* =================================
-              MOBILE NUMBER LABEL
-          ================================= */}
-
-          <Text style={styles.label}>
-            Mobile Number
-          </Text>
-
-          {/* =================================
-              MOBILE NUMBER INPUT
-          ================================= */}
-
-          <View style={styles.mobileInputContainer}>
-
-            <Text style={styles.countryCode}>
-              +91
-            </Text>
-
-            <View style={styles.inputDivider} />
-
-            <TextInput
-              value={mobile}
-              onChangeText={handleMobileChange}
-              style={styles.mobileInput}
-              keyboardType="phone-pad"
-              inputMode="numeric"
-              maxLength={10}
-              placeholder="Enter mobile number"
-              placeholderTextColor="#98A2B3"
-              returnKeyType="done"
-              editable={!isGoogleLoading}
-            />
-
-          </View>
-
-          {/* =================================
-              SEND OTP
-          ================================= */}
-
-          <TouchableOpacity
+          <Text
             style={[
-              styles.otpButton,
-              mobile.length === 10
-                ? styles.otpButtonActive
-                : styles.otpButtonInactive,
+              styles.brandTagText,
+              {
+                color: isDarkMode
+                  ? '#6EE7B7'
+                  : '#15803D',
+              },
             ]}
-            onPress={handleOTPLogin}
-            activeOpacity={0.8}
           >
-            <Text style={styles.otpButtonText}>
-              Send OTP
-            </Text>
-          </TouchableOpacity>
-
-          {/* =================================
-              OR
-          ================================= */}
-
-          <View style={styles.divider}>
-
-            <View style={styles.dividerLine} />
-
-            <Text style={styles.dividerText}>
-              OR
-            </Text>
-
-            <View style={styles.dividerLine} />
-
-          </View>
-
-          {/* =================================
-              GOOGLE
-          ================================= */}
-
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-            activeOpacity={0.8}
-            disabled={isGoogleLoading}
-          >
-
-            <Ionicons
-              name="logo-google"
-              size={21}
-              color="#4285F4"
-            />
-
-            <Text style={styles.googleText}>
-              {isGoogleLoading
-                ? 'Signing in...'
-                : 'Continue with Google'}
-            </Text>
-
-          </TouchableOpacity>
-
-          {/* =================================
-              TERMS
-          ================================= */}
-
-          <Text style={styles.terms}>
-            By continuing you agree to our Terms & Privacy Policy.
+            {t('krishiMitra') ||
+              'Farmer AI'}
           </Text>
-
         </View>
 
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <View
+          style={styles.rightActionsRow}
+        >
+          {/* Language */}
+          <View style={styles.langWrapper}>
+            <TouchableOpacity
+              style={[
+                styles.langSelectorBtn,
+                {
+                  backgroundColor:
+                    themeColors.card,
+                  borderColor:
+                    themeColors.border,
+                },
+              ]}
+              onPress={() =>
+                setDropdownOpen(
+                  !dropdownOpen
+                )
+              }
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="globe-outline"
+                size={15}
+                color="#16A34A"
+              />
+
+              <Text
+                style={[
+                  styles.langSelectorText,
+                  {
+                    color:
+                      themeColors.textPrimary,
+                  },
+                ]}
+              >
+                {selectedLanguage.name}
+              </Text>
+
+              <Ionicons
+                name="chevron-down"
+                size={13}
+                color={
+                  themeColors.textSecondary
+                }
+              />
+            </TouchableOpacity>
+
+            {dropdownOpen && (
+              <>
+                <TouchableOpacity
+                  style={
+                    styles.backdropOverlay
+                  }
+                  activeOpacity={1}
+                  onPress={() =>
+                    setDropdownOpen(false)
+                  }
+                />
+
+                <View
+                  style={[
+                    styles.dropdownCard,
+                    {
+                      backgroundColor:
+                        themeColors.card,
+                      borderColor:
+                        themeColors.border,
+                    },
+                  ]}
+                >
+                  <ScrollView
+                    nestedScrollEnabled
+                    style={{
+                      maxHeight: 240,
+                    }}
+                  >
+                    {LANGUAGES.map(
+                      (lang, index) => {
+                        const isSelected =
+                          selectedLanguage.code ===
+                          lang.code;
+
+                        return (
+                          <TouchableOpacity
+                            key={lang.code}
+                            style={[
+                              styles.dropdownRow,
+
+                              index <
+                                LANGUAGES.length -
+                                  1 && {
+                                borderBottomWidth: 1,
+                                borderBottomColor:
+                                  isDarkMode
+                                    ? '#374151'
+                                    : '#F1F5F9',
+                              },
+
+                              isSelected && {
+                                backgroundColor:
+                                  isDarkMode
+                                    ? '#064E3B'
+                                    : '#F0FDF4',
+                              },
+                            ]}
+                            onPress={() =>
+                              handleSelectLanguage(
+                                lang
+                              )
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.dropdownRowText,
+                                {
+                                  color:
+                                    themeColors.textPrimary,
+                                },
+                                isSelected && {
+                                  fontWeight:
+                                    '800',
+                                  color:
+                                    '#16A34A',
+                                },
+                              ]}
+                            >
+                              {lang.name}
+                            </Text>
+
+                            {isSelected && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color="#16A34A"
+                              />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      }
+                    )}
+                  </ScrollView>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* Theme */}
+          <TouchableOpacity
+            style={[
+              styles.themeToggleBtn,
+              {
+                backgroundColor:
+                  themeColors.card,
+                borderColor:
+                  themeColors.border,
+              },
+            ]}
+            onPress={toggleTheme}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={
+                isDarkMode
+                  ? 'sunny-outline'
+                  : 'moon-outline'
+              }
+              size={17}
+              color={
+                isDarkMode
+                  ? '#F59E0B'
+                  : '#4B5563'
+              }
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <KeyboardAvoidingView
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : 'height'
+        }
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={
+            styles.scrollContent
+          }
+          showsVerticalScrollIndicator={
+            false
+          }
+          keyboardShouldPersistTaps="handled"
+        >
+          <Animated.View
+            style={[
+              styles.centerCardContainer,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  {
+                    scale: scaleAnim,
+                  },
+                ],
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor:
+                    isDarkMode
+                      ? '#1F2937'
+                      : '#FFFFFF',
+                  borderColor:
+                    isDarkMode
+                      ? '#374151'
+                      : '#E2E8F0',
+                },
+              ]}
+            >
+              {/* App Icon */}
+              <View
+                style={styles.logoWrap}
+              >
+                <View
+                  style={[
+                    styles.logoIconContainer,
+                    {
+                      backgroundColor:
+                        isDarkMode
+                          ? '#064E3B'
+                          : '#E8F5E9',
+                      borderColor:
+                        isDarkMode
+                          ? '#047857'
+                          : '#A7F3D0',
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="leaf"
+                    size={32}
+                    color={
+                      isDarkMode
+                        ? '#6EE7B7'
+                        : '#187A3D'
+                    }
+                  />
+                </View>
+              </View>
+
+              {/* Heading */}
+              <Text
+                style={[
+                  styles.welcomeHeading,
+                  {
+                    color: isDarkMode
+                      ? '#F9FAFB'
+                      : '#111827',
+                  },
+                ]}
+              >
+                {t('welcomeFarmer') ||
+                  'Welcome, Farmer 👋'}
+              </Text>
+
+              <Text
+                style={[
+                  styles.loginSubtitle,
+                  {
+                    color: isDarkMode
+                      ? '#9CA3AF'
+                      : '#64748B',
+                  },
+                ]}
+              >
+                {t('loginSubtitle') ||
+                  'Discover government schemes and agricultural information with your voice.'}
+              </Text>
+
+              {/* Mobile Number */}
+              <View
+                style={styles.formGroup}
+              >
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    {
+                      color:
+                        isDarkMode
+                          ? '#E5E7EB'
+                          : '#374151',
+                    },
+                  ]}
+                >
+                  {t(
+                    'mobileNumberLabel'
+                  ) ||
+                    'Mobile Number'}
+                </Text>
+
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      backgroundColor:
+                        isDarkMode
+                          ? '#111827'
+                          : '#F8FAFC',
+
+                      borderColor:
+                        isFocused
+                          ? isDarkMode
+                            ? '#10B981'
+                            : '#187A3D'
+                          : errorMsg
+                            ? '#EF4444'
+                            : isDarkMode
+                              ? '#374151'
+                              : '#E2E8F0',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.countryCode,
+                      {
+                        color:
+                          isDarkMode
+                            ? '#F9FAFB'
+                            : '#111827',
+                      },
+                    ]}
+                  >
+                    +91
+                  </Text>
+
+                  <View
+                    style={[
+                      styles.verticalDivider,
+                      {
+                        backgroundColor:
+                          isDarkMode
+                            ? '#374151'
+                            : '#CBD5E1',
+                      },
+                    ]}
+                  />
+
+                  <TextInput
+                    style={[
+                      styles.textInput,
+                      {
+                        color:
+                          isDarkMode
+                            ? '#F9FAFB'
+                            : '#111827',
+                      },
+                    ]}
+                    value={mobileNumber}
+                    onChangeText={(text) => {
+                      const numbersOnly =
+                        text.replace(
+                          /[^0-9]/g,
+                          ''
+                        );
+
+                      setMobileNumber(
+                        numbersOnly.slice(
+                          0,
+                          10
+                        )
+                      );
+
+                      if (errorMsg) {
+                        setErrorMsg('');
+                      }
+                    }}
+                    onFocus={() =>
+                      setIsFocused(true)
+                    }
+                    onBlur={() =>
+                      setIsFocused(false)
+                    }
+                    placeholder={
+                      t(
+                        'mobilePlaceholder'
+                      ) ||
+                      'Enter 10-digit mobile number'
+                    }
+                    placeholderTextColor={
+                      isDarkMode
+                        ? '#6B7280'
+                        : '#94A3B8'
+                    }
+                    keyboardType="phone-pad"
+                    inputMode="numeric"
+                    maxLength={10}
+                    editable={
+                      !isSubmitting
+                    }
+                  />
+                </View>
+
+                {errorMsg ? (
+                  <Text
+                    style={
+                      styles.errorText
+                    }
+                  >
+                    {errorMsg}
+                  </Text>
+                ) : null}
+              </View>
+
+              {/* Send OTP */}
+              <TouchableOpacity
+                style={[
+                  styles.sendOtpBtn,
+                  isSubmitting && {
+                    opacity: 0.8,
+                  },
+                ]}
+                onPress={
+                  handleSendOTP
+                }
+                disabled={
+                  isSubmitting
+                }
+                activeOpacity={0.88}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator
+                    color="#FFFFFF"
+                    size="small"
+                  />
+                ) : (
+                  <>
+                    <Text
+                      style={
+                        styles.sendOtpBtnText
+                      }
+                    >
+                      {t('sendOtp') ||
+                        'Send OTP'}
+                    </Text>
+
+                    <Ionicons
+                      name="arrow-forward"
+                      size={18}
+                      color="#FFFFFF"
+                    />
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Divider */}
+              <View
+                style={styles.dividerRow}
+              >
+                <View
+                  style={[
+                    styles.dividerLine,
+                    {
+                      backgroundColor:
+                        isDarkMode
+                          ? '#374151'
+                          : '#E2E8F0',
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.dividerText,
+                    {
+                      color:
+                        isDarkMode
+                          ? '#9CA3AF'
+                          : '#94A3B8',
+                    },
+                  ]}
+                >
+                  {t('orDivider') ||
+                    'OR'}
+                </Text>
+
+                <View
+                  style={[
+                    styles.dividerLine,
+                    {
+                      backgroundColor:
+                        isDarkMode
+                          ? '#374151'
+                          : '#E2E8F0',
+                    },
+                  ]}
+                />
+              </View>
+
+              {/* Google */}
+              <TouchableOpacity
+                style={[
+                  styles.googleBtn,
+                  {
+                    backgroundColor:
+                      isDarkMode
+                        ? '#111827'
+                        : '#FFFFFF',
+                    borderColor:
+                      isDarkMode
+                        ? '#374151'
+                        : '#E2E8F0',
+                  },
+                ]}
+                onPress={
+                  handleGoogleLogin
+                }
+                activeOpacity={0.88}
+                disabled={
+                  isGoogleLoading
+                }
+              >
+                {isGoogleLoading ? (
+                  <ActivityIndicator
+                    color="#4285F4"
+                  />
+                ) : (
+                  <>
+                    <View
+                      style={[
+                        styles.googleIconCircle,
+                        {
+                          backgroundColor:
+                            isDarkMode
+                              ? '#1F2937'
+                              : '#F8FAFC',
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name="logo-google"
+                        size={18}
+                        color="#4285F4"
+                      />
+                    </View>
+
+                    <Text
+                      style={[
+                        styles.googleBtnText,
+                        {
+                          color:
+                            isDarkMode
+                              ? '#F9FAFB'
+                              : '#1E293B',
+                        },
+                      ]}
+                    >
+                      {t(
+                        'continueWithGoogle'
+                      ) ||
+                        'Continue with Google'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Terms */}
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate(
+                    'TermsConditions' as any
+                  )
+                }
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.termsText,
+                    {
+                      color:
+                        isDarkMode
+                          ? '#9CA3AF'
+                          : '#94A3B8',
+                    },
+                  ]}
+                >
+                  {t(
+                    'termsPolicyAgreement'
+                  ) ||
+                    'By continuing you agree to our Terms & Privacy Policy.'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
-/* =========================================
+/* =========================================================
    STYLES
-========================================= */
+========================================================= */
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: '#EEF3F9',
+  },
+
+  bgCircle1: {
+    position: 'absolute',
+    top: -50,
+    left: -50,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+  },
+
+  bgCircle2: {
+    position: 'absolute',
+    bottom: -60,
+    right: -60,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+  },
+
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    zIndex: 100,
+  },
+
+  brandTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  brandTagText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  rightActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  langWrapper: {
+    position: 'relative',
+    zIndex: 1000,
+  },
+
+  langSelectorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  langSelectorText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  themeToggleBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+
+  backdropOverlay: {
+    position: 'absolute',
+    top: -500,
+    left: -500,
+    right: -500,
+    bottom: -1000,
+    width: 2000,
+    height: 2000,
+    zIndex: 999,
+  },
+
+  dropdownCard: {
+    position: 'absolute',
+    top: 42,
+    right: 0,
+    width: 170,
+    borderRadius: 16,
+    paddingVertical: 4,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 10,
+    zIndex: 1000,
+  },
+
+  dropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+
+  dropdownRowText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  keyboardView: {
+    flex: 1,
   },
 
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-
-    paddingHorizontal: 20,
-    paddingVertical: 25,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
   },
 
-  /* =========================================
-     CARD
-  ========================================= */
+  centerCardContainer: {
+    width: '100%',
+    maxWidth: 410,
+    alignItems: 'center',
+  },
 
   card: {
     width: '100%',
-    maxWidth: 680,
-
-    backgroundColor: Colors.white,
-
     borderRadius: 28,
-
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
-
-    paddingHorizontal: 46,
-    paddingVertical: 42,
-
-    alignItems: 'center',
-  },
-
-  /* =========================================
-     APP ICON
-  ========================================= */
-
-  logoContainer: {
-    width: 92,
-    height: 92,
-
-    borderRadius: 25,
-
-    backgroundColor: '#D9FBE7',
-
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    marginBottom: 26,
-  },
-
-  appIcon: {
-    width: 68,
-    height: 68,
-  },
-
-  /* =========================================
-     TITLE
-  ========================================= */
-
-  title: {
-    ...Typography.h2,
-
-    color: Colors.text.primary,
-
-    fontWeight: '800',
-
-    textAlign: 'center',
-
-    marginBottom: 7,
-  },
-
-  subtitle: {
-    ...Typography.body,
-
-    color: Colors.text.secondary,
-
-    textAlign: 'center',
-
-    lineHeight: 23,
-
-    marginBottom: 38,
-
-    paddingHorizontal: 5,
-  },
-
-  /* =========================================
-     LABEL
-  ========================================= */
-
-  label: {
-    width: '100%',
-
-    fontSize: 17,
-
-    lineHeight: 23,
-
-    color: Colors.text.secondary,
-
-    marginBottom: 9,
-  },
-
-  /* =========================================
-     MOBILE INPUT
-  ========================================= */
-
-  mobileInputContainer: {
-    width: '100%',
-
-    height: 62,
-
+    paddingHorizontal: 26,
+    paddingTop: 28,
+    paddingBottom: 24,
     borderWidth: 1.5,
-
-    borderColor: Colors.gray[200],
-
-    borderRadius: 18,
-
-    backgroundColor: Colors.white,
-
-    flexDirection: 'row',
-
+    shadowColor: '#16A34A',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 6,
     alignItems: 'center',
+  },
 
-    paddingHorizontal: 18,
-
+  logoWrap: {
     marginBottom: 18,
   },
 
-  countryCode: {
-    fontSize: 18,
-
-    color: Colors.text.primary,
-
-    fontWeight: '600',
-  },
-
-  inputDivider: {
-    width: 1,
-
-    height: 27,
-
-    backgroundColor: Colors.gray[200],
-
-    marginHorizontal: 12,
-  },
-
-  mobileInput: {
-    flex: 1,
-
-    height: '100%',
-
-    fontSize: 18,
-
-    color: Colors.text.primary,
-
-    paddingHorizontal: 0,
-
-    paddingVertical: 0,
-
-    outlineStyle: 'none',
-  } as any,
-
-  /* =========================================
-     SEND OTP
-  ========================================= */
-
-  otpButton: {
-    width: '100%',
-
-    height: 62,
-
-    borderRadius: 18,
-
-    alignItems: 'center',
-
+  logoIconContainer: {
+    width: 68,
+    height: 68,
+    borderRadius: 22,
     justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
   },
 
-  otpButtonActive: {
-    backgroundColor: '#18A94B',
+  welcomeHeading: {
+    fontSize: 26,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 6,
+    letterSpacing: -0.4,
   },
 
-  otpButtonInactive: {
-    backgroundColor: '#9AD9AF',
+  loginSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 26,
+    paddingHorizontal: 8,
   },
 
-  otpButtonText: {
-    color: Colors.white,
+  formGroup: {
+    width: '100%',
+    marginBottom: 20,
+  },
 
-    fontSize: 20,
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
 
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    paddingHorizontal: 14,
+  },
+
+  countryCode: {
+    fontSize: 16,
+    fontWeight: '800',
+    paddingRight: 10,
+  },
+
+  verticalDivider: {
+    width: 1,
+    height: 24,
+    marginRight: 12,
+  },
+
+  textInput: {
+    flex: 1,
+    height: 52,
+    fontSize: 16,
     fontWeight: '700',
   },
 
-  /* =========================================
-     DIVIDER
-  ========================================= */
+  errorText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginTop: 6,
+  },
 
-  divider: {
+  sendOtpBtn: {
     width: '100%',
-
+    height: 52,
+    backgroundColor: '#187A3D',
+    borderRadius: 16,
     flexDirection: 'row',
-
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#187A3D',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 4,
+    marginBottom: 20,
+  },
 
-    marginVertical: 25,
+  sendOtpBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
 
-    gap: 14,
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
   },
 
   dividerLine: {
     flex: 1,
-
     height: 1,
-
-    backgroundColor: Colors.gray[200],
   },
 
   dividerText: {
-    fontSize: 15,
-
-    color: Colors.text.tertiary,
+    fontSize: 12,
+    fontWeight: '700',
+    paddingHorizontal: 12,
   },
 
-  /* =========================================
-     GOOGLE
-  ========================================= */
-
-  googleButton: {
+  googleBtn: {
     width: '100%',
-
-    height: 62,
-
-    borderRadius: 18,
-
-    borderWidth: 1,
-
-    borderColor: Colors.gray[200],
-
-    backgroundColor: Colors.white,
-
+    height: 50,
+    borderRadius: 16,
+    borderWidth: 1.5,
     flexDirection: 'row',
-
     alignItems: 'center',
-
     justifyContent: 'center',
-
-    gap: 13,
+    gap: 10,
+    marginBottom: 22,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
 
-  googleText: {
-    color: Colors.text.primary,
-
-    fontSize: 18,
-
-    fontWeight: '600',
+  googleIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  /* =========================================
-     TERMS
-  ========================================= */
+  googleBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
 
-  terms: {
-    fontSize: 13,
-
-    lineHeight: 20,
-
-    color: Colors.text.tertiary,
-
+  termsText: {
+    fontSize: 11,
+    fontWeight: '500',
     textAlign: 'center',
-
-    marginTop: 25,
-
+    lineHeight: 16,
     paddingHorizontal: 10,
   },
 });

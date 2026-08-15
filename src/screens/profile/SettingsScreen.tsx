@@ -1,73 +1,145 @@
 /**
- * Settings Screen
+ * Settings Screen — Fully localized & theme-aware settings page
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography } from '../../theme';
+import { Header } from '../../components/layout/Header';
 import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
 import { ProfileScreenProps } from '../../navigation/types';
 
 export const SettingsScreen: React.FC<ProfileScreenProps<'Settings'>> = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
-  const { selectedLanguage } = useLanguageContext();
+  const { selectedLanguage, t } = useLanguageContext();
+  const { isDarkMode, toggleTheme, colors: themeColors } = useThemeContext();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-      </View>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <Header
+        showBack
+        onBackPress={() => navigation.goBack()}
+        title={t('settings') || 'सेटिंग्ज (Settings)'}
+        showLanguageSelector
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
+        <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>
+          {t('preferences') || 'प्राधान्ये (PREFERENCES)'}
+        </Text>
 
-        <TouchableOpacity style={styles.settingItem}
-          onPress={() => navigation.navigate('LanguageSelection')}>
-          <Ionicons name="language-outline" size={20} color={Colors.primary[600]} />
-          <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>Language</Text>
-            <Text style={styles.settingValue}>{selectedLanguage.name}</Text>
+        {/* Language Selection Setting */}
+        <TouchableOpacity
+          style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+          onPress={() => navigation.navigate('LanguageSelection')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+            <Ionicons name="language-outline" size={20} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.gray[400]} />
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              {t('language') || 'भास (Language)'}
+            </Text>
+            <Text style={[styles.settingValue, { color: themeColors.textSecondary }]}>
+              {selectedLanguage.name}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={themeColors.textSecondary} />
         </TouchableOpacity>
 
-        <View style={styles.settingItem}>
-          <Ionicons name="notifications-outline" size={20} color={Colors.primary[600]} />
+        {/* Dark Mode Theme Toggle Setting */}
+        <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+          <View style={[styles.iconWrap, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+            <Ionicons
+              name={isDarkMode ? 'moon-outline' : 'sunny-outline'}
+              size={20}
+              color={isDarkMode ? '#F59E0B' : '#15803D'}
+            />
+          </View>
           <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>Push Notifications</Text>
-            <Text style={styles.settingValue}>Enabled</Text>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              {t('themeMode') || 'डार्क मोड (Dark Mode)'}
+            </Text>
+            <Text style={[styles.settingValue, { color: themeColors.textSecondary }]}>
+              {isDarkMode ? 'सुरू (On)' : 'बंद (Off)'}
+            </Text>
+          </View>
+          <Switch
+            value={isDarkMode}
+            onValueChange={toggleTheme}
+            trackColor={{ false: '#D1D5DB', true: '#10B981' }}
+            thumbColor={isDarkMode ? '#F9FAFB' : '#FFFFFF'}
+          />
+        </View>
+
+        {/* Push Notifications */}
+        <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+          <View style={[styles.iconWrap, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+            <Ionicons name="notifications-outline" size={20} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
+          </View>
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              {t('pushNotifications') || 'सूचना (Push Notifications)'}
+            </Text>
+            <Text style={[styles.settingValue, { color: themeColors.textSecondary }]}>
+              {t('enabled') || 'सुरू (Enabled)'}
+            </Text>
           </View>
         </View>
 
-        <Text style={[styles.sectionTitle, { marginTop: Spacing['2xl'] }]}>About</Text>
+        {/* About Section */}
+        <Text style={[styles.sectionTitle, { marginTop: Spacing['2xl'], color: themeColors.textSecondary }]}>
+          {t('about') || 'माहिती (ABOUT)'}
+        </Text>
 
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('About')}>
-          <Ionicons name="information-circle-outline" size={20} color={Colors.primary[600]} />
-          <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>About Farmer AI</Text>
+        <TouchableOpacity
+          style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+          onPress={() => navigation.navigate('About')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+            <Ionicons name="information-circle-outline" size={20} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.gray[400]} />
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              {t('aboutFarmerAi') || 'Farmer AI बद्दल माहिती'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={themeColors.textSecondary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('PrivacyPolicy')}>
-          <Ionicons name="shield-outline" size={20} color={Colors.primary[600]} />
-          <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>Privacy Policy</Text>
+        <TouchableOpacity
+          style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+          onPress={() => navigation.navigate('PrivacyPolicy')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+            <Ionicons name="shield-outline" size={20} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.gray[400]} />
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              {t('privacyPolicy') || 'गोपनीयता धोरण'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={themeColors.textSecondary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('TermsConditions')}>
-          <Ionicons name="document-text-outline" size={20} color={Colors.primary[600]} />
-          <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>Terms & Conditions</Text>
+        <TouchableOpacity
+          style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+          onPress={() => navigation.navigate('TermsConditions')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+            <Ionicons name="document-text-outline" size={20} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.gray[400]} />
+          <View style={styles.settingContent}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              {t('termsConditions') || 'अटी व शर्ती'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={themeColors.textSecondary} />
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -75,19 +147,30 @@ export const SettingsScreen: React.FC<ProfileScreenProps<'Settings'>> = ({ navig
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.white },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md, gap: Spacing.md,
-  },
-  headerTitle: { ...Typography.h5, color: Colors.text.primary },
+  container: { flex: 1 },
   content: { padding: Spacing.xl },
-  sectionTitle: { ...Typography.labelSm, color: Colors.text.tertiary, marginBottom: Spacing.md, textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   settingItem: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.lg,
-    gap: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.divider,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    gap: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   settingContent: { flex: 1 },
-  settingLabel: { ...Typography.label, color: Colors.text.primary },
-  settingValue: { ...Typography.bodySm, color: Colors.text.tertiary, marginTop: 2 },
+  settingLabel: { fontSize: 15, fontWeight: '600' },
+  settingValue: { fontSize: 13, marginTop: 2 },
 });

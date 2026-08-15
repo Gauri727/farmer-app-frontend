@@ -1,45 +1,79 @@
 /**
  * OTP Login Screen
- * 6-digit OTP verification
+ * Phone input → OTP verification
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 import {
   Colors,
   Spacing,
+  BorderRadius,
   Typography,
 } from '../../theme';
+
+import { Button } from '../../components/common/Button';
+import { Input } from '../../components/common/Input';
+
+import {
+  useSendOTP,
+  useVerifyOTP,
+} from '../../hooks/useAuth';
 
 import { useAuthContext } from '../../contexts/AuthContext';
 import { AuthScreenProps } from '../../navigation/types';
 
-export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
-  navigation,
-  route,
-}) => {
+// ─────────────────────────────────────────────
+// Validation
+// ─────────────────────────────────────────────
+
+const phoneSchema = z.object({
+  mobile: z
+    .string()
+    .min(10, 'Enter a valid 10-digit mobile number')
+    .max(10, 'Enter a valid 10-digit mobile number')
+    .regex(/^\d{10}$/, 'Only digits allowed'),
+});
+
+type PhoneFormData = z.infer<typeof phoneSchema>;
+
+// ─────────────────────────────────────────────
+// Screen
+// ─────────────────────────────────────────────
+
+export const OTPLoginScreen: React.FC<
+  AuthScreenProps<'OTPLogin'>
+> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
+
   const { login } = useAuthContext();
 
-  const mobileNumber =
-    route.params?.mobileNumber ||
-    route.params?.phone ||
-    '';
+  const sendOTPMutation = useSendOTP();
+  const verifyOTPMutation = useVerifyOTP();
 
-  const [otp, setOtp] = useState<string[]>([
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+
+  const [phoneNumber, setPhoneNumber] = useState(
+    route.params?.mobile || ''
+  );
+
+  const [otpDigits, setOtpDigits] = useState([
     '',
     '',
     '',
@@ -48,174 +82,141 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
     '',
   ]);
 
-  const [timer, setTimer] = useState(25);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const otpInputs = useRef<(TextInput | null)[]>([]);
 
-  const inputRefs = useRef<Array<TextInput | null>>([]);
+  // ─────────────────────────────────────────
+  // Phone form
+  // ─────────────────────────────────────────
 
-  /* -----------------------------------------
-     RESEND TIMER
-  ----------------------------------------- */
+  const phoneForm = useForm<PhoneFormData>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: {
+      mobile: route.params?.mobile || '',
+    },
+  });
 
-  useEffect(() => {
-    if (timer <= 0) {
-      return;
-    }
+  // ─────────────────────────────────────────
+  // Send OTP
+  // ─────────────────────────────────────────
 
-    const interval = setInterval(() => {
-      setTimer((previous) => previous - 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timer]);
-
-  /* -----------------------------------------
-     OTP CHANGE
-  ----------------------------------------- */
-
-  const handleOtpChange = (
-    value: string,
-    index: number
-  ) => {
-    const numericValue = value.replace(/[^0-9]/g, '');
-
-    const updatedOtp = [...otp];
-
-    // Handle pasted OTP
-    if (numericValue.length > 1) {
-      const digits = numericValue.slice(0, 6).split('');
-
-      digits.forEach((digit, i) => {
-        if (index + i < 6) {
-          updatedOtp[index + i] = digit;
-        }
+  const handleSendOTP = async (data: PhoneFormData) => {
+    try {
+      await sendOTPMutation.mutateAsync({
+        mobile: data.mobile,
       });
 
-      setOtp(updatedOtp);
+      setPhoneNumber(data.mobile);
+      setOtpDigits(['', '', '', '', '', '']);
+      setStep('otp');
 
-      const nextIndex = Math.min(
-        index + digits.length,
-        5
-      );
-
-      inputRefs.current[nextIndex]?.focus();
-
-      return;
-    }
-
-    updatedOtp[index] = numericValue;
-    setOtp(updatedOtp);
-
-    // Move to next box automatically
-    if (numericValue && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+      setTimeout(() => {
+        otpInputs.current[0]?.focus();
+      }, 100);
+    } catch {
+      // Existing mutation handles the error.
     }
   };
 
-  /* -----------------------------------------
-     BACKSPACE
-  ----------------------------------------- */
+  // ─────────────────────────────────────────
+  // OTP change
+  // ─────────────────────────────────────────
 
-  const handleKeyPress = (
-    event: any,
+  const handleOTPChange = (
+    text: string,
+    index: number
+  ) => {
+    // Allow only numbers
+    const digit = text.replace(/\D/g, '').slice(0, 1);
+
+    const newDigits = [...otpDigits];
+
+    newDigits[index] = digit;
+
+    setOtpDigits(newDigits);
+
+    // Move to next box
+    if (digit && index < 5) {
+      otpInputs.current[index + 1]?.focus();
+    }
+  };
+
+  // ─────────────────────────────────────────
+  // Backspace
+  // ─────────────────────────────────────────
+
+  const handleOTPKeyPress = (
+    key: string,
     index: number
   ) => {
     if (
-      event.nativeEvent.key === 'Backspace' &&
-      !otp[index] &&
+      key === 'Backspace' &&
+      !otpDigits[index] &&
       index > 0
     ) {
-      inputRefs.current[index - 1]?.focus();
+      otpInputs.current[index - 1]?.focus();
     }
   };
 
-  /* -----------------------------------------
-     RESEND OTP
-  ----------------------------------------- */
-
-  const handleResendOTP = () => {
-    if (timer > 0) {
-      return;
-    }
-
-    // Reset OTP
-    setOtp(['', '', '', '', '', '']);
-
-    // Restart timer
-    setTimer(25);
-
-    // Focus first box
-    setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 100);
-
-    /*
-     * Connect your resend OTP API here.
-     */
-  };
-
-  /* -----------------------------------------
-     VERIFY OTP
-  ----------------------------------------- */
+  // ─────────────────────────────────────────
+  // Verify OTP
+  // ─────────────────────────────────────────
 
   const handleVerifyOTP = async () => {
-    const enteredOTP = otp.join('');
+    const otp = otpDigits.join('');
 
-    if (enteredOTP.length !== 6) {
+    if (otp.length !== 6) {
       return;
     }
 
     try {
-      setIsVerifying(true);
+      const result = await verifyOTPMutation.mutateAsync({
+        mobile: phoneNumber,
+        otp,
+      });
 
-      /*
-       * IMPORTANT:
-       * Connect your existing OTP verification API here.
-       *
-       * Example:
-       *
-       * const result = await otpLoginMutation.mutateAsync({
-       *   mobile: mobileNumber,
-       *   otp: enteredOTP,
-       * });
-       *
-       * if (result.success) {
-       *   await login(
-       *     result.data.user,
-       *     result.data.access_token,
-       *     result.data.refresh_token
-       *   );
-       * }
-       */
+      if (result.success) {
+        await login(
+          result.data.user,
+          result.data.access_token,
+          result.data.refresh_token
+        );
+      }
+    } catch {
+      setOtpDigits([
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]);
 
-      console.log(
-        'OTP:',
-        enteredOTP,
-        'Mobile:',
-        mobileNumber
-      );
-
-    } catch (error) {
-      console.log(
-        'OTP verification failed:',
-        error
-      );
-    } finally {
-      setIsVerifying(false);
+      setTimeout(() => {
+        otpInputs.current[0]?.focus();
+      }, 100);
     }
   };
 
-  /* -----------------------------------------
-     BACK TO LOGIN
-  ----------------------------------------- */
+  // ─────────────────────────────────────────
+  // Change mobile number
+  // ─────────────────────────────────────────
 
   const handleChangeNumber = () => {
-    navigation.navigate('Login');
+    setOtpDigits([
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]);
+
+    setStep('phone');
   };
 
-  const isOtpComplete = otp.every(
-    (digit) => digit.length === 1
-  );
+  // ─────────────────────────────────────────
+  // UI
+  // ─────────────────────────────────────────
 
   return (
     <KeyboardAvoidingView
@@ -223,316 +224,312 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
       behavior={
         Platform.OS === 'ios'
           ? 'padding'
-          : undefined
+          : 'height'
       }
     >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + 30,
-            paddingBottom: insets.bottom + 30,
+            paddingTop:
+              insets.top + Spacing.md,
           },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.outerCard}>
+        {/* Back */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() =>
+            step === 'otp'
+              ? setStep('phone')
+              : navigation.goBack()
+          }
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={Colors.text.primary}
+          />
+        </TouchableOpacity>
 
-          {/* INNER CARD */}
-
-          <View style={styles.card}>
-
-            {/* BACK BUTTON */}
-
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() =>
-                navigation.navigate('Login')
-              }
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="arrow-back"
-                size={25}
-                color={Colors.text.primary}
-              />
-            </TouchableOpacity>
-
-            {/* APP ICON */}
-
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('../../../assets/icon.png')}
-                style={styles.appIcon}
-                resizeMode="contain"
-              />
-            </View>
-
-            {/* TITLE */}
-
-            <Text style={styles.title}>
-              Verify your number
-            </Text>
-
-            <Text style={styles.subtitle}>
-              Enter the 6-digit OTP sent to your
-              {'\n'}
-              mobile number.
-            </Text>
-
-            {/* OTP BOXES */}
-
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => {
-                    inputRefs.current[index] = ref;
-                  }}
-                  style={[
-                    styles.otpBox,
-                    digit
-                      ? styles.otpBoxFilled
-                      : null,
-                  ]}
-                  value={digit}
-                  onChangeText={(value) =>
-                    handleOtpChange(
-                      value,
-                      index
-                    )
-                  }
-                  onKeyPress={(event) =>
-                    handleKeyPress(
-                      event,
-                      index
-                    )
-                  }
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  textAlign="center"
-                  selectTextOnFocus
-                  autoFocus={index === 0}
+        <View style={styles.content}>
+          {step === 'phone' ? (
+            <>
+              {/* Phone icon */}
+              <View style={styles.iconHeader}>
+                <Ionicons
+                  name="phone-portrait-outline"
+                  size={32}
+                  color={Colors.primary[500]}
                 />
-              ))}
-            </View>
+              </View>
 
-            {/* RESEND */}
+              <Text style={styles.title}>
+                Enter Mobile Number
+              </Text>
 
-            <TouchableOpacity
-              onPress={handleResendOTP}
-              disabled={timer > 0}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.resendText,
-                  timer === 0
-                    ? styles.resendActive
-                    : null,
-                ]}
+              <Text style={styles.subtitle}>
+                We'll send you a 6-digit verification
+                code
+              </Text>
+
+              {/* Mobile number */}
+              <Controller
+                control={phoneForm.control}
+                name="mobile"
+                render={({
+                  field: {
+                    onChange,
+                    value,
+                  },
+                  fieldState: {
+                    error,
+                  },
+                }) => (
+                  <Input
+                    label="Mobile Number"
+                    value={value}
+                    onChangeText={(text) =>
+                      onChange(
+                        text.replace(/\D/g, '')
+                      )
+                    }
+                    error={error?.message}
+                    placeholder="Enter 10-digit number"
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    leftIcon="call-outline"
+                    required
+                  />
+                )}
+              />
+
+              {/* Send OTP */}
+              <Button
+                title="Send OTP"
+                onPress={phoneForm.handleSubmit(
+                  handleSendOTP
+                )}
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={
+                  sendOTPMutation.isPending
+                }
+                icon="arrow-forward"
+                iconPosition="right"
+              />
+            </>
+          ) : (
+            <>
+              {/* OTP icon */}
+              <View style={styles.iconHeader}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={32}
+                  color={Colors.primary[500]}
+                />
+              </View>
+
+              <Text style={styles.title}>
+                Verify OTP
+              </Text>
+
+              <Text style={styles.subtitle}>
+                Enter the 6-digit code sent to{'\n'}
+                +91 {phoneNumber}
+              </Text>
+
+              {/* 6 OTP boxes */}
+              <View style={styles.otpContainer}>
+                {otpDigits.map(
+                  (digit, index) => (
+                    <TextInput
+                      key={index}
+                      ref={(ref) => {
+                        otpInputs.current[index] =
+                          ref;
+                      }}
+                      style={[
+                        styles.otpInput,
+                        digit &&
+                          styles.otpInputFilled,
+                      ]}
+                      value={digit}
+                      onChangeText={(text) =>
+                        handleOTPChange(
+                          text,
+                          index
+                        )
+                      }
+                      onKeyPress={({ nativeEvent }) =>
+                        handleOTPKeyPress(
+                          nativeEvent.key,
+                          index
+                        )
+                      }
+                      keyboardType="number-pad"
+                      maxLength={1}
+                      textAlign="center"
+                      selectTextOnFocus
+                      accessibilityLabel={`OTP digit ${
+                        index + 1
+                      }`}
+                    />
+                  )
+                )}
+              </View>
+
+              {/* Verify */}
+              <Button
+                title="Verify OTP"
+                onPress={handleVerifyOTP}
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={
+                  verifyOTPMutation.isPending
+                }
+                disabled={otpDigits.some(
+                  (digit) => !digit
+                )}
+              />
+
+              {/* Resend */}
+              <TouchableOpacity
+                style={styles.resendButton}
+                onPress={() =>
+                  sendOTPMutation.mutate({
+                    mobile: phoneNumber,
+                  })
+                }
+                disabled={
+                  sendOTPMutation.isPending
+                }
               >
-                {timer > 0
-                  ? `Resend OTP in ${timer}s`
-                  : 'Resend OTP'}
-              </Text>
-            </TouchableOpacity>
+                <Text style={styles.resendText}>
+                  Didn't receive code? Resend OTP
+                </Text>
+              </TouchableOpacity>
 
-            {/* VERIFY BUTTON */}
-
-            <TouchableOpacity
-              style={[
-                styles.verifyButton,
-                !isOtpComplete ||
-                isVerifying
-                  ? styles.verifyDisabled
-                  : null,
-              ]}
-              onPress={handleVerifyOTP}
-              disabled={
-                !isOtpComplete ||
-                isVerifying
-              }
-              activeOpacity={0.8}
-            >
-              <Text style={styles.verifyText}>
-                {isVerifying
-                  ? 'Verifying...'
-                  : 'Verify OTP'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* CHANGE NUMBER */}
-
-            <TouchableOpacity
-              onPress={handleChangeNumber}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.changeNumber}>
-                Change mobile number
-              </Text>
-            </TouchableOpacity>
-
-          </View>
+              {/* Change number */}
+              <TouchableOpacity
+                style={styles.changePhoneBtn}
+                onPress={handleChangeNumber}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={styles.changePhoneText}
+                >
+                  Change mobile number
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-/* =========================================
-   STYLES
-========================================= */
+// ─────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EEF3F9',
+    backgroundColor: Colors.white,
   },
 
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingBottom: Spacing['3xl'],
   },
-
-  outerCard: {
-    width: '100%',
-    maxWidth: 620,
-    backgroundColor: Colors.white,
-    borderRadius: 28,
-    padding: 20,
-  },
-
-  card: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
-    borderRadius: 24,
-    paddingHorizontal: 36,
-    paddingVertical: 36,
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-  },
-
-  /* BACK */
 
   backButton: {
-    alignSelf: 'flex-start',
-    width: 42,
-    height: 42,
-    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+
+  content: {
+    flex: 1,
+    paddingHorizontal: Spacing['2xl'],
+    paddingTop: Spacing.xl,
+  },
+
+  iconHeader: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: Colors.primary[50],
     justifyContent: 'center',
-    marginBottom: 12,
-  },
-
-  /* APP ICON */
-
-  logoContainer: {
-    width: 90,
-    height: 90,
-    borderRadius: 25,
-    backgroundColor: '#D9FBE7',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 28,
+    marginBottom: Spacing.xl,
   },
-
-  appIcon: {
-    width: 66,
-    height: 66,
-  },
-
-  /* TITLE */
 
   title: {
-    ...Typography.h2,
+    ...Typography.h3,
     color: Colors.text.primary,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
   },
 
   subtitle: {
     ...Typography.body,
     color: Colors.text.secondary,
-    textAlign: 'center',
+    marginBottom: Spacing['3xl'],
     lineHeight: 22,
   },
 
-  /* OTP */
-
   otpContainer: {
-    width: '100%',
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 30,
-    marginBottom: 28,
+    justifyContent: 'space-between',
+    marginBottom: Spacing['3xl'],
+    gap: Spacing.sm,
   },
 
-  otpBox: {
-    width: 48,
-    height: 58,
-    borderWidth: 1,
+  otpInput: {
+    flex: 1,
+    maxWidth: 52,
+    height: 56,
+    borderWidth: 1.5,
     borderColor: Colors.gray[200],
-    borderRadius: 14,
-    backgroundColor: Colors.white,
-    fontSize: 24,
+    borderRadius: BorderRadius.md,
+    fontSize: 22,
     fontWeight: '600',
     color: Colors.text.primary,
-    textAlign: 'center',
+    backgroundColor: Colors.gray[50],
   },
 
-  otpBoxFilled: {
-    borderColor: '#18A94B',
-    borderWidth: 2,
+  otpInputFilled: {
+    borderColor: Colors.primary[500],
+    backgroundColor: Colors.primary[50],
   },
 
-  /* RESEND */
+  resendButton: {
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+    padding: Spacing.md,
+  },
 
   resendText: {
-    color: Colors.text.secondary,
-    fontSize: 14,
-    marginBottom: 28,
+    ...Typography.bodySm,
+    color: Colors.primary[600],
+    fontWeight: '500',
   },
 
-  resendActive: {
-    color: '#18A94B',
-    fontWeight: '600',
-  },
-
-  /* VERIFY */
-
-  verifyButton: {
-    width: '100%',
-    height: 60,
-    borderRadius: 18,
-    backgroundColor: '#18A94B',
+  changePhoneBtn: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 26,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
   },
 
-  verifyDisabled: {
-    opacity: 0.5,
-  },
-
-  verifyText: {
-    color: Colors.white,
-    fontSize: 19,
-    fontWeight: '700',
-  },
-
-  /* CHANGE NUMBER */
-
-  changeNumber: {
-    color: '#18A94B',
-    fontSize: 15,
+  changePhoneText: {
+    ...Typography.bodySm,
+    color: Colors.primary[600],
     fontWeight: '600',
-    marginTop: 4,
   },
 });

@@ -1,54 +1,130 @@
 /**
- * Language Selection Screen — 3 supported languages: English, Hindi, Marathi
+ * Language Selection Screen
+ * Supported languages: Marathi, English, Hindi, Ahirani, Konkani
+ * Theme-aware & global i18n context integrated.
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../../theme';
+
+import {
+  Colors,
+  Spacing,
+  BorderRadius,
+  Typography,
+  Shadows,
+} from '../../theme';
+
+import { Header } from '../../components/layout/Header';
 import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
 import { useLanguages } from '../../hooks/useLanguages';
 import { useUpdateProfile } from '../../hooks/useProfile';
 import { ProfileScreenProps } from '../../navigation/types';
 import { Language } from '../../types/api.types';
 
-// Only these 3 languages are supported
-const SUPPORTED_CODES = ['en', 'hi', 'mr'];
+/* =========================================
+   SUPPORTED LANGUAGES
+========================================= */
+
+const SUPPORTED_CODES = ['mr', 'en', 'hi', 'ahr', 'kok'];
 
 const DEFAULT_LANGUAGES: Language[] = [
+  { code: 'mr', name: 'मराठी' },
   { code: 'en', name: 'English' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'mr', name: 'Marathi' },
+  { code: 'hi', name: 'हिंदी' },
+  { code: 'ahr', name: 'अहिराणी' },
+  { code: 'kok', name: 'कोंकणी' },
 ];
 
-export const LanguageSelectionScreen: React.FC<ProfileScreenProps<'LanguageSelection'>> = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
-  const { selectedLanguage, setLanguage } = useLanguageContext();
+/* =========================================
+   SCREEN
+========================================= */
+
+export const LanguageSelectionScreen: React.FC<
+  ProfileScreenProps<'LanguageSelection'>
+> = ({ navigation }) => {
+  const { selectedLanguage, setLanguage, t } = useLanguageContext();
+  const { isDarkMode, colors: themeColors } = useThemeContext();
+
   const languagesQuery = useLanguages();
   const updateProfile = useUpdateProfile();
 
-  // Always restrict to the 3 supported languages, even if API returns more
-  const allLangs = (languagesQuery.data as Language[]) || DEFAULT_LANGUAGES;
-  const languages = allLangs.filter(l => SUPPORTED_CODES.includes(l.code));
+  /* =========================================
+     LANGUAGE DATA
+
+     Keep the five supported languages even if
+     the API returns a partial language list.
+  ========================================= */
+
+  const fetchedLangs = languagesQuery.data as Language[] | undefined;
+
+  const languages =
+    fetchedLangs && fetchedLangs.length > 0
+      ? DEFAULT_LANGUAGES.map(
+          (defaultLanguage) =>
+            fetchedLangs.find(
+              (fetchedLanguage) =>
+                fetchedLanguage.code === defaultLanguage.code
+            ) || defaultLanguage
+        )
+      : DEFAULT_LANGUAGES;
+
+  /* =========================================
+     LANGUAGE SELECTION
+  ========================================= */
 
   const handleSelect = async (lang: Language) => {
-    await setLanguage(lang);
-    updateProfile.mutate({ preferred_language: lang.code });
-    navigation.goBack();
+    try {
+      await setLanguage(lang);
+
+      updateProfile.mutate({
+        preferred_language: lang.code,
+      });
+
+      navigation.goBack();
+    } catch (error) {
+      console.error('Failed to change language:', error);
+    }
   };
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Language</Text>
-      </View>
+  /* =========================================
+     UI
+  ========================================= */
 
-      <Text style={styles.subtitle}>
-        Choose your preferred language for the AI assistant
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: themeColors.background,
+        },
+      ]}
+    >
+      <Header
+        showBack
+        onBackPress={() => navigation.goBack()}
+        title={t('selectLanguageTitle') || 'भाषा निवडा (Select Language)'}
+        showLanguageSelector={false}
+      />
+
+      <Text
+        style={[
+          styles.subtitle,
+          {
+            color: themeColors.textSecondary,
+          },
+        ]}
+      >
+        {t('selectLanguageSub') ||
+          'एआय सहाय्यकासाठी तुमची प्राधान्य दिलेली भाषा निवडा'}
       </Text>
 
       <FlatList
@@ -56,18 +132,53 @@ export const LanguageSelectionScreen: React.FC<ProfileScreenProps<'LanguageSelec
         numColumns={1}
         contentContainerStyle={styles.grid}
         keyExtractor={(item) => item.code}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => {
-          const isSelected = selectedLanguage.code === item.code;
+          const isSelected =
+            selectedLanguage?.code === item.code ||
+            selectedLanguage?.name === item.name;
+
           return (
             <TouchableOpacity
-              style={[styles.langCard, isSelected && styles.langCardSelected, Shadows.sm]}
+              style={[
+                styles.langCard,
+                {
+                  backgroundColor: isSelected
+                    ? isDarkMode
+                      ? '#064E3B'
+                      : '#E8F5E9'
+                    : themeColors.card,
+
+                  borderColor: isSelected
+                    ? '#16A34A'
+                    : themeColors.border,
+                },
+                Shadows.sm,
+              ]}
               onPress={() => handleSelect(item)}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.langName, isSelected && styles.langNameSelected]}>
+              <Text
+                style={[
+                  styles.langName,
+                  {
+                    color: themeColors.textPrimary,
+                  },
+                  isSelected && {
+                    color: '#16A34A',
+                    fontWeight: '800',
+                  },
+                ]}
+              >
                 {item.name}
               </Text>
+
               {isSelected && (
-                <Ionicons name="checkmark-circle" size={20} color={Colors.primary[500]} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={22}
+                  color="#16A34A"
+                />
               )}
             </TouchableOpacity>
           );
@@ -77,24 +188,45 @@ export const LanguageSelectionScreen: React.FC<ProfileScreenProps<'LanguageSelec
   );
 };
 
+/* =========================================
+   STYLES
+========================================= */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.white },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md, gap: Spacing.md,
+  container: {
+    flex: 1,
   },
-  headerTitle: { ...Typography.h5, color: Colors.text.primary },
+
   subtitle: {
-    ...Typography.body, color: Colors.text.secondary, paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.xl,
+    ...Typography.body,
+    paddingHorizontal: Spacing.xl,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
-  grid: { padding: Spacing.lg },
+
+  grid: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl,
+  },
+
   langCard: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.white, borderRadius: BorderRadius.lg, padding: Spacing.lg,
-    borderWidth: 1.5, borderColor: Colors.gray[200],
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+
+    borderWidth: 1.5,
+
+    minHeight: 56,
+
+    marginBottom: Spacing.md,
   },
-  langCardSelected: { borderColor: Colors.primary[500], backgroundColor: Colors.primary[50] },
-  langName: { ...Typography.label, color: Colors.text.primary },
-  langNameSelected: { color: Colors.primary[700] },
+
+  langName: {
+    ...Typography.label,
+    fontSize: 16,
+  },
 });

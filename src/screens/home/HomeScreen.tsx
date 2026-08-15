@@ -1,328 +1,856 @@
 /**
- * Home Screen
- * Greeting, Voice Card, Feature Badges, Quick Actions, Featured Schemes, Recent Updates
+ * Home Screen — Farmer AI
+ * Merged version of existing Home + SamProject changes.
+ *
+ * Includes:
+ * - Theme support
+ * - Language support
+ * - Voice assistant hero
+ * - Quick Ask
+ * - More Topics
+ * - Featured Schemes
+ * - Recent Updates
+ * - API + fallback data
+ * - Pull to refresh
  */
 
-import React, { useMemo } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  FlatList,
   TouchableOpacity,
   RefreshControl,
-  Image,
-  useWindowDimensions,
+  Animated,
+  Easing,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
-import {
-  Colors,
-  Spacing,
-  BorderRadius,
-} from '../../theme';
+import { Ionicons } from '@expo/vector-icons';
+
+import { Colors, Spacing, Layout } from '../../theme';
 
 import { Header } from '../../components/layout/Header';
 import { SchemeCard } from '../../components/cards/SchemeCard';
 import { QuickActionCard } from '../../components/cards/QuickActionCard';
-import { NotificationCard } from '../../components/cards/NotificationCard';
-import { SkeletonSchemeCard } from '../../components/common/SkeletonLoader';
 
 import { useSchemes } from '../../hooks/useSchemes';
 import { useNotifications } from '../../hooks/useNotifications';
-import { useAuthContext } from '../../contexts/AuthContext';
+
 import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
+
+import {
+  getLocalizedScheme,
+} from '../../utils/schemeLocalization';
+
+import {
+  getLocalizedNotification,
+  getLocalizedTimeAgo,
+} from '../../utils/notificationLocalization';
 
 import { HomeScreenProps } from '../../navigation/types';
+
 import {
   Scheme,
-  Notification as AppNotification,
+  Notification,
 } from '../../types/api.types';
 
 
-const TOPICS = [
+/* ============================================================
+   DESIGN TOKENS
+============================================================ */
+
+const PRIMARY_GREEN = '#187A3D';
+const DARK_GREEN = '#126B35';
+
+const LIGHT_GREEN_BG = '#F3FAF5';
+const PALE_GREEN_TINT = '#EAF6EE';
+
+const BORDER_GREEN = '#DDE5E0';
+
+
+/* ============================================================
+   TOPICS
+============================================================ */
+
+const TOPICS_DATA = [
   {
-    label: 'Horticulture',
+    id: 'horticulture',
+    title: 'Horticulture',
+    subtitle: 'Fruit Orchards & Plantation',
     icon: 'leaf-outline' as const,
+    category: 'Horticulture',
   },
   {
-    label: 'Irrigation',
+    id: 'irrigation',
+    title: 'Irrigation',
+    subtitle: 'Drip & Sprinkler Subsidies',
     icon: 'water-outline' as const,
+    category: 'Irrigation',
   },
   {
-    label: 'Mechanization',
-    icon: 'construct-outline' as const,
+    id: 'mechanization',
+    title: 'Mechanization',
+    subtitle: 'Tractor & Machinery',
+    icon: 'hardware-chip-outline' as const,
+    category: 'Mechanization',
   },
   {
-    label: 'Tribal Development',
-    icon: 'people-outline' as const,
-  },
-  {
-    label: 'Crop Development',
-    icon: 'flower-outline' as const,
+    id: 'welfare',
+    title: 'Farmer Welfare',
+    subtitle: 'Income Support & Loans',
+    icon: 'cash-outline' as const,
+    category: 'Farmer Welfare',
   },
 ];
 
 
-const ASK_ITEMS = [
+/* ============================================================
+   QUICK ASK
+============================================================ */
+
+const QUICK_ASK_ITEMS = [
   {
-    title: 'Which schemes am I eligible for?',
-    icon: 'mic-outline' as const,
+    id: 'q1',
+    text: 'How to apply for Drip Irrigation?',
   },
   {
-    title: 'PM Kisan Status Check',
-    icon: 'mic-outline' as const,
+    id: 'q2',
+    text: 'Tractor subsidy eligibility rules?',
   },
   {
-    title: 'How to apply for crop insurance?',
-    icon: 'mic-outline' as const,
+    id: 'q3',
+    text: 'PM-Kisan installment status?',
+  },
+  {
+    id: 'q4',
+    text: 'Fruit orchard plantation grant?',
   },
 ];
 
 
-export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
-  navigation,
-}) => {
-  const { user } = useAuthContext();
-  const { selectedLanguage } = useLanguageContext();
+/* ============================================================
+   HOME SCREEN
+============================================================ */
 
-  const { width } = useWindowDimensions();
+export const HomeScreen: React.FC<
+  HomeScreenProps<'Home'>
+> = ({ navigation }) => {
 
-  /*
-   * Responsive layout
-   *
-   * Mobile:
-   * image stays on the right and never crosses
-   * through the middle of the content.
-   *
-   * Desktop:
-   * slightly wider image area.
-   */
-  const isMobile = width < 600;
+  /* ----------------------------------------------------------
+     CONTEXT
+  ---------------------------------------------------------- */
 
-  const schemesQuery = useSchemes({ limit: 5 });
-  const notificationsQuery = useNotifications();
+  const {
+    t,
+    selectedLanguage,
+  } = useLanguageContext();
+
+  const {
+    isDarkMode,
+    colors: themeColors,
+  } = useThemeContext();
 
 
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
+  /* ----------------------------------------------------------
+     API
+  ---------------------------------------------------------- */
 
-    if (hour < 12) {
-      return 'Good Morning';
-    }
+  const schemesQuery = useSchemes({
+    limit: 6,
+  });
 
-    if (hour < 17) {
-      return 'Good Afternoon';
-    }
+  const notificationsQuery =
+    useNotifications();
 
-    return 'Good Evening';
+
+  /* ----------------------------------------------------------
+     VOICE ANIMATION
+  ---------------------------------------------------------- */
+
+  const [isListening, setIsListening] =
+    useState(false);
+
+  const pulseAnim =
+    useRef(new Animated.Value(1)).current;
+
+  const pulseOpacity =
+    useRef(new Animated.Value(0.6)).current;
+
+
+  useEffect(() => {
+
+    const pulse = Animated.loop(
+
+      Animated.parallel([
+
+        Animated.sequence([
+
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 1300,
+            useNativeDriver: true,
+            easing: Easing.out(
+              Easing.ease
+            ),
+          }),
+
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1300,
+            useNativeDriver: true,
+            easing: Easing.in(
+              Easing.ease
+            ),
+          }),
+
+        ]),
+
+        Animated.sequence([
+
+          Animated.timing(
+            pulseOpacity,
+            {
+              toValue: 0.25,
+              duration: 1300,
+              useNativeDriver: true,
+            }
+          ),
+
+          Animated.timing(
+            pulseOpacity,
+            {
+              toValue: 0.6,
+              duration: 1300,
+              useNativeDriver: true,
+            }
+          ),
+
+        ]),
+
+      ])
+    );
+
+    pulse.start();
+
+    return () => {
+      pulse.stop();
+    };
+
   }, []);
 
 
-  const schemes =
-    schemesQuery.data?.pages?.[0]?.data?.items || [];
+  /* ----------------------------------------------------------
+     MICROPHONE
+  ---------------------------------------------------------- */
 
-  const notifications =
-    (notificationsQuery.data as any)?.data?.slice?.(0, 3) || [];
+  const handleMicPress = () => {
 
-  const isRefreshing = schemesQuery.isRefetching;
+    setIsListening(true);
+
+    setTimeout(() => {
+
+      setIsListening(false);
+
+      navigation.navigate(
+        'VoiceAssistant'
+      );
+
+    }, 600);
+  };
+
+
+  /* ----------------------------------------------------------
+     REFRESH
+  ---------------------------------------------------------- */
+
+  const isRefreshing =
+    schemesQuery.isRefetching ||
+    notificationsQuery.isRefetching;
 
 
   const handleRefresh = () => {
+
     schemesQuery.refetch();
+
     notificationsQuery.refetch();
   };
 
 
-  const handleSchemePress = (scheme: Scheme) => {
-    navigation.navigate('SchemeDetails', {
-      schemeId: scheme.id,
-    });
-  };
+  /* ----------------------------------------------------------
+     SCHEME DATA
+  ---------------------------------------------------------- */
+
+  const rawHomeSchemes: Scheme[] =
+    schemesQuery.data
+      ?.pages?.[0]
+      ?.data
+      ?.items || [
+
+      {
+        id:
+          'pmksy-per-drop-more-crop-css',
+
+        name:
+          'प्रधानमंत्री कृषी सिंचन योजना - प्रती थेंब अधिक पिक',
+
+        title:
+          'प्रधानमंत्री कृषी सिंचन योजना - प्रती थेंब अधिक पिक',
+
+        englishName:
+          'PMKSY - Per Drop More Crop (Micro-Irrigation Component)',
+
+        description:
+          'ठिबक व तुषार सिंचनासाठी लहान व अल्पभूधारक शेतकऱ्यांना ५५% तर इतर शेतकऱ्यांना ४५% अनुदान.',
+
+        category:
+          'Irrigation',
+
+        type:
+          'Central',
+
+        amount:
+          '५५% ते ४५% अनुदान',
+
+        benefits:
+          'ठिबक सिंचन ५५%/४५% अनुदान व तुषार सिंचन संच सहाय्य.',
+      },
+
+      {
+        id:
+          'bhausaheb-fundkar-falbag-lagvad-yojana',
+
+        name:
+          'भाऊसाहेब फुंडकर फळबाग लागवड योजना',
+
+        title:
+          'भाऊसाहेब फुंडकर फळबाग लागवड योजना',
+
+        englishName:
+          'Bhausaheb Fundkar Fruit Orchard Plantation Scheme',
+
+        description:
+          'फळबाग लागवडीसाठी पहिल्या वर्षी ५०%, दुसऱ्या वर्षी ३०% आणि तिसऱ्या वर्षी २०% अनुदान.',
+
+        category:
+          'Horticulture',
+
+        type:
+          'State',
+
+        amount:
+          '५०% ते १००% अनुदान',
+
+        benefits:
+          'ठिबक सिंचनासाठी १००% अनुदान व ३ वर्षात टप्प्याटप्प्याने फळबाग लागवड अनुदान.',
+      },
+
+      {
+        id:
+          'sub-mission-on-agricultural-mechanization-css',
+
+        name:
+          'कृषी यांत्रिकीकरण उप-अभियान (SMAM)',
+
+        title:
+          'कृषी यांत्रिकीकरण उप-अभियान (SMAM)',
+
+        englishName:
+          'Sub-Mission on Agricultural Mechanization (SMAM)',
+
+        description:
+          'ट्रॅक्टर, पॉवर टिलर, अवजारे खरेदीसाठी ५०% अनुदान व कस्टम हायरिंग केंद्रांसाठी ८०% सहाय्य.',
+
+        category:
+          'Mechanization',
+
+        type:
+          'Central',
+
+        amount:
+          '५०% ते ८०% अनुदान',
+
+        benefits:
+          'ट्रॅक्टर, पॉवर टिलर, अवजारे खरेदीवर ५०% अनुदान व अवजारे बँक केंद्रांसाठी ८०% सहाय्य.',
+      },
+
+      {
+        id:
+          'dr-babasaheb-ambedkar-krushi-swavalamban-yojana',
+
+        name:
+          'डॉ. बाबासाहेब आंबेडकर कृषी स्वावलंबन योजना',
+
+        title:
+          'डॉ. बाबासाहेब आंबेडकर कृषी स्वावलंबन योजना',
+
+        englishName:
+          'Dr. Babasaheb Ambedkar Krushi Swavalamban Yojana',
+
+        description:
+          'अनुसूचित जाती (SC) व नवबौद्ध शेतकऱ्यांसाठी विहीर, विहीर दुरुस्ती, पंप व सूक्ष्म सिंचन अनुदान.',
+
+        category:
+          'Farmer Welfare',
+
+        type:
+          'State',
+
+        amount:
+          'रु. २.५० लाख पर्यंत अनुदान',
+
+        benefits:
+          'नवीन विहीर रु. २.५ लाख, जुनी विहीर दुरुस्ती रु. ५० हजार, पंप संच रु. २५ हजार.',
+      },
+
+    ];
 
 
-  const handleNotificationPress = (
-    notif: AppNotification
-  ) => {
-    navigation.navigate('Notifications');
-  };
+  const fetchedSchemes =
+    rawHomeSchemes.map(
+      (scheme) =>
+        getLocalizedScheme(
+          scheme,
+          selectedLanguage.code
+        )
+    );
 
+
+  /* ----------------------------------------------------------
+     NOTIFICATIONS
+  ---------------------------------------------------------- */
+
+  const rawUpdates: Notification[] =
+    notificationsQuery.data?.data || [
+
+      {
+        id: 'n1',
+
+        title:
+          'Application window open for Drip Irrigation Scheme',
+
+        body:
+          'State Agriculture Department is accepting applications for micro-irrigation subsidies on MahaDBT.',
+
+        type:
+          'update',
+
+        category:
+          'Irrigation',
+
+        is_read:
+          false,
+
+        created_at:
+          new Date(
+            Date.now() -
+              2 *
+                24 *
+                60 *
+                60 *
+                1000
+          ).toISOString(),
+      },
+
+      {
+        id: 'n2',
+
+        title:
+          'Bhausaheb Fundkar Fruit Orchard Scheme Sanctions Released',
+
+        body:
+          'Approved farmers can submit sapling purchase receipts on the online portal.',
+
+        type:
+          'update',
+
+        category:
+          'Horticulture',
+
+        is_read:
+          false,
+
+        created_at:
+          new Date(
+            Date.now() -
+              4 *
+                24 *
+                60 *
+                60 *
+                1000
+          ).toISOString(),
+      },
+
+    ];
+
+
+  const fetchedUpdates =
+    rawUpdates.map(
+      (notification) =>
+        getLocalizedNotification(
+          notification,
+          selectedLanguage.code
+        )
+    );
+
+
+  /* ==========================================================
+     RENDER
+  ========================================================== */
 
   return (
-    <View style={styles.container}>
 
-      {/* ================= HEADER ================= */}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            themeColors.background,
+        },
+      ]}
+    >
+
+      {/* ======================================================
+          HEADER
+      ====================================================== */}
 
       <Header
-        selectedLanguage={selectedLanguage.name}
-        onLanguagePress={() =>
+        title={
+          t('appName') ||
+          'Farmer AI'
+        }
+
+        subtitle={
+          t('appSubtitle') ||
+          'VOICE ASSISTANT'
+        }
+
+        onNotificationPress={() =>
+          navigation.navigate(
+            'Notifications'
+          )
+        }
+
+        onProfilePress={() =>
           navigation.navigate(
             'ProfileTab',
             {
-              screen: 'LanguageSelection',
+              screen: 'Profile',
             } as any
           )
         }
-        onNotificationPress={() =>
-          navigation.navigate('Notifications')
+
+        notificationCount={
+          notificationsQuery.data?.data?.filter(
+            (notification) =>
+              !notification.is_read
+          ).length || 0
         }
       />
 
 
-      {/* ================= MAIN SCROLL ================= */}
+      {/* ======================================================
+          SCROLL CONTENT
+      ====================================================== */}
 
       <ScrollView
+
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom: 120,
+          },
+        ]}
+
+        showsVerticalScrollIndicator={
+          false
+        }
+
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={Colors.primary[600]}
-            colors={[Colors.primary[600]]}
+            refreshing={
+              isRefreshing
+            }
+
+            onRefresh={
+              handleRefresh
+            }
+
+            tintColor={
+              PRIMARY_GREEN
+            }
+
+            colors={[
+              PRIMARY_GREEN,
+            ]}
           />
         }
       >
 
 
-        {/* =====================================================
-            HERO CARD
-            ===================================================== */}
+        {/* ====================================================
+            1. HERO / VOICE
+        ==================================================== */}
 
-        <View style={styles.heroCard}>
-
-          {/* -------------------------------------------------
-              FARM LANDSCAPE BACKGROUND
-              ------------------------------------------------- */}
+        <View
+          style={styles.heroSectionWrapper}
+        >
 
           <View
-            pointerEvents="none"
             style={[
-              styles.heroImageContainer,
-              isMobile
-                ? styles.heroImageMobile
-                : styles.heroImageDesktop,
+              styles.heroCardContainer,
+              {
+                backgroundColor:
+                  isDarkMode
+                    ? '#1E2937'
+                    : LIGHT_GREEN_BG,
+
+                borderColor:
+                  isDarkMode
+                    ? '#374151'
+                    : BORDER_GREEN,
+              },
             ]}
           >
 
-            <Image
-              source={require('../../../assets/farmer-hero.png')}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
+            {/* LIVE BADGE */}
 
-            {/* 
-              IMPORTANT:
-              This gradient hides the hard vertical edge
-              of the PNG.
-
-              It makes the image smoothly disappear into
-              the mint background instead of showing a line.
-            */}
-            <LinearGradient
-              pointerEvents="none"
-              colors={[
-                Colors.mint[100],
-                'rgba(239,250,242,0.90)',
-                'rgba(239,250,242,0.25)',
-                'rgba(239,250,242,0)',
+            <View
+              style={[
+                styles.liveBadgeRow,
+                {
+                  backgroundColor:
+                    isDarkMode
+                      ? '#111827'
+                      : '#FFFFFF',
+                },
               ]}
-              locations={[0, 0.28, 0.58, 1]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.imageFade}
-            />
+            >
 
-            {/* Bottom fade to keep image inside hero */}
-            <LinearGradient
-              pointerEvents="none"
-              colors={[
-                'rgba(239,250,242,0)',
-                'rgba(239,250,242,0.15)',
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.imageBottomFade}
-            />
+              <View
+                style={
+                  styles.liveDot
+                }
+              />
 
-          </View>
-
-
-          {/* -------------------------------------------------
-              HERO CONTENT
-              ------------------------------------------------- */}
-
-          <View style={styles.heroContent}>
-
-            {/* Live Badge */}
-
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-
-              <Text style={styles.liveText}>
-                Live
+              <Text
+                style={
+                  styles.liveBadgeText
+                }
+              >
+                {t('liveBadge') ||
+                  'Live'}
               </Text>
+
             </View>
 
 
-            {/* Greeting */}
+            {/* GREETING */}
 
-            <Text style={styles.greetingTitle}>
-              Namaste!
-              {'\n'}
-              <Text style={styles.greetingBold}>
-                {greeting}
-              </Text>
+            <Text
+              style={[
+                styles.namasteText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#F9FAFB'
+                      : '#172033',
+                },
+              ]}
+            >
+              {t('namasteGreeting') ||
+                'नमस्ते!'}
             </Text>
 
 
-            <Text style={styles.greetingSubtitle}>
-              Your AI assistant for government schemes & agri guidance.
+            <Text
+              style={[
+                styles.greetingTimeText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#F9FAFB'
+                      : '#172033',
+                },
+              ]}
+            >
+              {
+                t(
+                  new Date().getHours() <
+                    12
+                    ? 'goodMorning'
+                    : new Date().getHours() <
+                        17
+                      ? 'goodAfternoon'
+                      : 'goodEvening'
+                ) ||
+                (
+                  new Date().getHours() <
+                  12
+                    ? 'Good Morning'
+                    : new Date().getHours() <
+                        17
+                      ? 'Good Afternoon'
+                      : 'Good Evening'
+                )
+              }
             </Text>
 
 
-            {/* -------------------------------------------------
-                VOICE SECTION
-                ------------------------------------------------- */}
+            {/* DESCRIPTION */}
+
+            <Text
+              style={[
+                styles.heroSubText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#9CA3AF'
+                      : '#5F6B7A',
+                },
+              ]}
+            >
+              {t('heroSubTitle') ||
+                'Your AI assistant for government schemes and agricultural guidance.'}
+            </Text>
+
+
+            {/* ==================================================
+                MICROPHONE
+            ================================================== */}
 
             <TouchableOpacity
-              style={styles.voiceSection}
-              onPress={() =>
-                navigation.navigate('VoiceAssistant')
+              activeOpacity={0.88}
+              onPress={
+                handleMicPress
               }
-              activeOpacity={0.85}
+              style={
+                styles.centeredMicTouchArea
+              }
             >
 
-              <View style={styles.voiceIconContainer}>
-                <Ionicons
-                  name="mic-outline"
-                  size={36}
-                  color={Colors.white}
-                />
+              <View
+                style={
+                  styles.glowOuterCircle
+                }
+              >
+
+                <View
+                  style={
+                    styles.glowMiddleCircle
+                  }
+                >
+
+                  <Animated.View
+                    style={[
+                      styles.micPulseRing,
+                      {
+                        transform: [
+                          {
+                            scale:
+                              pulseAnim,
+                          },
+                        ],
+
+                        opacity:
+                          pulseOpacity,
+                      },
+                    ]}
+                  />
+
+
+                  <View
+                    style={[
+                      styles.largeCenterMicBtn,
+                      isListening && {
+                        backgroundColor:
+                          DARK_GREEN,
+                      },
+                    ]}
+                  >
+
+                    <Ionicons
+                      name="mic"
+                      size={54}
+                      color="#FFFFFF"
+                    />
+
+                  </View>
+
+                </View>
+
               </View>
 
 
-              <View style={styles.voiceRight}>
+              {/* MIC TITLE */}
 
-                <Text style={styles.voiceTitle}>
-                  Tap to Speak
-                </Text>
+              <Text
+                style={
+                  styles.tapToSpeakTitle
+                }
+              >
+                {isListening
+                  ? (
+                    t(
+                      'listeningStatus'
+                    ) ||
+                    'Listening...'
+                  )
+                  : (
+                    t(
+                      'tapToSpeakTitle'
+                    ) ||
+                    'Tap to Speak'
+                  )}
+              </Text>
 
-                <Text style={styles.voiceSubtitle}>
-                  Ask anything in your language. Available in 12 regional languages.
-                </Text>
+
+              {/* MIC SUBTITLE */}
+
+              <Text
+                style={[
+                  styles.tapToSpeakSub,
+                  {
+                    color:
+                      isDarkMode
+                        ? '#9CA3AF'
+                        : '#5F6B7A',
+                  },
+                ]}
+              >
+                {t(
+                  'tapToSpeakSub'
+                ) ||
+                  'Ask anything in your language.'}
+              </Text>
 
 
-                <View style={styles.voiceBars}>
-                  {[12, 18, 26, 20, 14].map(
-                    (height, index) => (
+              {/* WAVEFORM */}
+
+              <View
+                style={
+                  styles.waveformContainer
+                }
+              >
+
+                {[12, 22, 34, 42, 28, 18, 10]
+                  .map(
+                    (
+                      height,
+                      index
+                    ) => (
                       <View
                         key={index}
                         style={[
-                          styles.voiceBar,
+                          styles.waveBar,
                           {
                             height,
                           },
@@ -330,52 +858,138 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
                       />
                     )
                   )}
-                </View>
 
               </View>
 
             </TouchableOpacity>
 
 
-            {/* -------------------------------------------------
-                FEATURE BADGES
-                ------------------------------------------------- */}
+            {/* FEATURE PILLS */}
 
-            <View style={styles.heroBadges}>
+            <View
+              style={
+                styles.pillsRowCentered
+              }
+            >
 
-              {[
-                {
-                  icon: 'document-text-outline' as const,
-                  label: '12 Languages',
-                },
-                {
-                  icon: 'flash-outline' as const,
-                  label: 'Instant Reply',
-                },
-                {
-                  icon: 'leaf-outline' as const,
-                  label: 'Free to Use',
-                },
-              ].map((badge, index) => (
+              <View
+                style={[
+                  styles.featurePill,
+                  {
+                    backgroundColor:
+                      isDarkMode
+                        ? '#111827'
+                        : '#FFFFFF',
+                  },
+                ]}
+              >
 
-                <View
-                  key={index}
-                  style={styles.heroBadge}
+                <Ionicons
+                  name="language-outline"
+                  size={15}
+                  color={
+                    PRIMARY_GREEN
+                  }
+                />
+
+                <Text
+                  style={[
+                    styles.pillText,
+                    {
+                      color:
+                        isDarkMode
+                          ? '#F9FAFB'
+                          : '#172033',
+                    },
+                  ]}
                 >
+                  {t(
+                    'pill12Languages'
+                  ) ||
+                    '5 Languages'}
+                </Text>
 
-                  <Ionicons
-                    name={badge.icon}
-                    size={15}
-                    color={Colors.primary[600]}
-                  />
+              </View>
 
-                  <Text style={styles.heroBadgeText}>
-                    {badge.label}
-                  </Text>
 
-                </View>
+              <View
+                style={[
+                  styles.featurePill,
+                  {
+                    backgroundColor:
+                      isDarkMode
+                        ? '#111827'
+                        : '#FFFFFF',
+                  },
+                ]}
+              >
 
-              ))}
+                <Ionicons
+                  name="flash-outline"
+                  size={15}
+                  color={
+                    PRIMARY_GREEN
+                  }
+                />
+
+                <Text
+                  style={[
+                    styles.pillText,
+                    {
+                      color:
+                        isDarkMode
+                          ? '#F9FAFB'
+                          : '#172033',
+                    },
+                  ]}
+                >
+                  {t(
+                    'pillInstantReply'
+                  ) ||
+                    'Instant Reply'}
+                </Text>
+
+              </View>
+
+
+              <View
+                style={[
+                  styles.featurePill,
+                  {
+                    backgroundColor:
+                      isDarkMode
+                        ? '#111827'
+                        : '#FFFFFF',
+                  },
+                ]}
+              >
+
+                <Ionicons
+                  name="leaf-outline"
+                  size={15}
+                  color={
+                    PRIMARY_GREEN
+                  }
+                />
+
+                <Text
+                  style={[
+                    styles.pillText,
+                    {
+                      color:
+                        isDarkMode
+                          ? '#F9FAFB'
+                          : '#172033',
+                    },
+                  ]}
+                >
+                  {t(
+                    'pillFreeToUse'
+                  ) ||
+                    'Free to Use'}
+                </Text>
+
+              </View>
 
             </View>
 
@@ -384,37 +998,57 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
         </View>
 
 
-        {/* =====================================================
-            QUICK ASK
-            ===================================================== */}
+        {/* ====================================================
+            2. QUICK ASK
+        ==================================================== */}
 
-        <View style={styles.section}>
+        <View
+          style={
+            styles.sectionContainer
+          }
+        >
 
-          <View style={styles.sectionHeader}>
+          <View
+            style={
+              styles.sectionHeaderRow
+            }
+          >
 
-            <View style={styles.sectionTitleRow}>
-
-              <Ionicons
-                name="flash-outline"
-                size={20}
-                color={Colors.primary[600]}
-              />
-
-              <Text style={styles.sectionTitle}>
-                Ask
-              </Text>
-
-            </View>
+            <Text
+              style={[
+                styles.sectionTitleText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#F9FAFB'
+                      : '#172033',
+                },
+              ]}
+            >
+              🎙{' '}
+              {t(
+                'quickAskHeader'
+              ) ||
+                'Quick Ask'}
+            </Text>
 
 
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate('VoiceAssistant')
+                navigation.navigate(
+                  'VoiceAssistant'
+                )
               }
+              activeOpacity={0.7}
             >
 
-              <Text style={styles.seeAll}>
-                View all →
+              <Text
+                style={
+                  styles.seeAllActionText
+                }
+              >
+                {t('viewAll') ||
+                  'View all →'}
               </Text>
 
             </TouchableOpacity>
@@ -422,102 +1056,235 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
           </View>
 
 
-          <FlatList
-            data={ASK_ITEMS}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-            keyExtractor={(_, index) =>
-              index.toString()
+          <View
+            style={
+              styles.twoColumnGrid
             }
-            renderItem={({ item }) => (
+          >
 
-              <QuickActionCard
-                title={item.title}
-                icon={item.icon}
-                onPress={() =>
-                  navigation.navigate('VoiceAssistant')
-                }
-              />
+            {QUICK_ASK_ITEMS.map(
+              (item) => (
 
-            )}
-          />
-
-        </View>
-
-
-        {/* =====================================================
-            MORE TOPICS
-            ===================================================== */}
-
-        <View style={styles.section}>
-
-          <Text style={styles.sectionTitle}>
-            More Topics
-          </Text>
-
-
-          <View style={styles.topicsGrid}>
-
-            {TOPICS.map((topic, index) => (
-
-              <TouchableOpacity
-                key={index}
-                style={styles.topicChip}
-                activeOpacity={0.7}
-                onPress={() =>
-                  navigation.navigate(
-                    'SchemesTab',
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.quickAskCard,
                     {
-                      screen: 'SchemesList',
-                      params: {
-                        category: topic.label,
+                      backgroundColor:
+                        isDarkMode
+                          ? '#1E2937'
+                          : '#FFFFFF',
+
+                      borderColor:
+                        isDarkMode
+                          ? '#374151'
+                          : BORDER_GREEN,
+                    },
+                  ]}
+                  activeOpacity={0.88}
+                  onPress={() =>
+                    navigation.navigate(
+                      'VoiceAssistant'
+                    )
+                  }
+                >
+
+                  <View
+                    style={[
+                      styles.quickAskIconCircle,
+                      {
+                        backgroundColor:
+                          PALE_GREEN_TINT,
                       },
-                    } as any
-                  )
-                }
-              >
+                    ]}
+                  >
 
-                <Ionicons
-                  name={topic.icon}
-                  size={16}
-                  color={Colors.primary[600]}
-                />
+                    <Ionicons
+                      name="mic-outline"
+                      size={18}
+                      color={
+                        PRIMARY_GREEN
+                      }
+                    />
 
-                <Text style={styles.topicText}>
-                  {topic.label}
-                </Text>
+                  </View>
 
-              </TouchableOpacity>
 
-            ))}
+                  <Text
+                    style={[
+                      styles.quickAskText,
+                      {
+                        color:
+                          isDarkMode
+                            ? '#F9FAFB'
+                            : '#172033',
+                      },
+                    ]}
+                    numberOfLines={3}
+                  >
+                    {t(
+                      item.id === 'q1'
+                        ? 'quickQ1'
+                        : item.id === 'q2'
+                          ? 'quickQ2'
+                          : item.id === 'q3'
+                            ? 'quickQ3'
+                            : 'quickQ4'
+                    ) ||
+                      item.text}
+                  </Text>
+
+                </TouchableOpacity>
+
+              )
+            )}
 
           </View>
 
         </View>
 
 
-        {/* =====================================================
-            FEATURED SCHEMES
-            ===================================================== */}
+        {/* ====================================================
+            3. MORE TOPICS
+        ==================================================== */}
 
-        <View style={styles.section}>
+        <View
+          style={
+            styles.sectionContainer
+          }
+        >
 
-          <View style={styles.sectionHeader}>
+          <View
+            style={
+              styles.sectionHeaderRow
+            }
+          >
 
-            <View style={styles.sectionTitleRow}>
+            <Text
+              style={[
+                styles.sectionTitleText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#F9FAFB'
+                      : '#172033',
+                },
+              ]}
+            >
+              🌱{' '}
+              {t(
+                'moreTopicsHeader'
+              ) ||
+                'More Topics'}
+            </Text>
 
-              <Ionicons
-                name="star-outline"
-                size={20}
-                color={Colors.primary[600]}
-              />
+          </View>
 
-              <Text style={styles.sectionTitle}>
-                Featured Schemes
-              </Text>
 
-            </View>
+          <View
+            style={
+              styles.twoColumnGrid
+            }
+          >
+
+            {TOPICS_DATA.map(
+              (topic) => (
+
+                <QuickActionCard
+                  key={topic.id}
+
+                  title={
+                    t(
+                      topic.id ===
+                        'horticulture'
+                        ? 'topicHorticultureTitle'
+                        : topic.id ===
+                            'irrigation'
+                          ? 'topicIrrigationTitle'
+                          : topic.id ===
+                              'mechanization'
+                            ? 'topicMechanizationTitle'
+                            : 'topicWelfareTitle'
+                    ) ||
+                    topic.title
+                  }
+
+                  subtitle={
+                    t(
+                      topic.id ===
+                        'horticulture'
+                        ? 'topicHorticultureSub'
+                        : topic.id ===
+                            'irrigation'
+                          ? 'topicIrrigationSub'
+                          : topic.id ===
+                              'mechanization'
+                            ? 'topicMechanizationSub'
+                            : 'topicWelfareSub'
+                    ) ||
+                    topic.subtitle
+                  }
+
+                  icon={
+                    topic.icon
+                  }
+
+                  onPress={() =>
+                    navigation.navigate(
+              'SchemesTab' as any,
+                      {
+                        screen:
+                          'SchemesList',
+                        params: {
+                          category:
+                            topic.category,
+                        },
+                      } as any
+                    )
+                  }
+                />
+
+              )
+            )}
+
+          </View>
+
+        </View>
+
+
+        {/* ====================================================
+            4. FEATURED SCHEMES
+        ==================================================== */}
+
+        <View
+          style={
+            styles.sectionContainer
+          }
+        >
+
+          <View
+            style={
+              styles.sectionHeaderRow
+            }
+          >
+
+            <Text
+              style={[
+                styles.sectionTitleText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#F9FAFB'
+                      : '#172033',
+                },
+              ]}
+            >
+              ★{' '}
+              {t(
+                'featuredSchemesHeader'
+              ) ||
+                'Featured Schemes'}
+            </Text>
 
 
             <TouchableOpacity
@@ -526,10 +1293,16 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
                   'SchemesTab' as any
                 )
               }
+              activeOpacity={0.7}
             >
 
-              <Text style={styles.seeAll}>
-                See all →
+              <Text
+                style={
+                  styles.seeAllActionText
+                }
+              >
+                {t('seeAll') ||
+                  'See all →'}
               </Text>
 
             </TouchableOpacity>
@@ -537,80 +1310,98 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
           </View>
 
 
-          {schemesQuery.isLoading ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={
+              false
+            }
+            contentContainerStyle={
+              styles.horizontalCarouselPadding
+            }
+            decelerationRate="fast"
+            snapToInterval={324}
+          >
 
-            <FlatList
-              data={[1, 2, 3]}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-              keyExtractor={(_, index) =>
-                index.toString()
-              }
-              renderItem={() => (
-                <SkeletonSchemeCard />
-              )}
-            />
-
-          ) : (
-
-            <FlatList
-              data={schemes}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
+            {fetchedSchemes.map(
+              (scheme) => (
 
                 <SchemeCard
-                  scheme={item}
-                  onPress={handleSchemePress}
+                  key={scheme.id}
+                  scheme={scheme}
+                  onPress={() =>
+                    navigation.navigate(
+              'SchemesTab' as any,
+                      {
+                        screen:
+                          'SchemeDetails',
+                        params: {
+                          schemeId:
+                            scheme.id,
+                        },
+                      } as any
+                    )
+                  }
                 />
 
-              )}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>
-                  No schemes available
-                </Text>
-              }
-            />
+              )
+            )}
 
-          )}
+          </ScrollView>
 
         </View>
 
 
-        {/* =====================================================
-            RECENT UPDATES
-            ===================================================== */}
+        {/* ====================================================
+            5. RECENT UPDATES
+        ==================================================== */}
 
-        <View style={styles.section}>
+        <View
+          style={
+            styles.sectionContainer
+          }
+        >
 
-          <View style={styles.sectionHeader}>
+          <View
+            style={
+              styles.sectionHeaderRow
+            }
+          >
 
-            <View style={styles.sectionTitleRow}>
-
-              <Ionicons
-                name="megaphone-outline"
-                size={20}
-                color={Colors.primary[600]}
-              />
-
-              <Text style={styles.sectionTitle}>
-                Recent Updates
-              </Text>
-
-            </View>
+            <Text
+              style={[
+                styles.sectionTitleText,
+                {
+                  color:
+                    isDarkMode
+                      ? '#F9FAFB'
+                      : '#172033',
+                },
+              ]}
+            >
+              📢{' '}
+              {t(
+                'recentUpdatesHeader'
+              ) ||
+                'Recent Updates'}
+            </Text>
 
 
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate('Notifications')
+                navigation.navigate(
+                  'Notifications'
+                )
               }
+              activeOpacity={0.7}
             >
 
-              <Text style={styles.seeAll}>
-                View all →
+              <Text
+                style={
+                  styles.seeAllActionText
+                }
+              >
+                {t('seeAll') ||
+                  'View all →'}
               </Text>
 
             </TouchableOpacity>
@@ -618,40 +1409,210 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
           </View>
 
 
-          {notifications.map(
-            (
-              notification: AppNotification,
-              index: number
-            ) => (
+          <View
+            style={
+              styles.updatesListContainer
+            }
+          >
 
-              <NotificationCard
-                key={
-                  notification.id ||
-                  index
-                }
-                notification={notification}
-                onPress={
-                  handleNotificationPress
-                }
-              />
+            {fetchedUpdates.map(
+              (update) => (
 
-            )
-          )}
+                <TouchableOpacity
+                  key={update.id}
+
+                  style={[
+                    styles.updateCardItem,
+                    {
+                      backgroundColor:
+                        isDarkMode
+                          ? '#1E2937'
+                          : '#FFFFFF',
+
+                      borderColor:
+                        isDarkMode
+                          ? '#374151'
+                          : BORDER_GREEN,
+                    },
+                  ]}
+
+                  activeOpacity={0.88}
+
+                  onPress={() =>
+                    navigation.navigate(
+                      'Notifications'
+                    )
+                  }
+                >
+
+                  {/* LEFT ACCENT */}
+
+                  <View
+                    style={
+                      styles.updateLeftAccentBar
+                    }
+                  />
 
 
-          {notifications.length === 0 &&
-            !notificationsQuery.isLoading && (
+                  <View
+                    style={
+                      styles.updateCardContent
+                    }
+                  >
 
-              <Text style={styles.emptyText}>
-                No recent updates
+                    <View
+                      style={
+                        styles.updateTopRow
+                      }
+                    >
+
+                      <View
+                        style={
+                          styles.newBadgeContainer
+                        }
+                      >
+
+                        <Text
+                          style={
+                            styles.newBadgeText
+                          }
+                        >
+                          {t(
+                            'newBadge'
+                          ) ||
+                            'NEW'}
+                        </Text>
+
+                      </View>
+
+
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={
+                          PRIMARY_GREEN
+                        }
+                      />
+
+                    </View>
+
+
+                    <Text
+                      style={[
+                        styles.updateTitleText,
+                        {
+                          color:
+                            isDarkMode
+                              ? '#F9FAFB'
+                              : '#172033',
+                        },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {update.title}
+                    </Text>
+
+
+                    <Text
+                      style={[
+                        styles.updateBodyText,
+                        {
+                          color:
+                            isDarkMode
+                              ? '#9CA3AF'
+                              : '#5F6B7A',
+                        },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {update.body}
+                    </Text>
+
+
+                    <View
+                      style={
+                        styles.updateMetaRow
+                      }
+                    >
+
+                      <Ionicons
+                        name="time-outline"
+                        size={13}
+                        color="#5F6B7A"
+                      />
+
+                      <Text
+                        style={
+                          styles.updateMetaText
+                        }
+                      >
+                        {getLocalizedTimeAgo(
+                          update.created_at,
+                          selectedLanguage.code
+                        )}
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.updateMetaDot
+                        }
+                      >
+                        •
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.updateMetaCategory
+                        }
+                      >
+                        {update.category ||
+                          'General'}
+                      </Text>
+
+                    </View>
+
+                  </View>
+
+                </TouchableOpacity>
+
+              )
+            )}
+
+
+            {fetchedUpdates.length ===
+              0 && (
+
+              <Text
+                style={[
+                  styles.emptyText,
+                  {
+                    color:
+                      isDarkMode
+                        ? '#9CA3AF'
+                        : '#6B7280',
+                  },
+                ]}
+              >
+                {t(
+                  'noRecentUpdates'
+                ) ||
+                  'No recent updates'}
               </Text>
 
             )}
 
+          </View>
+
         </View>
 
 
-        <View style={{ height: 110 }} />
+        {/* BOTTOM SPACE */}
+
+        <View
+          style={{
+            height: 100,
+          }}
+        />
 
       </ScrollView>
 
@@ -662,17 +1623,16 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({
 
 /* ============================================================
    STYLES
-   ============================================================ */
+============================================================ */
 
 const styles = StyleSheet.create({
 
-  /* =========================
+  /* ----------------------------------------------------------
      PAGE
-     ========================= */
+  ---------------------------------------------------------- */
 
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   scrollView: {
@@ -680,469 +1640,592 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: Spacing['3xl'],
+    paddingBottom: 120,
   },
 
 
-  /* =========================
-     HERO CARD
-     ========================= */
+  /* ----------------------------------------------------------
+     HERO
+  ---------------------------------------------------------- */
 
-  heroCard: {
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.xs,
+  heroSectionWrapper: {
+    paddingHorizontal:
+      Layout.screenPaddingH,
 
-    backgroundColor: Colors.mint[100],
+    paddingTop: 12,
 
+    marginBottom: 6,
+  },
+
+  heroCardContainer: {
     borderRadius: 28,
 
-    overflow: 'hidden',
+    padding: 24,
 
-    position: 'relative',
+    minHeight: 570,
 
-    minHeight: 360,
-  },
-
-
-  /* =========================
-     HERO IMAGE
-     ========================= */
-
-  heroImageContainer: {
-    position: 'absolute',
-
-    top: 0,
-    bottom: 0,
-
-    overflow: 'hidden',
-
-    zIndex: 0,
-  },
-
-  heroImageMobile: {
-    width: '65%',
-    right: 0,
-  },
-
-  heroImageDesktop: {
-    width: '58%',
-    right: 0,
-  },
-
-  heroImage: {
-    width: '100%',
-    height: '100%',
-  },
-
-  /*
-   * This is the important part.
-   *
-   * It hides the hard vertical edge of the
-   * farmer image and makes it blend into
-   * your mint background.
-   */
-
-  imageFade: {
-    position: 'absolute',
-
-    left: 0,
-    top: 0,
-    bottom: 0,
-
-    width: '48%',
-  },
-
-  imageBottomFade: {
-    position: 'absolute',
-
-    left: 0,
-    right: 0,
-
-    bottom: 0,
-
-    height: '20%',
-  },
-
-
-  /* =========================
-     HERO CONTENT
-     ========================= */
-
-  heroContent: {
-    position: 'relative',
-
-    zIndex: 2,
-
-    padding: Spacing.xl,
-
-    /*
-     * Content remains on the left.
-     * Image stays visually on the right.
-     */
-
-    width: '100%',
-  },
-
-
-  /* =========================
-     LIVE
-     ========================= */
-
-  liveBadge: {
-    flexDirection: 'row',
-
-    alignItems: 'center',
-
-    alignSelf: 'flex-start',
-
-    backgroundColor: Colors.white,
-
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-
-    borderRadius: BorderRadius.full,
-
-    gap: 6,
-
-    marginBottom: Spacing.md,
+    justifyContent:
+      'space-between',
 
     borderWidth: 1,
 
-    borderColor: Colors.border,
-  },
-
-  liveDot: {
-    width: 7,
-    height: 7,
-
-    borderRadius: 4,
-
-    backgroundColor:
-      Colors.primary[600],
-  },
-
-  liveText: {
-    fontSize: 12,
-
-    color:
-      Colors.primary[600],
-
-    fontWeight: '700',
-  },
-
-
-  /* =========================
-     GREETING
-     ========================= */
-
-  greetingTitle: {
-    fontSize: 26,
-
-    fontWeight: '700',
-
-    color:
-      Colors.text.primary,
-
-    lineHeight: 34,
-
-    maxWidth: '72%',
-  },
-
-  greetingBold: {
-    fontWeight: '800',
-
-    color:
-      Colors.text.primary,
-  },
-
-  greetingSubtitle: {
-    fontSize: 14,
-
-    color:
-      Colors.text.secondary,
-
-    marginTop: 6,
-
-    marginBottom: Spacing.xl,
-
-    lineHeight: 20,
-
-    /*
-     * Prevent the sentence from
-     * entering too far into the image.
-     */
-
-    maxWidth: '68%',
-  },
-
-
-  /* =========================
-     VOICE
-     ========================= */
-
-  voiceSection: {
-    flexDirection: 'row',
-
-    alignItems: 'center',
-
-    gap: Spacing.lg,
-
-    marginBottom: Spacing.xl,
-
-    maxWidth: '72%',
-  },
-
-  voiceIconContainer: {
-    width: 80,
-
-    height: 80,
-
-    borderRadius: 40,
-
-    backgroundColor:
-      Colors.primary[600],
-
-    justifyContent: 'center',
-
-    alignItems: 'center',
-
     shadowColor:
-      Colors.primary[900],
+      PRIMARY_GREEN,
 
     shadowOffset: {
       width: 0,
       height: 4,
     },
 
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.05,
 
-    shadowRadius: 8,
+    shadowRadius: 12,
 
-    elevation: 6,
-  },
-
-  voiceRight: {
-    flex: 1,
-
-    minWidth: 0,
-  },
-
-  voiceTitle: {
-    fontSize: 18,
-
-    fontWeight: '700',
-
-    color:
-      Colors.primary[600],
-
-    marginBottom: 2,
-  },
-
-  voiceSubtitle: {
-    fontSize: 12,
-
-    color:
-      Colors.text.secondary,
-
-    lineHeight: 17,
-  },
-
-  voiceBars: {
-    flexDirection: 'row',
-
-    alignItems: 'flex-end',
-
-    gap: 3,
-
-    marginTop: 8,
-  },
-
-  voiceBar: {
-    width: 4,
-
-    borderRadius: 2,
-
-    backgroundColor:
-      Colors.primary[600],
+    elevation: 3,
   },
 
 
-  /* =========================
-     BADGES
-     ========================= */
+  /* ----------------------------------------------------------
+     LIVE BADGE
+  ---------------------------------------------------------- */
 
-  heroBadges: {
-    flexDirection: 'row',
-
-    flexWrap: 'wrap',
-
-    gap: 8,
-
-    maxWidth: '100%',
-  },
-
-  heroBadge: {
+  liveBadgeRow: {
     flexDirection: 'row',
 
     alignItems: 'center',
 
     gap: 6,
 
-    backgroundColor:
-      Colors.white,
-
-    paddingVertical: 8,
-
     paddingHorizontal: 12,
 
-    borderRadius:
-      BorderRadius.full,
+    paddingVertical: 5,
+
+    borderRadius: 16,
 
     borderWidth: 1,
 
     borderColor:
-      Colors.border,
+      BORDER_GREEN,
+
+    alignSelf:
+      'flex-start',
+
+    marginBottom: 14,
   },
 
-  heroBadgeText: {
+  liveDot: {
+    width: 8,
+
+    height: 8,
+
+    borderRadius: 4,
+
+    backgroundColor:
+      PRIMARY_GREEN,
+  },
+
+  liveBadgeText: {
     fontSize: 12,
 
-    fontWeight: '600',
+    fontWeight: '800',
 
     color:
-      Colors.text.primary,
+      PRIMARY_GREEN,
   },
 
 
-  /* =========================
-     SECTIONS
-     ========================= */
+  /* ----------------------------------------------------------
+     GREETING
+  ---------------------------------------------------------- */
 
-  section: {
-    marginTop: Spacing['2xl'],
+  namasteText: {
+    fontSize: 28,
+
+    fontWeight: '800',
+
+    lineHeight: 34,
+  },
+
+  greetingTimeText: {
+    fontSize: 30,
+
+    fontWeight: '900',
+
+    lineHeight: 36,
+
+    marginBottom: 8,
+  },
+
+  heroSubText: {
+    fontSize: 14,
+
+    fontWeight: '500',
+
+    lineHeight: 20,
+
+    marginBottom: 18,
+  },
+
+
+  /* ----------------------------------------------------------
+     MICROPHONE
+  ---------------------------------------------------------- */
+
+  centeredMicTouchArea: {
+    alignItems: 'center',
+
+    justifyContent: 'center',
+
+    marginVertical: 10,
+  },
+
+  glowOuterCircle: {
+    width: 210,
+
+    height: 210,
+
+    borderRadius: 105,
+
+    backgroundColor:
+      'rgba(24, 122, 61, 0.08)',
+
+    justifyContent:
+      'center',
+
+    alignItems:
+      'center',
+
+    marginBottom: 16,
+  },
+
+  glowMiddleCircle: {
+    width: 170,
+
+    height: 170,
+
+    borderRadius: 85,
+
+    backgroundColor:
+      'rgba(24, 122, 61, 0.16)',
+
+    justifyContent:
+      'center',
+
+    alignItems:
+      'center',
+  },
+
+  micPulseRing: {
+    position:
+      'absolute',
+
+    width: 180,
+
+    height: 180,
+
+    borderRadius: 90,
+
+    backgroundColor:
+      'rgba(24, 122, 61, 0.25)',
+  },
+
+  largeCenterMicBtn: {
+    width: 130,
+
+    height: 130,
+
+    borderRadius: 65,
+
+    backgroundColor:
+      PRIMARY_GREEN,
+
+    justifyContent:
+      'center',
+
+    alignItems:
+      'center',
+
+    elevation: 6,
+
+    shadowColor:
+      PRIMARY_GREEN,
+
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+
+    shadowOpacity: 0.3,
+
+    shadowRadius: 10,
+  },
+
+  tapToSpeakTitle: {
+    fontSize: 19,
+
+    fontWeight: '800',
+
+    color:
+      PRIMARY_GREEN,
+
+    lineHeight: 24,
+
+    marginBottom: 6,
+
+    textAlign: 'center',
+  },
+
+  tapToSpeakSub: {
+    fontSize: 13,
+
+    fontWeight: '500',
+
+    lineHeight: 18,
+
+    textAlign: 'center',
+
+    maxWidth: 290,
+
+    marginBottom: 10,
+  },
+
+
+  /* ----------------------------------------------------------
+     WAVEFORM
+  ---------------------------------------------------------- */
+
+  waveformContainer: {
+    flexDirection: 'row',
+
+    alignItems: 'flex-end',
+
+    gap: 5,
+
+    marginTop: 4,
+
+    marginBottom: 6,
+  },
+
+  waveBar: {
+    width: 4,
+
+    backgroundColor:
+      PRIMARY_GREEN,
+
+    borderRadius: 2,
+  },
+
+
+  /* ----------------------------------------------------------
+     FEATURE PILLS
+  ---------------------------------------------------------- */
+
+  pillsRowCentered: {
+    flexDirection: 'row',
+
+    flexWrap: 'wrap',
+
+    justifyContent:
+      'center',
+
+    gap: 8,
+
+    marginTop: 14,
+  },
+
+  featurePill: {
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    gap: 6,
+
+    paddingHorizontal: 12,
+
+    paddingVertical: 8,
+
+    borderRadius: 20,
+
+    borderWidth: 1,
+
+    borderColor:
+      BORDER_GREEN,
+
+    elevation: 1,
+  },
+
+  pillText: {
+    fontSize: 13,
+
+    fontWeight: '700',
+  },
+
+
+  /* ----------------------------------------------------------
+     SECTIONS
+  ---------------------------------------------------------- */
+
+  sectionContainer: {
+    marginTop: 24,
 
     paddingHorizontal:
-      Spacing.lg,
+      Layout.screenPaddingH,
   },
 
-  sectionHeader: {
+  sectionHeaderRow: {
     flexDirection: 'row',
 
     justifyContent:
       'space-between',
 
-    alignItems: 'center',
+    alignItems:
+      'center',
 
-    marginBottom:
-      Spacing.lg,
+    marginBottom: 14,
   },
 
-  sectionTitleRow: {
-    flexDirection: 'row',
+  sectionTitleText: {
+    fontSize: 20,
 
-    alignItems: 'center',
+    fontWeight: '800',
 
-    gap: Spacing.xs,
+    lineHeight: 24,
   },
 
-  sectionTitle: {
-    fontSize: 18,
-
-    fontWeight: '700',
-
-    color:
-      Colors.text.primary,
-  },
-
-  seeAll: {
+  seeAllActionText: {
     fontSize: 14,
 
-    fontWeight: '700',
+    fontWeight: '800',
 
     color:
-      Colors.primary[600],
-  },
-
-  horizontalList: {
-    paddingRight:
-      Spacing.lg,
-
-    gap: Spacing.md,
+      PRIMARY_GREEN,
   },
 
 
-  /* =========================
-     TOPICS
-     ========================= */
+  /* ----------------------------------------------------------
+     TWO COLUMN GRID
+  ---------------------------------------------------------- */
 
-  topicsGrid: {
+  twoColumnGrid: {
     flexDirection: 'row',
 
     flexWrap: 'wrap',
 
-    gap: 10,
+    justifyContent:
+      'space-between',
   },
 
-  topicChip: {
+
+  /* ----------------------------------------------------------
+     QUICK ASK
+  ---------------------------------------------------------- */
+
+  quickAskCard: {
+    width: '48%',
+
+    borderRadius: 20,
+
+    padding: 14,
+
+    marginBottom: 12,
+
+    borderWidth: 1,
+
+    minHeight: 100,
+
+    justifyContent:
+      'space-between',
+
+    shadowColor:
+      PRIMARY_GREEN,
+
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+
+    shadowOpacity: 0.04,
+
+    shadowRadius: 6,
+
+    elevation: 2,
+  },
+
+  quickAskIconCircle: {
+    width: 34,
+
+    height: 34,
+
+    borderRadius: 12,
+
+    justifyContent:
+      'center',
+
+    alignItems:
+      'center',
+
+    marginBottom: 8,
+  },
+
+  quickAskText: {
+    fontSize: 13,
+
+    fontWeight: '700',
+
+    lineHeight: 17,
+  },
+
+
+  /* ----------------------------------------------------------
+     SCHEME CAROUSEL
+  ---------------------------------------------------------- */
+
+  horizontalCarouselPadding: {
+    paddingRight:
+      Layout.screenPaddingH,
+  },
+
+
+  /* ----------------------------------------------------------
+     RECENT UPDATES
+  ---------------------------------------------------------- */
+
+  updatesListContainer: {
+    gap: 12,
+  },
+
+  updateCardItem: {
+    borderRadius: 20,
+
+    borderWidth: 1,
+
+    overflow: 'hidden',
+
+    flexDirection: 'row',
+
+    shadowColor:
+      PRIMARY_GREEN,
+
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+
+    shadowOpacity: 0.04,
+
+    shadowRadius: 8,
+
+    elevation: 2,
+  },
+
+  updateLeftAccentBar: {
+    width: 5,
+
+    backgroundColor:
+      PRIMARY_GREEN,
+  },
+
+  updateCardContent: {
+    flex: 1,
+
+    padding: 16,
+  },
+
+  updateTopRow: {
     flexDirection: 'row',
 
     alignItems: 'center',
 
-    gap: 8,
+    justifyContent:
+      'space-between',
 
-    backgroundColor:
-      Colors.white,
-
-    paddingVertical: 10,
-
-    paddingHorizontal: 16,
-
-    borderRadius:
-      BorderRadius.full,
-
-    borderWidth: 1,
-
-    borderColor:
-      Colors.gray[200],
-
-    shadowColor:
-      Colors.black,
-
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-
-    shadowOpacity: 0.02,
-
-    shadowRadius: 2,
-
-    elevation: 1,
+    marginBottom: 6,
   },
 
-  topicText: {
-    fontSize: 13,
+  newBadgeContainer: {
+    backgroundColor:
+      PALE_GREEN_TINT,
 
-    fontWeight: '600',
+    paddingHorizontal: 8,
+
+    paddingVertical: 3,
+
+    borderRadius: 8,
+  },
+
+  newBadgeText: {
+    fontSize: 10,
+
+    fontWeight: '800',
 
     color:
-      Colors.text.primary,
+      PRIMARY_GREEN,
+
+    letterSpacing: 0.4,
+  },
+
+  updateTitleText: {
+    fontSize: 16,
+
+    fontWeight: '800',
+
+    lineHeight: 21,
+
+    marginBottom: 4,
+  },
+
+  updateBodyText: {
+    fontSize: 13,
+
+    lineHeight: 18,
+
+    marginBottom: 10,
+  },
+
+  updateMetaRow: {
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    gap: 6,
+  },
+
+  updateMetaText: {
+    fontSize: 12,
+
+    fontWeight: '500',
+
+    color:
+      '#5F6B7A',
+  },
+
+  updateMetaDot: {
+    fontSize: 12,
+
+    color:
+      '#5F6B7A',
+  },
+
+  updateMetaCategory: {
+    fontSize: 12,
+
+    fontWeight: '700',
+
+    color:
+      PRIMARY_GREEN,
   },
 
 
-  /* =========================
+  /* ----------------------------------------------------------
      EMPTY
-     ========================= */
+  ---------------------------------------------------------- */
 
   emptyText: {
     fontSize: 14,
 
-    color:
-      Colors.text.tertiary,
-
     textAlign: 'center',
 
-    padding: Spacing.xl,
+    padding: 24,
   },
 
 });
