@@ -1,5 +1,5 @@
 /**
- * Language Selection Screen — Supported languages grid (mr, en, hi, ahr, kok)
+ * Language Selection Screen — Supported languages list (mr, en, hi, ahr, kok)
  * Fully theme-aware & global i18n context integrated.
  */
 
@@ -55,9 +55,8 @@ export const LanguageSelectionScreen: React.FC<ProfileScreenProps<'LanguageSelec
 
       <FlatList
         data={languages}
-        numColumns={2}
+        numColumns={1}
         contentContainerStyle={styles.grid}
-        columnWrapperStyle={styles.row}
         keyExtractor={(item) => item.code}
         renderItem={({ item }) => {
           const isSelected = selectedLanguage.code === item.code || selectedLanguage.name === item.name;
@@ -106,8 +105,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     marginBottom: Spacing.lg,
   },
-  grid: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl },
-  row: { gap: Spacing.md, marginBottom: Spacing.md },
+  grid: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl, gap: Spacing.sm },
   langCard: {
     flex: 1,
     flexDirection: 'row',

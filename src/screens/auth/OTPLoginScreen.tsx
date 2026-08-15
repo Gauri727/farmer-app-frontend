@@ -1,5 +1,5 @@
 /**
- * OTP Verification Screen — Farmer AI / Farmer AI
+ * OTP Verification Screen — Farmer AI
  * Clean, mobile-first, 6-digit OTP verification card matching reference layout.
  * Features auto-focus between boxes, countdown timer, resend OTP, and theme/i18n support.
  */
@@ -46,12 +46,12 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
   const sendOTPMutation = useSendOTP();
   const verifyOTPMutation = useVerifyOTP();
 
-  const phoneNumber = route.params?.mobile || '9876543210';
+  const phoneNumber = route.params?.mobile || (route.params as any)?.mobileNumber || (route.params as any)?.phone || '9876543210';
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [errorMsg, setErrorMsg] = useState('');
   const [timer, setTimer] = useState(30);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const otpInputs = useRef<(TextInput | null)[]>([]);
+  const otpInputs = useRef<Array<TextInput | null>>([]);
 
   // Entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -90,17 +90,18 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
 
   const handleOTPChange = (text: string, index: number) => {
     if (errorMsg) setErrorMsg('');
+    const cleanNum = text.replace(/[^0-9]/g, '');
 
     // If user pasted a 6-digit code
-    if (text.length === 6 && /^\d{6}$/.test(text)) {
-      const pasted = text.split('');
+    if (cleanNum.length === 6) {
+      const pasted = cleanNum.split('');
       setOtpDigits(pasted);
       otpInputs.current[5]?.focus();
-      handleVerifyOTP(text);
+      handleVerifyOTP(cleanNum);
       return;
     }
 
-    const singleDigit = text.slice(-1);
+    const singleDigit = cleanNum.slice(-1);
     const newDigits = [...otpDigits];
     newDigits[index] = singleDigit;
     setOtpDigits(newDigits);
@@ -116,28 +117,29 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
     }
   };
 
-  const handleOTPKeyPress = (key: string, index: number) => {
-    if (key === 'Backspace' && !otpDigits[index] && index > 0) {
+  const handleKeyPress = (event: any, index: number) => {
+    if (event.nativeEvent.key === 'Backspace' && !otpDigits[index] && index > 0) {
       otpInputs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerifyOTP = async (otpCode: string) => {
-    if (otpCode.length < 6) {
-      setErrorMsg(t('verifyOtpSub') || 'कृपया ६ अंकी संपूर्ण OTP प्रविष्ट करा');
+  const handleVerifyOTP = async (otpCode?: string) => {
+    const code = otpCode || otpDigits.join('');
+    if (code.length < 6) {
+      setErrorMsg(t('verifyOtpSub') || 'Please enter valid 6-digit OTP');
       return;
     }
     setErrorMsg('');
     try {
       const result = await verifyOTPMutation.mutateAsync({
         mobile: phoneNumber,
-        otp: otpCode,
+        otp: code,
       });
       if (result.success) {
         await login(result.data.user, result.data.access_token, result.data.refresh_token);
       }
     } catch {
-      // Demo fallback login for smooth testing
+      // Fallback login
       await login(
         {
           id: '1',
@@ -157,15 +159,18 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
     setTimer(30);
     setOtpDigits(['', '', '', '', '', '']);
     sendOTPMutation.mutate({ mobile: phoneNumber });
+    setTimeout(() => {
+      otpInputs.current[0]?.focus();
+    }, 100);
   };
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#111827' : '#F7FAF8', paddingTop: insets.top }]}>
-      {/* Background Subtle Ambient Circles */}
+      {/* Background Ambient Circles */}
       <View style={[styles.bgCircle1, { backgroundColor: isDarkMode ? 'rgba(6, 78, 59, 0.25)' : 'rgba(220, 252, 231, 0.45)' }]} />
       <View style={[styles.bgCircle2, { backgroundColor: isDarkMode ? 'rgba(17, 24, 39, 0.4)' : 'rgba(240, 253, 244, 0.7)' }]} />
 
-      {/* Top Header Bar with Back Button, Language Selector & Theme Toggle */}
+      {/* Top Header Bar */}
       <View style={styles.topHeader}>
         <TouchableOpacity
           style={[styles.backBtn, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
@@ -176,7 +181,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
         </TouchableOpacity>
 
         <View style={styles.rightActionsRow}>
-          {/* Language Selector Dropdown */}
           <View style={styles.langWrapper}>
             <TouchableOpacity
               style={[styles.langSelectorBtn, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
@@ -190,7 +194,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
               <Ionicons name="chevron-down" size={13} color={themeColors.textSecondary} />
             </TouchableOpacity>
 
-            {/* Popover Language Card */}
             {dropdownOpen && (
               <>
                 <TouchableOpacity
@@ -231,7 +234,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
             )}
           </View>
 
-          {/* Theme Toggle Button */}
           <TouchableOpacity
             style={[styles.themeToggleBtn, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
             onPress={toggleTheme}
@@ -266,7 +268,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
               },
             ]}
           >
-            {/* Centered Rounded OTP Verification Card */}
             <View
               style={[
                 styles.card,
@@ -276,7 +277,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
                 },
               ]}
             >
-              {/* Lock Emblem Header */}
               <View style={styles.logoWrap}>
                 <View
                   style={[
@@ -291,7 +291,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
                 </View>
               </View>
 
-              {/* Headings */}
               <Text style={[styles.verifyHeading, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
                 {t('verifyYourNumber') || 'क्रमांक सत्यापित करा'}
               </Text>
@@ -327,12 +326,12 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
                       ]}
                       value={digit}
                       onChangeText={(text) => handleOTPChange(text, index)}
-                      onKeyPress={({ nativeEvent }) =>
-                        handleOTPKeyPress(nativeEvent.key, index)
-                      }
+                      onKeyPress={(e) => handleKeyPress(e, index)}
                       keyboardType="number-pad"
                       maxLength={6}
+                      textAlign="center"
                       selectTextOnFocus
+                      autoFocus={index === 0}
                       accessibilityLabel={`OTP Digit ${index + 1}`}
                     />
                   );
@@ -340,13 +339,12 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
               </View>
               {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
-              {/* Primary Verify Button */}
               <TouchableOpacity
                 style={[
                   styles.verifyBtn,
                   verifyOTPMutation.isPending && { opacity: 0.8 },
                 ]}
-                onPress={() => handleVerifyOTP(otpDigits.join(''))}
+                onPress={() => handleVerifyOTP()}
                 activeOpacity={0.88}
                 disabled={verifyOTPMutation.isPending}
               >
@@ -360,7 +358,6 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
                 )}
               </TouchableOpacity>
 
-              {/* Timer & Resend Option */}
               <View style={styles.resendRow}>
                 <Text style={[styles.resendInfoText, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
                   {t('didntReceiveOtp') || 'OTP मिळाला नाही? '}
@@ -381,10 +378,9 @@ export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({
                 </TouchableOpacity>
               </View>
 
-              {/* Change Mobile Number Link */}
               <TouchableOpacity
                 style={[styles.changePhoneBtn, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}
-                onPress={() => navigation.goBack()}
+                onPress={() => navigation.navigate('Login')}
                 activeOpacity={0.7}
               >
                 <Ionicons name="create-outline" size={15} color={isDarkMode ? '#6EE7B7' : '#187A3D'} />
@@ -404,8 +400,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
-  /* Background Blobs */
   bgCircle1: {
     position: 'absolute',
     top: -50,
@@ -422,8 +416,6 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 140,
   },
-
-  /* Top Bar Header */
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -470,8 +462,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
   },
-
-  /* Popover Dropdown */
   backdropOverlay: {
     position: 'absolute',
     top: -500,
@@ -508,8 +498,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-
-  /* Scroll Content & Card */
   keyboardView: {
     flex: 1,
   },
@@ -539,8 +527,6 @@ const styles = StyleSheet.create({
     elevation: 6,
     alignItems: 'center',
   },
-
-  /* Emblem Header */
   logoWrap: {
     marginBottom: 18,
   },
@@ -552,8 +538,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
   },
-
-  /* Headings */
   verifyHeading: {
     fontSize: 24,
     fontWeight: '900',
@@ -573,8 +557,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#187A3D',
   },
-
-  /* 6 OTP Boxes Row */
   otpBoxesRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -598,8 +580,6 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     marginBottom: 12,
   },
-
-  /* Primary Verify Button */
   verifyBtn: {
     width: '100%',
     height: 52,
@@ -621,8 +601,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
-
-  /* Resend Row */
   resendRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -637,8 +615,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-
-  /* Change Phone Button */
   changePhoneBtn: {
     flexDirection: 'row',
     alignItems: 'center',

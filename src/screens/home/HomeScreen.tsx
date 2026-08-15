@@ -340,7 +340,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
                 style={[
                   styles.quickAskCard,
                   {
-                    backgroundColor: isDarkMode ? '#1E2937' : '#FFFFFF',
+                    backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
                     borderColor: isDarkMode ? '#374151' : BORDER_GREEN,
                   },
                 ]}
@@ -378,7 +378,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
                 title={topic.title}
                 subtitle={topic.subtitle}
                 icon={topic.icon}
-                onPress={() => navigation.navigate('Schemes')}
+                onPress={() => navigation.navigate('Schemes' as any)}
               />
             ))}
           </View>
@@ -390,7 +390,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
             <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
               ★ {t('featuredSchemesHeader') || 'Featured Schemes'}
             </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Schemes')} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigation.navigate('Schemes' as any)} activeOpacity={0.7}>
               <Text style={styles.seeAllActionText}>{t('seeAll') || 'See all →'}</Text>
             </TouchableOpacity>
           </View>
@@ -472,12 +472,14 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
             ))}
           </View>
         </View>
-
-
       </ScrollView>
     </View>
   );
 };
+
+/* ============================================================
+   STYLES
+   ============================================================ */
 
 const styles = StyleSheet.create({
   container: {
@@ -535,6 +537,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
+    maxWidth: '72%',
   },
   greetingTimeText: {
     fontSize: 30,
@@ -774,36 +777,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: PRIMARY_GREEN,
-  },
-
-  /* Today's Advisory Card */
-  advisoryCardContainer: {
-    borderRadius: 20,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-  },
-  advisoryIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  advisoryTextWrap: {
-    flex: 1,
-  },
-  advisoryTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  advisoryBody: {
-    fontSize: 13,
-    fontWeight: '500',
-    lineHeight: 18,
   },
 });

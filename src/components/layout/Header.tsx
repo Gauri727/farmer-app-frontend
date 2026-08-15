@@ -5,10 +5,10 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing } from '../../theme';
+import { Colors, Spacing, BorderRadius } from '../../theme';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import { useLanguageContext } from '../../contexts/LanguageContext';
 import { Language } from '../../types/api.types';
@@ -23,6 +23,7 @@ const LANGUAGES: Language[] = [
 
 interface HeaderProps {
   showLanguageSelector?: boolean;
+  onLanguagePress?: () => void;
   onNotificationPress?: () => void;
   onProfilePress?: () => void;
   onBackPress?: () => void;
@@ -34,6 +35,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   showLanguageSelector = true,
+  onLanguagePress,
   onNotificationPress,
   onProfilePress,
   onBackPress,
@@ -50,6 +52,14 @@ export const Header: React.FC<HeaderProps> = ({
   const handleSelectLanguage = (lang: Language) => {
     setLanguage(lang);
     setDropdownOpen(false);
+  };
+
+  const handleLanguageBtnClick = () => {
+    if (onLanguagePress) {
+      onLanguagePress();
+    } else {
+      setDropdownOpen(!dropdownOpen);
+    }
   };
 
   return (
@@ -92,12 +102,14 @@ export const Header: React.FC<HeaderProps> = ({
                 styles.languageButton,
                 { backgroundColor: themeColors.card, borderColor: themeColors.border },
               ]}
-              onPress={() => setDropdownOpen(!dropdownOpen)}
+              onPress={handleLanguageBtnClick}
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Select language"
             >
               <Ionicons name="globe-outline" size={15} color="#16A34A" />
               <Text style={[styles.languageText, { color: themeColors.textPrimary }]}>
-                {selectedLanguage.name}
+                {selectedLanguage.name || selectedLanguage}
               </Text>
               <Ionicons name="chevron-down" size={13} color={themeColors.textSecondary} />
             </TouchableOpacity>
@@ -184,7 +196,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </TouchableOpacity>
 
-            {/* Profile icon button with LIGHT GREEN BACKGROUND TINT */}
+            {/* Profile icon button */}
             <TouchableOpacity
               style={[
                 styles.actionIconButton,
@@ -303,8 +315,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.white,
   },
-
-  /* Floating Popover Dropdown positioned directly below button */
   backdropOverlay: {
     position: 'absolute',
     top: -500,

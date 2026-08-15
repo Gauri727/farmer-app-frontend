@@ -27,10 +27,9 @@ import { Scheme } from '../../types/api.types';
 
 const PRIMARY_GREEN = '#187A3D';
 
-export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
-  navigation,
-  route,
-}) => {
+export const SchemesListScreen: React.FC<
+  SchemesScreenProps<'SchemesList'>
+> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const { t, selectedLanguage } = useLanguageContext();
   const { isDarkMode, colors: themeColors } = useThemeContext();
@@ -39,6 +38,7 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   const categoriesQuery = useSchemeCategories();
+
   const schemesQuery = useSchemes({
     category: selectedCategory !== 'All' ? selectedCategory : undefined,
     limit: 50,
@@ -49,7 +49,7 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
   const allCategories = [{ id: 'all', name: 'All', count: totalSchemes }, ...categories];
   const rawSchemes = schemesQuery.data?.pages?.flatMap((page) => page.data.items) || [];
 
-  // Instant 60fps local filtering & localization
+  // Instant local filtering & localization
   const schemes = rawSchemes
     .map((s) => getLocalizedScheme(s, selectedLanguage.code))
     .filter((s) => {
@@ -77,7 +77,9 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
     });
 
   const handleSchemePress = (scheme: Scheme) => {
-    navigation.navigate('SchemeDetails', { schemeId: scheme.id });
+    navigation.navigate('SchemeDetails', {
+      schemeId: scheme.id,
+    });
   };
 
   const handleLoadMore = () => {
@@ -97,7 +99,7 @@ export const SchemesListScreen: React.FC<SchemesScreenProps<'SchemesList'>> = ({
         onProfilePress={() => navigation.navigate('ProfileTab', { screen: 'Profile' } as any)}
       />
 
-      {/* 2. Permanent Search Bar & Category Controls (Never unmounts) */}
+      {/* 2. Permanent Search Bar & Category Controls */}
       <View style={styles.headerBlock}>
         <View style={styles.searchWrap}>
           <SearchBar
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
   },
   loadingText: {
-    ...Typography.bodySmall,
+    ...Typography.bodySm,
   },
   skeletonWrap: {
     marginBottom: Spacing.sm,

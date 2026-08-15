@@ -12,6 +12,7 @@ import { ProfileStack } from './ProfileStack';
 import { Colors } from '../theme';
 import { useThemeContext } from '../contexts/ThemeContext';
 import { useLanguageContext } from '../contexts/LanguageContext';
+import { ChatbotFAB } from '../components/common/ChatbotFAB';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -86,7 +87,7 @@ const TabItem: React.FC<{
   inactiveIcon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
 }> = ({ isFocused, label, activeIcon, inactiveIcon, onPress }) => {
-  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const { isDarkMode } = useThemeContext();
   const scaleValue = React.useRef(new Animated.Value(isFocused ? 1.1 : 1)).current;
 
   React.useEffect(() => {
@@ -138,9 +139,9 @@ type CenterTab = {
 
 type TabConfig = RegularTab | CenterTab;
 
-const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const { isDarkMode } = useThemeContext();
   const { t } = useLanguageContext();
 
   const currentRouteName = state.routes[state.index]?.name;
@@ -148,11 +149,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
   const isVoiceAssistantFocused = currentRouteName === 'HomeTab' && currentChildRoute === 'VoiceAssistant';
 
   const tabs: TabConfig[] = [
-    { routeName: 'HomeTab', label: t('homeTab'), activeIcon: 'home', inactiveIcon: 'home-outline' },
-    { routeName: 'SchemesTab', label: t('schemesTab'), activeIcon: 'apps', inactiveIcon: 'apps-outline' },
+    { routeName: 'HomeTab', label: t('homeTab') || 'Home', activeIcon: 'home', inactiveIcon: 'home-outline' },
+    { routeName: 'SchemesTab', label: t('schemesTab') || 'Schemes', activeIcon: 'apps', inactiveIcon: 'apps-outline' },
     { isCenter: true },
-    { routeName: 'EligibilityTab', label: t('eligibilityTab'), activeIcon: 'checkmark-circle', inactiveIcon: 'checkmark-circle-outline' },
-    { routeName: 'ProfileTab', label: t('profileTab'), activeIcon: 'person', inactiveIcon: 'person-outline' },
+    { routeName: 'EligibilityTab', label: t('eligibilityTab') || 'Eligibility', activeIcon: 'checkmark-circle', inactiveIcon: 'checkmark-circle-outline' },
+    { routeName: 'ProfileTab', label: t('profileTab') || 'Profile', activeIcon: 'person', inactiveIcon: 'person-outline' },
   ];
 
   return (
@@ -166,7 +167,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
         },
       ]}
     >
-      {tabs.map((tab, index) => {
+      {tabs.map((tab) => {
         if (tab.isCenter) {
           return (
             <FloatingCenterFab
@@ -222,18 +223,25 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
 };
 
 export const MainTabs: React.FC = () => (
-  <Tab.Navigator
-    tabBar={(props) => <CustomTabBar {...props} />}
-    screenOptions={{ headerShown: false }}
-  >
-    <Tab.Screen name="HomeTab" component={HomeStack} />
-    <Tab.Screen name="SchemesTab" component={SchemesStack} />
-    <Tab.Screen name="EligibilityTab" component={EligibilityStack} />
-    <Tab.Screen name="ProfileTab" component={ProfileStack} />
-  </Tab.Navigator>
+  <View style={styles.mainContainer}>
+    <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
+    >
+      <Tab.Screen name="HomeTab" component={HomeStack} />
+      <Tab.Screen name="SchemesTab" component={SchemesStack} />
+      <Tab.Screen name="EligibilityTab" component={EligibilityStack} />
+      <Tab.Screen name="ProfileTab" component={ProfileStack} />
+    </Tab.Navigator>
+    {/* Global chatbot FAB — floats above every tab screen */}
+    <ChatbotFAB />
+  </View>
 );
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+  },
   tabBarFloatingContainer: {
     flexDirection: 'row',
     alignItems: 'center',

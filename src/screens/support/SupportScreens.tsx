@@ -4,8 +4,17 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography, BorderRadius } from '../../theme';
 import { Button } from '../../components/common/Button';
 import { Header } from '../../components/layout/Header';
@@ -28,9 +37,11 @@ export const AboutScreen: React.FC<any> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* App Header Section */}
         <View style={styles.aboutHeader}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="leaf" size={40} color={Colors.white} />
-          </View>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={styles.aboutLogo}
+            resizeMode="contain"
+          />
           <Text style={[styles.appName, { color: themeColors.textPrimary }]}>Farmer AI</Text>
           <Text style={[styles.version, { color: themeColors.textSecondary }]}>Version 1.0.0</Text>
         </View>
@@ -227,9 +238,11 @@ export const LoadingScreen: React.FC = () => {
   const { colors: themeColors } = useThemeContext();
   return (
     <View style={[styles.centerContainer, { backgroundColor: themeColors.background }]}>
-      <View style={styles.logoContainer}>
-        <Ionicons name="leaf" size={32} color={Colors.white} />
-      </View>
+      <Image
+        source={require('../../../assets/icon.png')}
+        style={styles.aboutLogo}
+        resizeMode="contain"
+      />
       <ActivityIndicator size="large" color={Colors.primary[500]} style={{ marginTop: Spacing.xl }} />
       <Text style={[styles.centerSubtitle, { color: themeColors.textSecondary, marginTop: Spacing.md }]}>Loading...</Text>
     </View>
@@ -264,6 +277,8 @@ export const NotFoundScreen: React.FC<{ onGoHome?: () => void }> = ({ onGoHome }
   );
 };
 
+// ── Styles ────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.xl, paddingBottom: 100 },
@@ -272,11 +287,17 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     marginTop: Spacing.md,
   },
+  aboutLogo: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    marginBottom: Spacing.lg,
+  },
   logoContainer: {
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: '#187A3D',
+    backgroundColor: Colors.primary[500],
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,

@@ -1,6 +1,6 @@
 /**
- * Login / Signup Screen — Farmer AI / Farmer AI
- * Clean, modern, trustworthy, mobile-first card-based authentication.
+ * Login / Signup Screen — Farmer AI
+ * Google + OTP login options.
  * Fully localized across 5 languages & theme-aware (Light / Dark).
  */
 
@@ -16,9 +16,11 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { useGoogleLogin } from '../../hooks/useAuth';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useLanguageContext } from '../../contexts/LanguageContext';
@@ -36,6 +38,7 @@ const LANGUAGES: Language[] = [
 
 export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+
   const { login } = useAuthContext();
   const { t, selectedLanguage, setLanguage } = useLanguageContext();
   const { isDarkMode, toggleTheme, colors: themeColors } = useThemeContext();
@@ -45,6 +48,7 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
   const [errorMsg, setErrorMsg] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Entrance animations
@@ -74,27 +78,34 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
 
   const handleSendOTP = async () => {
     const cleanNum = mobileNumber.replace(/\D/g, '');
-    if (cleanNum.length < 10) {
-      setErrorMsg(t('mobilePlaceholder') || 'कृपया १० अंकी वैध मोबाईल क्रमांक प्रविष्ट करा');
+    if (cleanNum.length === 0) {
+      setErrorMsg(t('mobilePlaceholder') || 'Please enter your mobile number.');
+      Alert.alert('Mobile Number Required', 'Please enter your mobile number first.');
+      return;
+    }
+    if (cleanNum.length !== 10) {
+      setErrorMsg(t('mobilePlaceholder') || 'Please enter a valid 10-digit mobile number.');
+      Alert.alert('Invalid Mobile Number', 'Please enter a valid 10-digit mobile number.');
       return;
     }
     setErrorMsg('');
     setIsSubmitting(true);
 
     try {
-      // Small feedback delay then navigate to OTP Verification
       setTimeout(() => {
         setIsSubmitting(false);
         navigation.navigate('OTPLogin', { mobile: cleanNum });
       }, 300);
     } catch {
       setIsSubmitting(false);
-      setErrorMsg(t('errorOccurred') || 'त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+      setErrorMsg(t('errorOccurred') || 'Error occurred. Please try again.');
     }
   };
 
   const handleGoogleLogin = async () => {
+    if (isGoogleLoading) return;
     try {
+      setIsGoogleLoading(true);
       const result = await googleLoginMutation.mutateAsync({
         id_token: 'google_id_token_placeholder',
       });
@@ -102,7 +113,7 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
         await login(result.data.user, result.data.access_token, result.data.refresh_token);
       }
     } catch {
-      // Demo fallback for smooth offline/testing flow
+      // Fallback demo login
       await login(
         {
           id: '1',
@@ -114,18 +125,19 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
         'demo_token',
         'demo_refresh'
       );
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#111827' : '#F7FAF8', paddingTop: insets.top }]}>
-      {/* Background Subtle Ambient Circles */}
+      {/* Ambient background circles */}
       <View style={[styles.bgCircle1, { backgroundColor: isDarkMode ? 'rgba(6, 78, 59, 0.25)' : 'rgba(220, 252, 231, 0.45)' }]} />
       <View style={[styles.bgCircle2, { backgroundColor: isDarkMode ? 'rgba(17, 24, 39, 0.4)' : 'rgba(240, 253, 244, 0.7)' }]} />
 
-      {/* Top Header Bar with Language Selector & Theme Toggle */}
+      {/* Top Header Bar */}
       <View style={styles.topHeader}>
-        {/* Brand Tag */}
         <View style={[styles.brandTag, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <Ionicons name="leaf" size={16} color="#15803D" />
           <Text style={[styles.brandTagText, { color: isDarkMode ? '#6EE7B7' : '#15803D' }]}>
@@ -133,9 +145,7 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
           </Text>
         </View>
 
-        {/* Action Controls */}
         <View style={styles.rightActionsRow}>
-          {/* Language Selector Dropdown */}
           <View style={styles.langWrapper}>
             <TouchableOpacity
               style={[styles.langSelectorBtn, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
@@ -149,7 +159,6 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
               <Ionicons name="chevron-down" size={13} color={themeColors.textSecondary} />
             </TouchableOpacity>
 
-            {/* Popover Language Card */}
             {dropdownOpen && (
               <>
                 <TouchableOpacity
@@ -190,7 +199,6 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
             )}
           </View>
 
-          {/* Theme Toggle Button */}
           <TouchableOpacity
             style={[styles.themeToggleBtn, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
             onPress={toggleTheme}
@@ -206,7 +214,7 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
         </View>
       </View>
 
-      {/* Main Content Area */}
+      {/* Main Form Content */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -225,7 +233,6 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
               },
             ]}
           >
-            {/* Centered Rounded Authentication Card */}
             <View
               style={[
                 styles.card,
@@ -235,7 +242,6 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                 },
               ]}
             >
-              {/* Logo / Emblem Container */}
               <View style={styles.logoWrap}>
                 <View
                   style={[
@@ -250,17 +256,14 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                 </View>
               </View>
 
-              {/* Main Welcome Heading */}
               <Text style={[styles.welcomeHeading, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}>
-                {t('welcomeFarmer') || 'नमस्कार, शेतकरी 👋'}
+                {t('welcomeFarmer') || ' नमस्कार, शेतकरी 👋'}
               </Text>
 
-              {/* Subheading Description */}
               <Text style={[styles.loginSubtitle, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
                 {t('loginSubtitle') || 'तुमच्या आवाजातून सरकारी योजना व शेती माहिती शोधा.'}
               </Text>
 
-              {/* Form Input Section */}
               <View style={styles.formGroup}>
                 <Text style={[styles.inputLabel, { color: isDarkMode ? '#E5E7EB' : '#374151' }]}>
                   {t('mobileNumberLabel') || 'मोबाईल क्रमांक'}
@@ -287,7 +290,8 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                     style={[styles.textInput, { color: isDarkMode ? '#F9FAFB' : '#111827' }]}
                     value={mobileNumber}
                     onChangeText={(text) => {
-                      setMobileNumber(text);
+                      const digits = text.replace(/[^0-9]/g, '').slice(0, 10);
+                      setMobileNumber(digits);
                       if (errorMsg) setErrorMsg('');
                     }}
                     onFocus={() => setIsFocused(true)}
@@ -302,11 +306,10 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                 {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
               </View>
 
-              {/* Primary Send OTP Button */}
               <TouchableOpacity
                 style={[
                   styles.sendOtpBtn,
-                  isSubmitting && { opacity: 0.8 },
+                  (isSubmitting || mobileNumber.length !== 10) && { opacity: 0.85, backgroundColor: mobileNumber.length === 10 ? '#187A3D' : '#9CA3AF' },
                 ]}
                 onPress={handleSendOTP}
                 disabled={isSubmitting}
@@ -322,7 +325,6 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                 )}
               </TouchableOpacity>
 
-              {/* OR Divider */}
               <View style={styles.dividerRow}>
                 <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? '#374151' : '#E2E8F0' }]} />
                 <Text style={[styles.dividerText, { color: isDarkMode ? '#9CA3AF' : '#94A3B8' }]}>
@@ -331,7 +333,6 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                 <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? '#374151' : '#E2E8F0' }]} />
               </View>
 
-              {/* Google Login Button */}
               <TouchableOpacity
                 style={[
                   styles.googleBtn,
@@ -342,22 +343,22 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                 ]}
                 onPress={handleGoogleLogin}
                 activeOpacity={0.88}
+                disabled={isGoogleLoading}
               >
                 <View style={[styles.googleIconCircle, { backgroundColor: isDarkMode ? '#1F2937' : '#F8FAFC' }]}>
                   <Ionicons name="logo-google" size={18} color="#4285F4" />
                 </View>
                 <Text style={[styles.googleBtnText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
-                  {t('continueWithGoogle') || 'Google सह पुढे जा'}
+                  {isGoogleLoading ? 'Signing in...' : (t('continueWithGoogle') || 'Google सह पुढे जा')}
                 </Text>
               </TouchableOpacity>
 
-              {/* Bottom Terms & Privacy Disclaimer */}
               <TouchableOpacity
                 onPress={() => navigation.navigate('TermsConditions' as any)}
                 activeOpacity={0.7}
               >
                 <Text style={[styles.termsText, { color: isDarkMode ? '#9CA3AF' : '#94A3B8' }]}>
-                  {t('termsPolicyAgreement') || 'पुढे चालू ठेवून तुम्ही आमच्या सेवा अटी व गोपनीयता धोरणास सहमती देता.'}
+                  {t('termsPolicyAgreement') || 'आगे बढ़कर आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत होते हैं।'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -372,8 +373,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
-  /* Background Glow Blobs */
   bgCircle1: {
     position: 'absolute',
     top: -50,
@@ -390,8 +389,6 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 140,
   },
-
-  /* Top Bar Header */
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -443,8 +440,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
   },
-
-  /* Popover Dropdown */
   backdropOverlay: {
     position: 'absolute',
     top: -500,
@@ -481,8 +476,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-
-  /* Scroll & Card Centering */
   keyboardView: {
     flex: 1,
   },
@@ -512,8 +505,6 @@ const styles = StyleSheet.create({
     elevation: 6,
     alignItems: 'center',
   },
-
-  /* Logo Container */
   logoWrap: {
     marginBottom: 18,
   },
@@ -525,8 +516,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
   },
-
-  /* Headings */
   welcomeHeading: {
     fontSize: 26,
     fontWeight: '900',
@@ -542,8 +531,6 @@ const styles = StyleSheet.create({
     marginBottom: 26,
     paddingHorizontal: 8,
   },
-
-  /* Input Form */
   formGroup: {
     width: '100%',
     marginBottom: 20,
@@ -583,8 +570,6 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     marginTop: 6,
   },
-
-  /* Buttons */
   sendOtpBtn: {
     width: '100%',
     height: 52,
@@ -648,8 +633,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
-
-  /* Terms Footer */
   termsText: {
     fontSize: 11,
     fontWeight: '500',

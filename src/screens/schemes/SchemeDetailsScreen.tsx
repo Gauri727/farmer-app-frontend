@@ -94,7 +94,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       } else {
         throw new Error('Scheme data empty');
       }
-    } catch (err: any) {
+    } catch {
       console.log('Fetching scheme via service failed, trying local MOCK_SCHEMES fallback for ID:', schemeId);
       const clean = schemeId.toLowerCase().trim();
       const fallback = MOCK_SCHEMES.find(
@@ -135,7 +135,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  // ── Loading State ────────────────────────────────────────────────────────────
+  // Loading State
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: themeColors.background, paddingTop: insets.top }]}>
@@ -155,7 +155,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // ── Error / Empty State ──────────────────────────────────────────────────────
+  // Error / Empty State
   if (error || !scheme) {
     return (
       <View style={[styles.container, { backgroundColor: themeColors.background, paddingTop: insets.top }]}>
@@ -168,7 +168,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.centerContainer}>
           <Ionicons name="alert-circle-outline" size={56} color="#EF4444" />
           <Text style={[styles.errorTitle, { color: textColor }]}>
-            {t('errorLoadScheme')}
+            {t('errorLoadScheme') || 'Unable to load scheme details.'}
           </Text>
           <TouchableOpacity
             style={styles.retryBtn}
@@ -183,8 +183,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // ── Extract Core Standardized Scheme Fields ──────────────────────────────────
-  // 1. Overview
+  // Extract Core Standardized Scheme Fields
   const rawOverview = scheme.overview || scheme.description || scheme.about || '';
   const overviewParagraphs: string[] = Array.isArray(rawOverview)
     ? rawOverview
@@ -192,7 +191,6 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       ? rawOverview.split(/\n\n+/).map(p => p.trim()).filter(Boolean)
       : []);
 
-  // 2. Benefits
   const rawBenefits = scheme.benefit || scheme.benefits;
   let benefitsList: any[] = [];
   if (Array.isArray(rawBenefits)) {
@@ -201,7 +199,6 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     benefitsList = rawBenefits.split(/\n|;|•/).map(s => s.trim()).filter(Boolean);
   }
 
-  // 3. Eligibility
   const rawEligibility = scheme.eligibility || scheme.eligibility_criteria;
   let eligibilityList: string[] = [];
   if (Array.isArray(rawEligibility)) {
@@ -210,7 +207,6 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     eligibilityList = rawEligibility.split(/\n|;|•/).map((s: string) => s.trim()).filter(Boolean);
   }
 
-  // 4. Required Documents
   const rawDocs = scheme.requiredDocuments || scheme.documents || scheme.documents_required;
   let documentsList: any[] = [];
   if (Array.isArray(rawDocs)) {
@@ -219,7 +215,6 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     documentsList = rawDocs.split(/\n|;|•/).map(s => s.trim()).filter(Boolean);
   }
 
-  // 5. How to Apply
   const rawHowToApply = scheme.howToApply;
   let howToApplySteps: string[] = [];
   let howToApplyDesc = '';
@@ -232,34 +227,29 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     howToApplySteps = rawHowToApply.split(/\n|;/).map(s => s.trim()).filter(Boolean);
   }
 
-  // Fallback complete steps if empty
   if (howToApplySteps.length === 0) {
     howToApplySteps = [
-      t('defaultStep1'),
-      t('defaultStep2'),
-      t('defaultStep3'),
-      t('defaultStep4'),
+      t('defaultStep1') || 'Visit official Portal (MahaDBT).',
+      t('defaultStep2') || 'Register as a Farmer with Aadhaar & Mobile number.',
+      t('defaultStep3') || 'Select Scheme Category & fill farm details.',
+      t('defaultStep4') || 'Upload required documents & submit application.',
     ];
   }
   const officialApplyUrl = (rawHowToApply && typeof rawHowToApply === 'object' ? rawHowToApply.officialUrl : null) || scheme.application_url || scheme.official_website;
 
-  // FAQs
   const faqsList: { question: string; answer: string }[] = Array.isArray(scheme.faqs) ? scheme.faqs : [];
 
-  // GR
   const grObj = scheme.gr || {};
   const grViewUrl = grObj.viewUrl || grObj.url || grObj.downloadUrl;
   const grDownloadUrl = grObj.downloadUrl || grObj.viewUrl || grObj.url;
   const hasGRUrl = Boolean(grViewUrl || grDownloadUrl);
   const grTitle = grObj.title || t('grSectionTitle') || 'Government Resolution (GR)';
 
-  // Contact
   const contactObj = scheme.contact || {};
   const contactPhone = contactObj.phone || contactObj.helpline || '022-61316429';
   const contactEmail = contactObj.email;
   const contactAddress = contactObj.address || contactObj.office;
 
-  // Source URL
   const sourceObj = scheme.source || {};
   const sourceName = sourceObj.name || 'Maharashtra Government – MahaDBT';
   const sourceUrl = sourceObj.url || officialApplyUrl || 'https://mahadbt2.maharashtra.gov.in/farmer';
@@ -277,7 +267,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ── Top Hero Banner ── */}
+        {/* Top Hero Banner */}
         <View style={[styles.heroCard, { backgroundColor: greenBg, borderColor: borderColor }]}>
           <View style={styles.heroHeaderRow}>
             <View style={[styles.heroIconCircle, { backgroundColor: cardBg }]}>
@@ -299,14 +289,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           ) : null}
         </View>
 
-        {/* ── 1. Overview (includes Overview & Benefits/Grant details) ── */}
+        {/* 1. Overview */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="information-circle" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('overviewTab')}
+              {t('overviewTab') || 'Overview'}
             </Text>
           </View>
           {overviewParagraphs.length > 0 ? (
@@ -317,15 +307,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             ))
           ) : (
             <Text style={[styles.bodyText, { color: textColor }]}>
-              {t('schemeObjective')}
+              {t('schemeObjective') || 'No description available.'}
             </Text>
           )}
 
-          {/* Benefits / Subsidies Sub-Block inside Overview */}
           {benefitsList.length > 0 ? (
             <View style={{ marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: borderColor }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: PRIMARY_GREEN, marginBottom: 8 }}>
-                {t('benefitsSubsidyHeader')}
+                {t('benefitsSubsidyHeader') || 'Benefits & Subsidy Details'}
               </Text>
               <View style={styles.listWrap}>
                 {benefitsList.map((item, index) => {
@@ -382,14 +371,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           ) : null}
         </View>
 
-        {/* ── 2. Eligibility ── */}
+        {/* 2. Eligibility */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="people" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('eligibilityTabName')}
+              {t('eligibilityTabName') || 'Eligibility Criteria'}
             </Text>
           </View>
           {eligibilityList.length > 0 ? (
@@ -402,20 +391,20 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               ))}
             </View>
           ) : (
-            <Text style={[styles.bodyText, { color: subTextColor, italic: true } as any]}>
-              {t('noEligibilityCriteria')}
+            <Text style={[styles.bodyText, { color: subTextColor }]}>
+              {t('noEligibilityCriteria') || 'Standard farmer eligibility criteria applies.'}
             </Text>
           )}
         </View>
 
-        {/* ── 3. How to Apply ── */}
+        {/* 3. How to Apply */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="clipboard" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('howToApplyTab')}
+              {t('howToApplyTab') || 'How to Apply'}
             </Text>
           </View>
           {howToApplyDesc ? (
@@ -424,12 +413,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </Text>
           ) : null}
           <View style={styles.timelineList}>
-            {(howToApplySteps.length > 0 ? howToApplySteps : [
-              t('defaultStep1'),
-              t('defaultStep2'),
-              t('defaultStep3'),
-              t('defaultStep4'),
-            ]).map((step, idx) => (
+            {howToApplySteps.map((step, idx) => (
               <View key={idx} style={styles.timelineItem}>
                 <View style={styles.stepBadge}>
                   <Text style={styles.stepBadgeText}>0{idx + 1}</Text>
@@ -452,14 +436,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           ) : null}
         </View>
 
-        {/* ── 4. Documents ── */}
+        {/* 4. Documents */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="document-text" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('documentsTab')}
+              {t('documentsTab') || 'Required Documents'}
             </Text>
           </View>
           {documentsList.length > 0 ? (
@@ -498,20 +482,20 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               })}
             </View>
           ) : (
-            <Text style={[styles.bodyText, { color: subTextColor, italic: true } as any]}>
-              {t('noDocumentsAvailable')}
+            <Text style={[styles.bodyText, { color: subTextColor }]}>
+              {t('noDocumentsAvailable') || 'Aadhaar Card, 7/12 extract & Bank Passbook required.'}
             </Text>
           )}
         </View>
 
-        {/* ── 5. FAQs ── */}
+        {/* 5. FAQs */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="help-circle" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('faqsTab')}
+              {t('faqsTab') || 'Frequently Asked Questions (FAQs)'}
             </Text>
           </View>
           <View style={styles.accordionContainer}>
@@ -546,14 +530,14 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* ── 6. GR (View/Download) ── */}
+        {/* 6. GR (View/Download) */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="newspaper" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('grSectionTitle')}
+              {t('grSectionTitle') || 'Government Resolution (GR)'}
             </Text>
           </View>
           {hasGRUrl ? (
@@ -569,7 +553,7 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                     activeOpacity={0.85}
                   >
                     <Ionicons name="eye-outline" size={16} color="#FFFFFF" />
-                    <Text style={styles.grBtnViewText}>{t('viewGR')}</Text>
+                    <Text style={styles.grBtnViewText}>{t('viewGR') || 'View GR'}</Text>
                   </TouchableOpacity>
                 ) : null}
                 {grDownloadUrl ? (
@@ -579,26 +563,26 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                     activeOpacity={0.85}
                   >
                     <Ionicons name="download-outline" size={16} color={PRIMARY_GREEN} />
-                    <Text style={[styles.grBtnDownloadText, { color: PRIMARY_GREEN }]}>{t('downloadGR')}</Text>
+                    <Text style={[styles.grBtnDownloadText, { color: PRIMARY_GREEN }]}>{t('downloadGR') || 'Download GR'}</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
             </View>
           ) : (
             <Text style={[styles.bodyText, { color: subTextColor }]}>
-              {t('noGRAvailable')}
+              {t('noGRAvailable') || 'Government Resolution (GR) Document is available on MahaDBT Portal.'}
             </Text>
           )}
         </View>
 
-        {/* ── 7. Contact ── */}
+        {/* 7. Contact */}
         <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor }]}>
           <View style={styles.sectionHeaderRow}>
             <View style={[styles.sectionHeaderIcon, { backgroundColor: greenBg }]}>
               <Ionicons name="call" size={20} color={greenText} />
             </View>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              {t('contactTab')}
+              {t('contactTab') || 'Help & Support Contact'}
             </Text>
           </View>
           {(contactPhone || contactEmail || contactAddress) ? (
@@ -641,21 +625,21 @@ export const SchemeDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           ) : (
             <Text style={[styles.bodyText, { color: textColor }]}>
-              {t('contactFallback')}
+              {t('contactFallback') || 'Contact Krishi Sevak or Taluka Agriculture Office.'}
             </Text>
           )}
         </View>
 
-        {/* ── Bottom Official Source Section ── */}
+        {/* Bottom Official Source Section */}
         <View style={[styles.sourceCard, { backgroundColor: greenBg, borderColor: BORDER_GREEN }]}>
-          <Text style={[styles.sourceLabel, { color: subTextColor }]}>{t('sourceLabel')}</Text>
+          <Text style={[styles.sourceLabel, { color: subTextColor }]}>{t('sourceLabel') || 'Official Source'}</Text>
           <Text style={[styles.sourceName, { color: textColor }]}>{sourceName}</Text>
           <TouchableOpacity
             style={styles.officialSourceBtn}
             onPress={() => handleOpenUrl(sourceUrl)}
             activeOpacity={0.85}
           >
-            <Text style={styles.officialSourceBtnText}>{t('viewOfficialSource')}</Text>
+            <Text style={styles.officialSourceBtnText}>{t('viewOfficialSource') || 'View Official Website →'}</Text>
             <Ionicons name="open-outline" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -951,11 +935,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  contactVal: {
-    fontSize: 13.5,
-    fontWeight: '600',
-    marginTop: 1,
   },
   contactValLink: {
     fontSize: 13.5,

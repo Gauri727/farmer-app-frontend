@@ -359,10 +359,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 14,
     paddingTop: 10,
-    paddingBottom: 130, // Ensures bottom padding so action button & last cards are never obscured
+    paddingBottom: 130,
   },
-
-  /* Voice Assistance Banner */
   voiceBannerCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,8 +395,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 2,
   },
-
-  /* Form & Question Cards */
   formSection: {
     gap: 2,
   },
@@ -419,8 +415,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     lineHeight: 18,
   },
-
-  /* 2-Column Responsive Grid */
   twoColumnGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -441,8 +435,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-
-  /* Big Green Action Button */
   bigGreenButton: {
     width: '100%',
     paddingVertical: 15,
@@ -464,8 +456,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.3,
   },
-
-  /* Results Section */
   resultsContainer: {
     gap: 12,
   },

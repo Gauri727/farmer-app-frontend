@@ -1,3 +1,8 @@
+/**
+ * Voice Assistant Screen
+ * Large mic button, animated waveform, transcript, response display
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
