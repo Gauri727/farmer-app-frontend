@@ -93,26 +93,18 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: isWeb ? '#E2E8F0' : '#FFFFFF',
+    backgroundColor: '#FFFFFF',
   },
   webContainer: {
     flex: 1,
-    alignItems: isWeb ? 'center' : undefined,
-    justifyContent: isWeb ? 'center' : undefined,
-    backgroundColor: isWeb ? '#E2E8F0' : '#FFFFFF',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#FFFFFF',
   },
   mobileFrame: {
     flex: 1,
     width: '100%',
-    maxWidth: isWeb ? 450 : undefined,
-    maxHeight: isWeb ? 900 : undefined,
+    height: '100%',
     backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    borderRadius: isWeb ? 24 : 0,
-    marginVertical: isWeb ? 16 : 0,
   },
 });

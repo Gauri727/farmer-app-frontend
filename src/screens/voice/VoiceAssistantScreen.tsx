@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +25,9 @@ import { HomeScreenProps } from '../../navigation/types';
 export const VoiceAssistantScreen: React.FC<HomeScreenProps<'VoiceAssistant'>> = ({
   navigation,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const isDesktop = windowWidth >= 768;
+
   const { t, selectedLanguage } = useLanguageContext();
   const { isDarkMode, colors: themeColors } = useThemeContext();
 
@@ -274,7 +278,11 @@ export const VoiceAssistantScreen: React.FC<HomeScreenProps<'VoiceAssistant'>> =
             {quickQuestions.map((item, idx) => (
               <TouchableOpacity
                 key={idx}
-                style={[styles.questionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                style={[
+                  styles.questionCard,
+                  isDesktop && { width: '23.5%' },
+                  { backgroundColor: themeColors.card, borderColor: themeColors.border },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => triggerMockQuery(item.question, item.response)}
               >
@@ -304,6 +312,9 @@ const styles = StyleSheet.create({
   bannerWrapper: {
     paddingHorizontal: 14,
     paddingTop: 8,
+    maxWidth: 1000,
+    width: '100%',
+    alignSelf: 'center',
   },
   assistantBannerCard: {
     borderRadius: 18,
@@ -355,6 +366,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 14,
     paddingHorizontal: 14,
+    maxWidth: 800,
+    width: '100%',
+    alignSelf: 'center',
   },
   micMainInstruction: {
     fontSize: 15,
@@ -405,6 +419,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: 16,
     gap: 10,
+    maxWidth: 1000,
+    width: '100%',
+    alignSelf: 'center',
   },
   userCard: {
     flexDirection: 'row',
@@ -436,6 +453,9 @@ const styles = StyleSheet.create({
   quickQuestionsSection: {
     marginTop: 24,
     paddingHorizontal: 16,
+    maxWidth: 1000,
+    width: '100%',
+    alignSelf: 'center',
   },
   sectionTitle: {
     fontSize: 16,

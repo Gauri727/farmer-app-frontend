@@ -3,6 +3,21 @@
  */
 
 export const kok: Record<string, string> = {
+  "admin": "प्रशासक (Admin)",
+  "adminPanel": "प्रशासक (Admin)",
+  "guest": "पाहुणो (Guest)",
+  "signInSaveSchemes": "येवजणी आनी अर्ज सुवातीर दवरपाक सायन इन करात",
+  "adminAccessRequired": "प्रशासक प्रवेश गरजेचो",
+  "adminAccessSub": "हो पॅनेल पळोवपाक प्रशासक वा मॉडरेटर खात्यान सायन इन करात.",
+  "signIn": "सायन इन",
+  "adminAccessGranted": "प्रशासक प्रवेश मंजूर",
+  "welcomeAdmin": "प्रशासक तुमचें येवकार",
+  "adminDashboardSub": "सिस्टम विहंगावलोकन आनी व्यवस्थापन पॅनेल.",
+  "registeredFarmers": "नोंदणीकृत शेतकार",
+  "activeSchemes": "सक्रिय येवजणी",
+  "pendingApplications": "प्रलंबित अर्ज",
+  "systemHealth": "सिस्टम भलायकी",
+  "managementModules": "व्यवस्थापन मॉड्यूल्स",
   "faqQHelpline": "येवजणेचो हेल्पलाईन नंबर काय आसा?",
   "faqQHowToApply": "ह्या येवजणे खातीर अर्ज कसो करचो?",
   "faqQDocuments": "अर्जा खातीर कसलीं कादगारां जाय?",

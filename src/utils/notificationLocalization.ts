@@ -137,7 +137,7 @@ export const getLocalizedNotification = (
     }
   }
 
-  const lang = (['mr', 'en', 'hi', 'ahr', 'kok'].includes(langCode) ? langCode : 'mr') as keyof LocalizedNotificationData['title'];
+  const lang = (['mr', 'en', 'hi'].includes(langCode) ? langCode : 'mr') as keyof LocalizedNotificationData['title'];
 
   if (!trans) {
     return notification;
@@ -155,7 +155,7 @@ export const getLocalizedNotification = (
  * Returns a localized formatted time string ("Today", "2 days ago", etc.) based on language code.
  */
 export const getLocalizedTimeAgo = (dateString: string, langCode: string): string => {
-  const lang = (['mr', 'en', 'hi', 'ahr', 'kok'].includes(langCode) ? langCode : 'mr');
+  const lang = (['mr', 'en', 'hi'].includes(langCode) ? langCode : 'mr');
   const dict = TIME_AGO_STRINGS[lang] || TIME_AGO_STRINGS['mr'];
 
   if (!dateString) {

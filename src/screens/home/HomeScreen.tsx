@@ -1,9 +1,8 @@
 /**
  * Home Screen — Farmer AI
- * Single Vertically Scrollable Page Layout with Large Vertical Voice Hero Card,
- * Large Centered Microphone with Soft Circular Glow, Audio Waveform Visualizer,
- * Quick Ask 2-Column Grid, More Topics, Featured Schemes Carousel & Recent Updates.
- * Preserves 100% of existing logic, hooks, state, navigation, theme & API integrations.
+ * Styled matching Image 2 reference with Farm Landscape background,
+ * Voice hero card, Quick Ask 2-column grid, More Topics chips, Featured Schemes & Recent Updates.
+ * 100% dynamic multi-language translation support.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -16,6 +15,7 @@ import {
   RefreshControl,
   Animated,
   Easing,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Layout } from '../../theme';
@@ -32,26 +32,18 @@ import { HomeScreenProps } from '../../navigation/types';
 import { Scheme, Notification } from '../../types/api.types';
 
 // Green Theme Design Tokens (Farmer AI Palette)
-const PRIMARY_GREEN = '#187A3D';
+const PRIMARY_GREEN = '#15803D';
 const DARK_GREEN = '#126B35';
-const LIGHT_GREEN_BG = '#F3FAF5';
-const PALE_GREEN_TINT = '#EAF6EE';
-const BORDER_GREEN = '#DDE5E0';
-
-// Topics Data
-const TOPICS_DATA = [
-  { id: 'horticulture', title: 'Horticulture', subtitle: 'Fruit Orchards & Plantation', icon: 'leaf-outline' as const, category: 'Horticulture' },
-  { id: 'irrigation', title: 'Irrigation', subtitle: 'Drip & Sprinkler Subsidies', icon: 'water-outline' as const, category: 'Irrigation' },
-  { id: 'mechanization', title: 'Mechanization', subtitle: 'Tractor & Machinery', icon: 'hardware-chip-outline' as const, category: 'Mechanization' },
-  { id: 'welfare', title: 'Farmer Welfare', subtitle: 'Income Support & Loans', icon: 'cash-outline' as const, category: 'Farmer Welfare' },
-];
+const LIGHT_GREEN_BG = '#F0FDF4';
+const PALE_GREEN_TINT = '#E8F5E9';
+const BORDER_GREEN = '#DCFCE7';
 
 // Quick Ask Items
 const QUICK_ASK_ITEMS = [
-  { id: 'q1', text: 'How to apply for Drip Irrigation?', category: 'Irrigation' },
-  { id: 'q2', text: 'Tractor subsidy eligibility rules?', category: 'Mechanization' },
-  { id: 'q3', text: 'PM-Kisan installment status?', category: 'Farmer Welfare' },
-  { id: 'q4', text: 'Fruit orchard plantation grant?', category: 'Horticulture' },
+  { id: 'q1', key: 'quickQ1', defaultText: 'Which schemes am I eligible for?', category: 'Eligibility' },
+  { id: 'q2', key: 'quickQ2', defaultText: 'PM Kisan Status Check', category: 'Farmer Welfare' },
+  { id: 'q3', key: 'quickQ3', defaultText: 'How to apply for crop insurance?', category: 'Insurance' },
+  { id: 'q4', key: 'quickQ4', defaultText: 'Tractor subsidy eligibility rules?', category: 'Mechanization' },
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) => {
@@ -70,7 +62,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
       Animated.parallel([
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.2,
+            toValue: 1.15,
             duration: 1300,
             useNativeDriver: true,
             easing: Easing.out(Easing.ease),
@@ -84,7 +76,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
         ]),
         Animated.sequence([
           Animated.timing(pulseOpacity, {
-            toValue: 0.25,
+            toValue: 0.2,
             duration: 1300,
             useNativeDriver: true,
           }),
@@ -151,17 +143,6 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
         amount: '५०% ते ८०% अनुदान',
         benefits: 'ट्रॅक्टर, पॉवर टिलर, अवजारे खरेदीवर ५०% अनुदान व अवजारे बँक केंद्रांसाठी ८०% सहाय्य.',
       },
-      {
-        id: 'dr-babasaheb-ambedkar-krushi-swavalamban-yojana',
-        name: 'डॉ. बाबासाहेब आंबेडकर कृषी स्वावलंबन योजना',
-        title: 'डॉ. बाबासाहेब आंबेडकर कृषी स्वावलंबन योजना',
-        englishName: 'Dr. Babasaheb Ambedkar Krushi Swavalamban Yojana',
-        description: 'अनुसूचित जाती (SC) व नवबौद्ध शेतकऱ्यांसाठी विहीर, विहीर दुरुस्ती, पंप व सूक्ष्म सिंचन अनुदान.',
-        category: 'Farmer Welfare',
-        type: 'State',
-        amount: 'रु. २.५० लाख पर्यंत अनुदान',
-        benefits: 'नवीन विहीर रु. २.५ लाख, जुनी विहीर दुरुस्ती रु. ५० हजार, पंप संच रु. २५ हजार.',
-      },
     ];
 
   const fetchedSchemes = rawHomeSchemes.map((s) => getLocalizedScheme(s, selectedLanguage.code));
@@ -191,6 +172,9 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
 
   const fetchedUpdates = rawUpdates.map((n) => getLocalizedNotification(n, selectedLanguage.code));
 
+  const currentHour = new Date().getHours();
+  const timeGreetingKey = currentHour < 12 ? 'goodMorning' : currentHour < 17 ? 'goodAfternoon' : 'goodEvening';
+
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* HEADER */}
@@ -205,7 +189,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
       {/* SINGLE VERTICAL SCROLLABLE PAGE */}
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 110 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -216,106 +200,111 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
           />
         }
       >
-        {/* 1. LARGE VERTICAL VOICE HERO CARD (Centered Microphone Layout) */}
+        {/* 1. VOICE HERO CARD MATCHING IMAGE 2 */}
         <View style={styles.heroSectionWrapper}>
           <View
             style={[
               styles.heroCardContainer,
               {
-                backgroundColor: isDarkMode ? '#1E2937' : LIGHT_GREEN_BG,
+                backgroundColor: isDarkMode ? '#1E293B' : LIGHT_GREEN_BG,
                 borderColor: isDarkMode ? '#374151' : BORDER_GREEN,
               },
             ]}
           >
+            {/* Background Farm Landscape Image */}
+            <Image
+              source={require('../../../assets/farm_banner.png')}
+              style={[styles.heroBgImageFull, { opacity: isDarkMode ? 0.18 : 0.85 }]}
+              resizeMode="cover"
+            />
             {/* Top Live Status Badge */}
-            <View style={[styles.liveBadgeRow, { backgroundColor: isDarkMode ? '#111827' : '#FFFFFF' }]}>
+            <View style={[styles.liveBadgeRow, { backgroundColor: isDarkMode ? '#1E293B' : 'rgba(255, 255, 255, 0.92)', borderColor: isDarkMode ? '#374151' : '#DCFCE7' }]}>
               <View style={styles.liveDot} />
               <Text style={styles.liveBadgeText}>{t('liveBadge') || 'Live'}</Text>
             </View>
 
             {/* Main Greeting Heading */}
-            <Text style={[styles.namasteText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-              {t('namasteGreeting') || 'नमस्ते!'}
+            <Text style={[styles.namasteText, { color: isDarkMode ? '#F9FAFB' : '#0F172A' }]}>
+              {t('namasteGreeting') || 'Namaste!'}
             </Text>
-            <Text style={[styles.greetingTimeText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-              {t(
-                new Date().getHours() < 12
-                  ? 'goodMorning'
-                  : new Date().getHours() < 17
-                    ? 'goodAfternoon'
-                    : 'goodEvening'
-              ) || 'शुभ संध्याकाळ'}
+            <Text style={[styles.greetingTimeText, { color: isDarkMode ? '#F9FAFB' : '#0F172A' }]}>
+              {t(timeGreetingKey) || 'Good Evening'}
             </Text>
 
             {/* Description */}
-            <Text style={[styles.heroSubText, { color: isDarkMode ? '#9CA3AF' : '#5F6B7A' }]}>
-              {t('heroSubTitle') || 'शासकीय योजना व शेती मार्गदर्शनासाठी तुमचा AI सहाय्यक.'}
+            <Text style={[styles.heroSubText, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
+              {t('heroSubTitle') || 'Your AI assistant for government schemes & agri guidance.'}
             </Text>
 
-            {/* LARGE CENTERED MICROPHONE AREA */}
+            {/* VOICE MIC ROW SECTION (SIDE-BY-SIDE SIDE LAYOUT MATCHING IMAGE 2) */}
             <TouchableOpacity
               activeOpacity={0.88}
               onPress={handleMicPress}
-              style={styles.centeredMicTouchArea}
+              style={[
+                styles.micRowSection,
+                {
+                  backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+                  borderColor: isDarkMode ? '#374151' : '#DCFCE7',
+                },
+              ]}
             >
-              <View style={styles.glowOuterCircle}>
-                <View style={styles.glowMiddleCircle}>
-                  <Animated.View
-                    style={[
-                      styles.micPulseRing,
-                      {
-                        transform: [{ scale: pulseAnim }],
-                        opacity: pulseOpacity,
-                      },
-                    ]}
-                  />
-                  <View style={[styles.largeCenterMicBtn, isListening && { backgroundColor: DARK_GREEN }]}>
-                    <Ionicons name="mic" size={54} color="#FFFFFF" />
-                  </View>
+              {/* Left Mic Button Circle with Pulse */}
+              <View style={styles.micButtonWrapper}>
+                <Animated.View
+                  style={[
+                    styles.micPulseRing,
+                    {
+                      transform: [{ scale: pulseAnim }],
+                      opacity: pulseOpacity,
+                    },
+                  ]}
+                />
+                <View style={[styles.micCircleBtn, isListening && { backgroundColor: DARK_GREEN }]}>
+                  <Ionicons name="mic" size={28} color="#FFFFFF" />
                 </View>
               </View>
 
-              {/* Voice Title & Subtitle below Mic */}
-              <Text style={styles.tapToSpeakTitle}>
-                {isListening ? (t('listeningStatus') || 'ऐकत आहे...') : (t('tapToSpeakTitle') || 'बोलण्यासाठी टॅप करा')}
-              </Text>
+              {/* Right Col: Title, Subtitle, Audio Waveform */}
+              <View style={styles.micTextCol}>
+                <Text style={styles.tapToSpeakTitle}>
+                  {isListening ? (t('listeningStatus') || 'Listening...') : (t('tapToSpeakTitle') || 'Tap to Speak')}
+                </Text>
 
-              <Text style={[styles.tapToSpeakSub, { color: isDarkMode ? '#9CA3AF' : '#5F6B7A' }]}>
-                {t('tapToSpeakSub') || 'तुमच्या भाषेत काहीही विचारा. ५ प्रादेशिक भाषांमध्ये उपलब्ध.'}
-              </Text>
+                <Text style={[styles.tapToSpeakSub, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
+                  {t('tapToSpeakSub') || 'Ask anything in your language. Available in 12 regional languages.'}
+                </Text>
 
-              {/* Audio Waveform Bars Visualizer */}
-              <View style={styles.waveformContainer}>
-                <View style={[styles.waveBar, { height: 12 }]} />
-                <View style={[styles.waveBar, { height: 22 }]} />
-                <View style={[styles.waveBar, { height: 34 }]} />
-                <View style={[styles.waveBar, { height: 42 }]} />
-                <View style={[styles.waveBar, { height: 28 }]} />
-                <View style={[styles.waveBar, { height: 18 }]} />
-                <View style={[styles.waveBar, { height: 10 }]} />
+                {/* Audio Waveform Bars Visualizer */}
+                <View style={styles.waveformContainer}>
+                  <View style={[styles.waveBar, { height: 10 }]} />
+                  <View style={[styles.waveBar, { height: 20 }]} />
+                  <View style={[styles.waveBar, { height: 28 }]} />
+                  <View style={[styles.waveBar, { height: 22 }]} />
+                  <View style={[styles.waveBar, { height: 14 }]} />
+                </View>
               </View>
             </TouchableOpacity>
 
             {/* Bottom Feature Pills Row */}
             <View style={styles.pillsRowCentered}>
-              <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#111827' : '#FFFFFF' }]}>
-                <Ionicons name="document-text-outline" size={15} color={PRIMARY_GREEN} />
-                <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-                  {t('pill12Languages') || '५ भाषा'}
+              <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#1E293B' : 'rgba(255, 255, 255, 0.92)', borderColor: isDarkMode ? '#374151' : '#DCFCE7' }]}>
+                <Ionicons name="document-text-outline" size={14} color={PRIMARY_GREEN} />
+                <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                  {t('pill12Languages') || '12 Languages'}
                 </Text>
               </View>
 
-              <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#111827' : '#FFFFFF' }]}>
-                <Ionicons name="flash-outline" size={15} color={PRIMARY_GREEN} />
-                <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-                  {t('pillInstantReply') || 'झटपट उत्तर'}
+              <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#1E293B' : 'rgba(255, 255, 255, 0.92)', borderColor: isDarkMode ? '#374151' : '#DCFCE7' }]}>
+                <Ionicons name="flash-outline" size={14} color={PRIMARY_GREEN} />
+                <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                  {t('pillInstantReply') || 'Instant Reply'}
                 </Text>
               </View>
 
-              <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#111827' : '#FFFFFF' }]}>
-                <Ionicons name="leaf-outline" size={15} color={PRIMARY_GREEN} />
-                <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-                  {t('pillFreeToUse') || 'मोफत वापर'}
+              <View style={[styles.featurePill, { backgroundColor: isDarkMode ? '#1E293B' : 'rgba(255, 255, 255, 0.92)', borderColor: isDarkMode ? '#374151' : '#DCFCE7' }]}>
+                <Ionicons name="leaf-outline" size={14} color={PRIMARY_GREEN} />
+                <Text style={[styles.pillText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                  {t('pillFreeToUse') || 'Free to Use'}
                 </Text>
               </View>
             </View>
@@ -325,20 +314,24 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
         {/* 2. QUICK ASK SECTION */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-              🎙 {t('quickAskHeader') || 'Quick Ask'}
+            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+              ⚡ {t('quickAskHeader') || 'Ask'}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('VoiceAssistant')} activeOpacity={0.7}>
               <Text style={styles.seeAllActionText}>{t('viewAll') || 'View all →'}</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.twoColumnGrid}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalCarouselPadding}
+          >
             {QUICK_ASK_ITEMS.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
-                  styles.quickAskCard,
+                  styles.quickAskCarouselCard,
                   {
                     backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
                     borderColor: isDarkMode ? '#374151' : BORDER_GREEN,
@@ -348,49 +341,64 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
                 onPress={() => navigation.navigate('VoiceAssistant')}
               >
                 <View style={[styles.quickAskIconCircle, { backgroundColor: PALE_GREEN_TINT }]}>
-                  <Ionicons name="mic-outline" size={18} color={PRIMARY_GREEN} />
+                  <Ionicons name="mic" size={16} color={PRIMARY_GREEN} />
                 </View>
-                <Text style={[styles.quickAskText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]} numberOfLines={3}>
-                  {t(item.id === 'q1' ? 'quickQ1' : item.id === 'q2' ? 'quickQ2' : item.id === 'q3' ? 'quickQ3' : 'quickQ4') || item.text}
+                <Text style={[styles.quickAskText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]} numberOfLines={3}>
+                  {t(item.key) || item.defaultText}
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         {/* 3. MORE TOPICS SECTION */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
-              🌱 {t('moreTopicsHeader') || 'More Topics'}
+            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+              {t('moreTopicsHeader') || 'More Topics'}
             </Text>
           </View>
 
-          <View style={styles.twoColumnGrid}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.topicsChipsPadding}
+          >
             {[
-              { id: 'horticulture', title: t('topicHorticultureTitle') || 'Horticulture', subtitle: t('topicHorticultureSub') || 'Fruit Orchards & Plantation', icon: 'leaf-outline' as const },
-              { id: 'irrigation', title: t('topicIrrigationTitle') || 'Irrigation', subtitle: t('topicIrrigationSub') || 'Drip & Sprinkler Subsidies', icon: 'water-outline' as const },
-              { id: 'mechanization', title: t('topicMechanizationTitle') || 'Mechanization', subtitle: t('topicMechanizationSub') || 'Tractor & Machinery', icon: 'hardware-chip-outline' as const },
-              { id: 'welfare', title: t('topicWelfareTitle') || 'Farmer Welfare', subtitle: t('topicWelfareSub') || 'Income Support & Loans', icon: 'cash-outline' as const },
+              { id: 'horticulture', title: t('topicHorticultureTitle') || 'Horticulture', icon: 'leaf-outline' },
+              { id: 'irrigation', title: t('topicIrrigationTitle') || 'Irrigation', icon: 'water-outline' },
+              { id: 'mechanization', title: t('topicMechanizationTitle') || 'Mechanization', icon: 'hardware-chip-outline' },
+              { id: 'welfare', title: t('topicWelfareTitle') || 'Tribal Development', icon: 'people-outline' },
+              { id: 'crop', title: 'Crop Development', icon: 'flower-outline' },
             ].map((topic) => (
-              <QuickActionCard
+              <TouchableOpacity
                 key={topic.id}
-                title={topic.title}
-                subtitle={topic.subtitle}
-                icon={topic.icon}
-                onPress={() => navigation.navigate('Schemes' as any)}
-              />
+                style={[
+                  styles.topicChip,
+                  {
+                    backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
+                    borderColor: isDarkMode ? '#374151' : BORDER_GREEN,
+                  },
+                ]}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('SchemesTab', { screen: 'SchemesList', params: {} } as any)}
+              >
+                <Ionicons name={topic.icon as any} size={15} color={PRIMARY_GREEN} />
+                <Text style={[styles.topicChipText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                  {topic.title}
+                </Text>
+              </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
         {/* 4. FEATURED SCHEMES SECTION */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
+            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
               ★ {t('featuredSchemesHeader') || 'Featured Schemes'}
             </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Schemes' as any)} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigation.navigate('SchemesTab', { screen: 'SchemesList', params: {} } as any)} activeOpacity={0.7}>
               <Text style={styles.seeAllActionText}>{t('seeAll') || 'See all →'}</Text>
             </TouchableOpacity>
           </View>
@@ -420,11 +428,11 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
         {/* 5. RECENT UPDATES SECTION */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]}>
+            <Text style={[styles.sectionTitleText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
               📢 {t('recentUpdatesHeader') || 'Recent Updates'}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Notifications')} activeOpacity={0.7}>
-              <Text style={styles.seeAllActionText}>{t('seeAll') || 'View all →'}</Text>
+              <Text style={styles.seeAllActionText}>{t('viewAll') || 'View all →'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -435,14 +443,13 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
                 style={[
                   styles.updateCardItem,
                   {
-                    backgroundColor: isDarkMode ? '#1E2937' : '#FFFFFF',
+                    backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
                     borderColor: isDarkMode ? '#374151' : BORDER_GREEN,
                   },
                 ]}
                 activeOpacity={0.88}
                 onPress={() => navigation.navigate('Notifications')}
               >
-                {/* Left Accent Bar */}
                 <View style={styles.updateLeftAccentBar} />
 
                 <View style={styles.updateCardContent}>
@@ -453,7 +460,7 @@ export const HomeScreen: React.FC<HomeScreenProps<'Home'>> = ({ navigation }) =>
                     <Ionicons name="chevron-forward" size={18} color={PRIMARY_GREEN} />
                   </View>
 
-                  <Text style={[styles.updateTitleText, { color: isDarkMode ? '#F9FAFB' : '#172033' }]} numberOfLines={2}>
+                  <Text style={[styles.updateTitleText, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]} numberOfLines={2}>
                     {update.title}
                   </Text>
 
@@ -492,235 +499,247 @@ const styles = StyleSheet.create({
     paddingBottom: 110,
   },
 
-  /* Section 1: Hero Welcome Section (Large Vertical Card Layout) */
+  /* Section 1: Hero Welcome Section (Image 2 Layout) */
   heroSectionWrapper: {
     paddingHorizontal: Layout.screenPaddingH,
     paddingTop: 12,
-    marginBottom: 6,
+    marginBottom: 16,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   heroCardContainer: {
-    borderRadius: 28,
-    padding: 24,
-    minHeight: 570,
-    justifyContent: 'space-between',
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
     shadowColor: PRIMARY_GREEN,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 12,
+    shadowRadius: 10,
     elevation: 3,
+  },
+  heroBgImageFull: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   liveBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_GREEN,
+    borderColor: '#DCFCE7',
     alignSelf: 'flex-start',
     marginBottom: 14,
   },
   liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: PRIMARY_GREEN,
   },
   liveBadgeText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
     color: PRIMARY_GREEN,
   },
   namasteText: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
-    lineHeight: 34,
-    maxWidth: '72%',
+    lineHeight: 28,
   },
   greetingTimeText: {
-    fontSize: 30,
-    fontWeight: '900',
-    lineHeight: 36,
-    marginBottom: 8,
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 28,
+    marginBottom: 6,
   },
   heroSubText: {
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
-    marginBottom: 18,
-  },
-
-  /* Large Centered Microphone Area */
-  centeredMicTouchArea: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  glowOuterCircle: {
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    backgroundColor: 'rgba(24, 122, 61, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  glowMiddleCircle: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: 'rgba(24, 122, 61, 0.16)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  micPulseRing: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(24, 122, 61, 0.25)',
-  },
-  largeCenterMicBtn: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: PRIMARY_GREEN,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
-    shadowColor: PRIMARY_GREEN,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
-  tapToSpeakTitle: {
-    fontSize: 19,
-    fontWeight: '800',
-    color: PRIMARY_GREEN,
-    lineHeight: 24,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  tapToSpeakSub: {
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
-    textAlign: 'center',
-    maxWidth: 290,
-    marginBottom: 10,
+    maxWidth: 240,
+    marginBottom: 16,
   },
+
+  /* Horizontal Mic Row Section matching Image 2 */
+  micRowSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    padding: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 252, 231, 0.8)',
+    marginBottom: 16,
+  },
+  micButtonWrapper: {
+    width: 64,
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  micPulseRing: {
+    position: 'absolute',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(21, 128, 61, 0.2)',
+  },
+  micCircleBtn: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: PRIMARY_GREEN,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: PRIMARY_GREEN,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  micTextCol: {
+    flex: 1,
+  },
+  tapToSpeakTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: PRIMARY_GREEN,
+    marginBottom: 2,
+  },
+  tapToSpeakSub: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+
+  /* Audio Waveform Bars Visualizer */
   waveformContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 5,
-    marginTop: 4,
-    marginBottom: 6,
+    alignItems: 'center',
+    gap: 4,
   },
   waveBar: {
     width: 4,
     backgroundColor: PRIMARY_GREEN,
     borderRadius: 2,
   },
+
+  /* Bottom Feature Pills Row */
   pillsRowCentered: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 14,
+    justifyContent: 'space-between',
+    gap: 6,
   },
   featurePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_GREEN,
-    elevation: 1,
+    borderColor: '#DCFCE7',
+    flex: 1,
+    justifyContent: 'center',
   },
   pillText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
   },
 
-  /* Global Section Layout */
+  /* Section Containers */
   sectionContainer: {
-    marginTop: 24,
-    paddingHorizontal: Layout.screenPaddingH,
+    marginBottom: 20,
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    justifyContent: 'space-between',
+    paddingHorizontal: Layout.screenPaddingH,
+    marginBottom: 12,
   },
   sectionTitleText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    lineHeight: 24,
   },
   seeAllActionText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
     color: PRIMARY_GREEN,
   },
 
-  /* 2-Column Responsive Grid for Quick Ask & Topics */
-  twoColumnGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  quickAskCard: {
-    width: '48%',
-    borderRadius: 20,
+  /* Quick Ask Carousel Cards */
+  quickAskCarouselCard: {
+    width: 170,
+    borderRadius: 18,
     padding: 14,
-    marginBottom: 12,
     borderWidth: 1,
-    minHeight: 100,
+    marginRight: 10,
     justifyContent: 'space-between',
-    shadowColor: PRIMARY_GREEN,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    minHeight: 110,
   },
   quickAskIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   quickAskText: {
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 17,
   },
-
-  /* Schemes Carousel */
   horizontalCarouselPadding: {
-    paddingRight: Layout.screenPaddingH,
+    paddingHorizontal: Layout.screenPaddingH,
   },
 
-  /* Recent Updates */
-  updatesListContainer: {
-    gap: 12,
+  /* Topics Chips */
+  topicsChipsPadding: {
+    paddingHorizontal: Layout.screenPaddingH,
+    gap: 8,
   },
-  updateCardItem: {
+  topicChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    overflow: 'hidden',
+  },
+  topicChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  /* Recent Updates Section */
+  updatesListContainer: {
+    paddingHorizontal: Layout.screenPaddingH,
+    gap: 10,
+  },
+  updateCardItem: {
     flexDirection: 'row',
-    shadowColor: PRIMARY_GREEN,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
   updateLeftAccentBar: {
     width: 5,
@@ -728,7 +747,7 @@ const styles = StyleSheet.create({
   },
   updateCardContent: {
     flex: 1,
-    padding: 16,
+    padding: 14,
   },
   updateTopRow: {
     flexDirection: 'row',
@@ -737,27 +756,26 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   newBadgeContainer: {
-    backgroundColor: PALE_GREEN_TINT,
+    backgroundColor: '#DCFCE7',
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   newBadgeText: {
     fontSize: 10,
     fontWeight: '800',
     color: PRIMARY_GREEN,
-    letterSpacing: 0.4,
   },
   updateTitleText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
-    lineHeight: 21,
+    lineHeight: 18,
     marginBottom: 4,
   },
   updateBodyText: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 10,
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 8,
   },
   updateMetaRow: {
     flexDirection: 'row',
@@ -765,16 +783,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   updateMetaText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
     color: '#5F6B7A',
   },
   updateMetaDot: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#5F6B7A',
   },
   updateMetaCategory: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: PRIMARY_GREEN,
   },

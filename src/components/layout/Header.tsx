@@ -17,8 +17,6 @@ const LANGUAGES: Language[] = [
   { code: 'mr', name: 'मराठी' },
   { code: 'en', name: 'English' },
   { code: 'hi', name: 'हिंदी' },
-  { code: 'ahr', name: 'अहिराणी' },
-  { code: 'kok', name: 'कोंकणी' },
 ];
 
 interface HeaderProps {
@@ -64,152 +62,158 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + Spacing.xs, backgroundColor: themeColors.headerBg, borderBottomColor: themeColors.border }]}>
-      {/* Left section: Back button OR Logo & Title */}
-      <View style={styles.left}>
-        {showBack ? (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={onBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={22} color={themeColors.textPrimary} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.logoContainer}>
-            <Ionicons name="leaf" size={20} color={Colors.white} />
-          </View>
-        )}
-
-        <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: isDarkMode ? '#F9FAFB' : '#172033' }]} numberOfLines={1} ellipsizeMode="tail">
-            {title || 'Farmer AI'}
-          </Text>
-          {!showBack && (
-            <Text style={[styles.subtitle, { color: isDarkMode ? '#9CA3AF' : '#8C9BAB' }]} numberOfLines={1} ellipsizeMode="tail">
-              {subtitle || 'VOICE ASSISTANT'}
-            </Text>
-          )}
-        </View>
-      </View>
-
-      {/* Right actions section */}
-      <View style={styles.right}>
-        {/* Language selector dropdown pill */}
-        {showLanguageSelector && (
-          <View style={styles.languageWrapper}>
+      <View style={styles.innerContainer}>
+        {/* Left section: Back button OR Logo & Title */}
+        <View style={styles.left}>
+          {showBack ? (
             <TouchableOpacity
-              style={[
-                styles.languageButton,
-                { backgroundColor: themeColors.card, borderColor: themeColors.border },
-              ]}
-              onPress={handleLanguageBtnClick}
-              activeOpacity={0.85}
-              accessibilityRole="button"
-              accessibilityLabel="Select language"
+              style={styles.backButton}
+              onPress={onBackPress}
+              activeOpacity={0.7}
             >
-              <Ionicons name="globe-outline" size={15} color="#16A34A" />
-              <Text style={[styles.languageText, { color: themeColors.textPrimary }]}>
-                {selectedLanguage?.name || 'मराठी'}
-              </Text>
-              <Ionicons name="chevron-down" size={13} color={themeColors.textSecondary} />
+              <Ionicons name="arrow-back" size={22} color={themeColors.textPrimary} />
             </TouchableOpacity>
+          ) : (
+            <View style={[styles.logoContainer, { backgroundColor: 'transparent' }]}>
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={{ width: 28, height: 28, borderRadius: 8 }}
+                resizeMode="contain"
+              />
+            </View>
+          )}
 
-            {/* Anchored Floating Dropdown directly below button */}
-            {dropdownOpen && (
-              <>
-                <TouchableOpacity
-                  style={styles.backdropOverlay}
-                  activeOpacity={1}
-                  onPress={() => setDropdownOpen(false)}
-                />
-                <View
-                  style={[
-                    styles.floatingDropdownCard,
-                    { backgroundColor: themeColors.card, borderColor: themeColors.border },
-                  ]}
-                >
-                  <ScrollView
-                    nestedScrollEnabled
-                    style={{ maxHeight: 280 }}
-                    showsVerticalScrollIndicator={true}
-                  >
-                    {LANGUAGES.map((lang, index) => {
-                      const isSelected = selectedLanguage.code === lang.code || selectedLanguage.name === lang.name;
-                      return (
-                        <TouchableOpacity
-                          key={lang.code}
-                          style={[
-                            styles.dropdownRow,
-                            index < LANGUAGES.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDarkMode ? '#374151' : '#F3F4F6' },
-                            isSelected && { backgroundColor: isDarkMode ? '#064E3B' : '#F0F9F1' },
-                          ]}
-                          onPress={() => handleSelectLanguage(lang)}
-                        >
-                          <Text
-                            style={[
-                              styles.dropdownRowText,
-                              { color: themeColors.textPrimary },
-                              isSelected && { fontWeight: '800', color: '#16A34A' },
-                            ]}
-                          >
-                            {lang.name}
-                          </Text>
-                          {isSelected && <Ionicons name="checkmark" size={16} color="#16A34A" />}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-              </>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: isDarkMode ? '#F9FAFB' : '#172033' }]} numberOfLines={1} ellipsizeMode="tail">
+              {title || 'Farmer AI'}
+            </Text>
+            {!showBack && (
+              <Text style={[styles.subtitle, { color: isDarkMode ? '#9CA3AF' : '#8C9BAB' }]} numberOfLines={1} ellipsizeMode="tail">
+                {subtitle || 'VOICE ASSISTANT'}
+              </Text>
             )}
           </View>
-        )}
+        </View>
 
-        {/* Theme toggle button (Sun / Moon) */}
-        <TouchableOpacity
-          style={[styles.actionIconButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-          onPress={toggleTheme}
-          activeOpacity={0.8}
-          accessibilityLabel="Toggle Theme"
-        >
-          <Ionicons
-            name={isDarkMode ? 'sunny-outline' : 'moon-outline'}
-            size={18}
-            color={isDarkMode ? '#F59E0B' : '#4B5563'}
-          />
-        </TouchableOpacity>
+        {/* Right actions section */}
+        <View style={styles.right}>
+          {/* Language selector dropdown pill */}
+          {showLanguageSelector && (
+            <View style={styles.languageWrapper}>
+              <TouchableOpacity
+                style={[
+                  styles.languageButton,
+                  { backgroundColor: themeColors.card, borderColor: themeColors.border },
+                ]}
+                onPress={handleLanguageBtnClick}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Select language"
+              >
+                <Ionicons name="globe-outline" size={15} color="#16A34A" />
+                <Text style={[styles.languageText, { color: themeColors.textPrimary }]}>
+                  {selectedLanguage?.name || 'मराठी'}
+                </Text>
+                <Ionicons name="chevron-down" size={13} color={themeColors.textSecondary} />
+              </TouchableOpacity>
 
-        {!showBack && (
-          <>
-            <TouchableOpacity
-              style={[styles.actionIconButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-              onPress={onNotificationPress}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="notifications-outline" size={19} color={themeColors.textPrimary} />
-              {notificationCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </Text>
-                </View>
+              {/* Anchored Floating Dropdown directly below button */}
+              {dropdownOpen && (
+                <>
+                  <TouchableOpacity
+                    style={styles.backdropOverlay}
+                    activeOpacity={1}
+                    onPress={() => setDropdownOpen(false)}
+                  />
+                  <View
+                    style={[
+                      styles.floatingDropdownCard,
+                      { backgroundColor: themeColors.card, borderColor: themeColors.border },
+                    ]}
+                  >
+                    <ScrollView
+                      nestedScrollEnabled
+                      style={{ maxHeight: 280 }}
+                      showsVerticalScrollIndicator={true}
+                    >
+                      {LANGUAGES.map((lang, index) => {
+                        const isSelected = selectedLanguage.code === lang.code || selectedLanguage.name === lang.name;
+                        return (
+                          <TouchableOpacity
+                            key={lang.code}
+                            style={[
+                              styles.dropdownRow,
+                              index < LANGUAGES.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDarkMode ? '#374151' : '#F3F4F6' },
+                              isSelected && { backgroundColor: isDarkMode ? '#064E3B' : '#F0F9F1' },
+                            ]}
+                            onPress={() => handleSelectLanguage(lang)}
+                          >
+                            <Text
+                              style={[
+                                styles.dropdownRowText,
+                                { color: themeColors.textPrimary },
+                                isSelected && { fontWeight: '800', color: '#16A34A' },
+                              ]}
+                            >
+                              {lang.name}
+                            </Text>
+                            {isSelected && <Ionicons name="checkmark" size={16} color="#16A34A" />}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                </>
               )}
-            </TouchableOpacity>
+            </View>
+          )}
 
-            {/* Profile icon button */}
-            <TouchableOpacity
-              style={[
-                styles.actionIconButton,
-                styles.profileButtonLightGreen,
-                { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9', borderColor: isDarkMode ? '#047857' : '#A7F3D0' },
-              ]}
-              onPress={onProfilePress}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="person-outline" size={19} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
-            </TouchableOpacity>
-          </>
-        )}
+          {/* Theme toggle button (Sun / Moon) */}
+          <TouchableOpacity
+            style={[styles.actionIconButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            onPress={toggleTheme}
+            activeOpacity={0.8}
+            accessibilityLabel="Toggle Theme"
+          >
+            <Ionicons
+              name={isDarkMode ? 'sunny-outline' : 'moon-outline'}
+              size={18}
+              color={isDarkMode ? '#F59E0B' : '#4B5563'}
+            />
+          </TouchableOpacity>
+
+          {!showBack && (
+            <>
+              <TouchableOpacity
+                style={[styles.actionIconButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                onPress={onNotificationPress}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="notifications-outline" size={19} color={themeColors.textPrimary} />
+                {notificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Profile icon button */}
+              <TouchableOpacity
+                style={[
+                  styles.actionIconButton,
+                  styles.profileButtonLightGreen,
+                  { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9', borderColor: isDarkMode ? '#047857' : '#A7F3D0' },
+                ]}
+                onPress={onProfilePress}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="person-outline" size={19} color={isDarkMode ? '#6EE7B7' : '#15803D'} />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -217,13 +221,19 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    zIndex: 100,
+  },
+  innerContainer: {
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-    zIndex: 100,
   },
   left: {
     flex: 1,

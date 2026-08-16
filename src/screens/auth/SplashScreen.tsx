@@ -12,7 +12,7 @@
  */
 
 import React, { useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Image } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -192,9 +192,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, navigation
           <Animated.View style={[styles.logoWrapper, logoAnimatedStyle]}>
             <Animated.View style={[styles.pulseRing, pulseAnimatedStyle, isDarkMode && { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]} />
 
-            {/* Primary Green Circle Logo Card */}
-            <View style={[styles.primaryLogoCard, isDarkMode && { backgroundColor: '#059669' }]}>
-              <Ionicons name="leaf" size={44} color="#FFFFFF" />
+            {/* Primary Green Logo Image */}
+            <View style={[styles.primaryLogoCard, { backgroundColor: 'transparent' }]}>
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={{ width: 88, height: 88, borderRadius: 22 }}
+                resizeMode="contain"
+              />
             </View>
 
             {/* Subtle Side Decorative Leaf Badges */}

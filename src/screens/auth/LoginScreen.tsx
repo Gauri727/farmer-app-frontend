@@ -17,6 +17,7 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,8 +33,6 @@ const LANGUAGES: Language[] = [
   { code: 'mr', name: 'मराठी' },
   { code: 'en', name: 'English' },
   { code: 'hi', name: 'हिंदी' },
-  { code: 'ahr', name: 'अहिराणी' },
-  { code: 'kok', name: 'कोंकणी' },
 ];
 
 export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) => {
@@ -138,11 +137,31 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
 
       {/* Top Header Bar */}
       <View style={styles.topHeader}>
-        <View style={[styles.brandTag, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-          <Ionicons name="leaf" size={16} color="#15803D" />
-          <Text style={[styles.brandTagText, { color: isDarkMode ? '#6EE7B7' : '#15803D' }]}>
-            {t('krishiMitra') || 'Farmer AI'}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Main' as any);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={18} color={themeColors.textPrimary} />
+          </TouchableOpacity>
+
+          <View style={[styles.brandTag, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={{ width: 22, height: 22, borderRadius: 5 }}
+              resizeMode="contain"
+            />
+            <Text style={[styles.brandTagText, { color: isDarkMode ? '#6EE7B7' : '#15803D' }]}>
+              {t('krishiMitra') || 'Farmer AI'}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.rightActionsRow}>
@@ -252,7 +271,11 @@ export const LoginScreen: React.FC<AuthScreenProps<'Login'>> = ({ navigation }) 
                     },
                   ]}
                 >
-                  <Ionicons name="leaf" size={32} color={isDarkMode ? '#6EE7B7' : '#187A3D'} />
+                  <Image
+                    source={require('../../../assets/icon.png')}
+                    style={{ width: 48, height: 48, borderRadius: 12 }}
+                    resizeMode="contain"
+                  />
                 </View>
               </View>
 
@@ -418,6 +441,14 @@ const styles = StyleSheet.create({
   langWrapper: {
     position: 'relative',
     zIndex: 1000,
+  },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
   },
   langSelectorBtn: {
     flexDirection: 'row',

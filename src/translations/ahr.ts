@@ -3,6 +3,21 @@
  */
 
 export const ahr: Record<string, string> = {
+  "admin": "अ‍ॅडमिन (Admin)",
+  "adminPanel": "अ‍ॅडमिन (Admin)",
+  "guest": "अतिथी (Guest)",
+  "signInSaveSchemes": "योजना आणि अर्ज जतन कराले साइन इन करा",
+  "adminAccessRequired": "प्रशासक प्रवेश आवश्यक",
+  "adminAccessSub": "हा पॅनेल देखाले प्रशासक किंवा मॉडरेटर खात्याना वापर करा.",
+  "signIn": "साइन इन",
+  "adminAccessGranted": "प्रशासक प्रवेश मंजूर",
+  "welcomeAdmin": "प्रशासक तुमना स्वागत शे",
+  "adminDashboardSub": "सिस्टम विहंगावलोकन आणि व्यवस्थापन पॅनेल.",
+  "registeredFarmers": "नोंदणीकृत शेतकरी",
+  "activeSchemes": "सक्रिय योजना",
+  "pendingApplications": "प्रलंबित अर्ज",
+  "systemHealth": "सिस्टम आरोग्य",
+  "managementModules": "व्यवस्थापन मॉड्यूल्स",
   "faqQHelpline": "योजनेचा हेल्पलाईन नंबर काय आहे?",
   "faqQHowToApply": "या योजनेसाठी अर्ज कसा करावा?",
   "faqQDocuments": "अर्जासाठी कोणती कागदपत्रे आवश्यक आहेत?",

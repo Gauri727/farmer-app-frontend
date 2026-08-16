@@ -1,6 +1,6 @@
 import SCHEME_TRANSLATIONS_JSON from '../constants/schemeTranslations.json';
 
-export type LanguageCode = 'mr' | 'en' | 'hi' | 'ahr' | 'kok';
+export type LanguageCode = 'mr' | 'en' | 'hi';
 
 export interface LocalizedSchemeContent {
   contact?: Record<string, { phone?: string; email?: string; address?: string }>;
@@ -22,8 +22,6 @@ export const normalizeLangCode = (lang: string): LanguageCode => {
   const clean = (lang || '').toLowerCase().trim();
   if (clean.includes('en') || clean === 'english') return 'en';
   if (clean.includes('hi') || clean === 'hindi') return 'hi';
-  if (clean.includes('ahr') || clean.includes('ahirani')) return 'ahr';
-  if (clean.includes('kok') || clean.includes('konkani')) return 'kok';
   return 'mr';
 };
 
@@ -36,43 +34,31 @@ export const getLocalizedCategoryName = (categoryName: string, langCode: string)
       mr: "सिंचन योजना",
       en: "Irrigation Schemes",
       hi: "सिंचाई योजनाएं",
-      ahr: "सिंचन योजना",
-      kok: "सिंचन योजना"
     },
     "यांत्रिकीकरण": {
       mr: "यांत्रिकीकरण",
       en: "Mechanization Schemes",
       hi: "यांत्रिकीकरण योजनाएं",
-      ahr: "यांत्रिकीकरण",
-      kok: "यांत्रिकीकरण"
     },
     "अन्न सुरक्षा व पिके": {
       mr: "अन्न सुरक्षा व पिके",
       en: "Food Security & Crops",
       hi: "खाद्य सुरक्षा एवं फसलें",
-      ahr: "अन्न सुरक्षा व पिके",
-      kok: "अन्न सुरक्षा व पिके"
     },
     "विशेष घटक व अनुसूचित जमाती": {
       mr: "विशेष घटक व अनुसूचित जमाती",
       en: "Special Tribal & Component Schemes",
       hi: "विशेष घटक एवं जनजातीय योजनाएं",
-      ahr: "विशेष घटक योजना",
-      kok: "विशेष घटक योजना"
     },
     "अनुसूचित जाती कल्याण": {
       mr: "अनुसूचित जाती कल्याण",
       en: "Scheduled Caste Welfare",
       hi: "अनुसूचित जाति कल्याण",
-      ahr: "अनुसूचित जाती कल्याण",
-      kok: "अनुसूचित जाती कल्याण"
     },
     "फलोत्पादन": {
       mr: "फलोत्पादन",
       en: "Horticulture Development",
       hi: "बागवानी विकास",
-      ahr: "फलोत्पादन",
-      kok: "फलोत्पादन"
     }
   };
 
