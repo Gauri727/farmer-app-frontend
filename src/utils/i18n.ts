@@ -1,12 +1,12 @@
 /**
  * Centralized i18n Translation Helper System
- * Supports Marathi ('mr'), English ('en'), Hindi ('hi'), Ahirani ('ahr'), and Konkani ('kok')
+ * Supports Marathi ('mr'), English ('en'), and Hindi ('hi')
  * Imports translation dictionaries from dedicated files in src/translations/
  */
 
 import { translations } from '../translations';
 
-export type SupportedLanguage = 'mr' | 'en' | 'hi' | 'ahr' | 'kok';
+export type SupportedLanguage = 'mr' | 'en' | 'hi';
 
 export { translations };
 
@@ -15,7 +15,7 @@ export const getTranslation = (
   key: string,
   params?: Record<string, any>
 ): string => {
-  const code = (['mr', 'en', 'hi', 'ahr', 'kok'].includes(langCode) ? langCode : 'mr') as SupportedLanguage;
+  const code = (['mr', 'en', 'hi'].includes(langCode) ? langCode : 'mr') as SupportedLanguage;
   let text = translations[code]?.[key] || translations['mr']?.[key] || translations['en']?.[key];
 
   if (!text) {

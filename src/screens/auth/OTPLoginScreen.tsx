@@ -30,8 +30,6 @@ const LANGUAGES: Language[] = [
   { code: 'mr', name: 'मराठी' },
   { code: 'en', name: 'English' },
   { code: 'hi', name: 'हिंदी' },
-  { code: 'ahr', name: 'अहिराणी' },
-  { code: 'kok', name: 'कोंकणी' },
 ];
 
 export const OTPLoginScreen: React.FC<AuthScreenProps<'OTPLogin'>> = ({

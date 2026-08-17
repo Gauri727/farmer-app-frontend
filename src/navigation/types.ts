@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Navigation type definitions
  * Type-safe param lists for all navigators
  */
@@ -62,10 +62,10 @@ export type EligibilityStackParamList = {
 export type ProfileStackParamList = {
   Profile: undefined;
   SignIn: undefined;
-  Settings: undefined;
   LanguageSelection: undefined;
   Bookmarks: undefined;
   ConversationHistory: undefined;
+  AdminPanel: undefined;
   Help: undefined;
   About: undefined;
   PrivacyPolicy: undefined;

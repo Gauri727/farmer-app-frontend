@@ -36,6 +36,7 @@ export interface User {
   name: string;
   email: string;
   mobile?: string;
+  role?: 'admin' | 'moderator' | 'user' | string;
   preferred_language: string;
   avatar_url?: string;
   state?: string;

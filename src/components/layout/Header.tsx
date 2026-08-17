@@ -17,8 +17,6 @@ const LANGUAGES: Language[] = [
   { code: 'mr', name: 'मराठी' },
   { code: 'en', name: 'English' },
   { code: 'hi', name: 'हिंदी' },
-  { code: 'ahr', name: 'अहिराणी' },
-  { code: 'kok', name: 'कोंकणी' },
 ];
 
 interface HeaderProps {
@@ -75,8 +73,12 @@ export const Header: React.FC<HeaderProps> = ({
             <Ionicons name="arrow-back" size={22} color={themeColors.textPrimary} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.logoContainer}>
-            <Ionicons name="leaf" size={20} color={Colors.white} />
+          <View style={[styles.logoContainer, { backgroundColor: 'transparent' }]}>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={{ width: 28, height: 28, borderRadius: 8 }}
+              resizeMode="contain"
+            />
           </View>
         )}
 

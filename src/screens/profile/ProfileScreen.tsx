@@ -1,5 +1,6 @@
 /**
- * Profile Screen — User info, Guest Sign-in banner, menu items, logout
+ * Profile Screen — User info, Guest Sign-in card, menu options, logout
+ * Styled to match user reference layout (Screenshot 2).
  */
 
 import React, { useState } from 'react';
@@ -32,11 +33,32 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
 
   const isGuest = !user || user.id === 'guest_user';
 
+  // Strictly 4 options as requested: Language, Bookmarked Schemes, Conversation History, Admin Panel
   const menuItems = [
-    { icon: 'settings-outline' as const, label: t('settings') || 'Settings', screen: 'Settings' },
-    { icon: 'language-outline' as const, label: t('language') || 'Language', screen: 'LanguageSelection' },
-    { icon: 'bookmark-outline' as const, label: t('bookmarks') || 'Bookmarks', screen: 'Bookmarks' },
-    { icon: 'chatbubbles-outline' as const, label: t('conversationHistory') || 'Conversation History', screen: 'ConversationHistory' },
+    {
+      id: 'language',
+      icon: 'language-outline' as const,
+      label: t('language') || 'Language',
+      screen: 'LanguageSelection',
+    },
+    {
+      id: 'bookmarks',
+      icon: 'bookmark-outline' as const,
+      label: t('bookmarks') || 'Bookmarked Schemes',
+      screen: 'Bookmarks',
+    },
+    {
+      id: 'conversationHistory',
+      icon: 'chatbubble-outline' as const,
+      label: t('conversationHistory') || 'Conversation History',
+      screen: 'ConversationHistory',
+    },
+    {
+      id: 'adminPanel',
+      icon: 'shield-outline' as const,
+      label: t('admin') || 'Admin',
+      screen: 'AdminPanel',
+    },
   ];
 
   const handleSignIn = () => {
@@ -65,7 +87,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? themeColors.background : '#F8FAFC' }]}>
+      {/* Header matching Screenshot 2 top bar with back button, Profile title, language selector & theme toggle */}
       <Header
         showBack
         onBackPress={handleBack}
@@ -73,18 +96,37 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
         showLanguageSelector
       />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* User Card or Guest Banner */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Guest Banner or User Card matching Screenshot 2 */}
         {isGuest ? (
-          <View style={[styles.guestCard, { backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF', borderColor: themeColors.border }, Shadows.card]}>
-            <View style={[styles.guestAvatarContainer, { backgroundColor: isDarkMode ? '#064E3B' : Colors.primary[50] }]}>
-              <Ionicons name="person-outline" size={28} color={Colors.primary[600]} />
+          <View
+            style={[
+              styles.guestCard,
+              {
+                backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF',
+                borderColor: isDarkMode ? themeColors.border : '#E2E8F0',
+              },
+              Shadows.card,
+            ]}
+          >
+            <View
+              style={[
+                styles.guestAvatarContainer,
+                { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' },
+              ]}
+            >
+              <Ionicons name="person-outline" size={26} color="#15803D" />
             </View>
 
             <View style={styles.guestTextContainer}>
-              <Text style={[styles.guestTitle, { color: themeColors.textPrimary }]}>Guest</Text>
-              <Text style={[styles.guestSubtitle, { color: themeColors.textSecondary }]}>
-                Sign in to save schemes and applications
+              <Text style={[styles.guestTitle, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                {t('guest') || 'Guest'}
+              </Text>
+              <Text style={[styles.guestSubtitle, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
+                {t('signInSaveSchemes') || 'Sign in to save schemes and applications'}
               </Text>
             </View>
 
@@ -93,44 +135,73 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
               onPress={handleSignIn}
               activeOpacity={0.85}
             >
-              <Ionicons name="log-in-outline" size={18} color={Colors.white} />
-              <Text style={styles.signInButtonText}>Sign in</Text>
+              <Ionicons name="log-in-outline" size={16} color="#FFFFFF" />
+              <Text style={styles.signInButtonText}>{t('signIn') || 'Sign in'}</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={[styles.userCard, { backgroundColor: isDarkMode ? themeColors.card : '#F7FCF8', borderColor: isDarkMode ? themeColors.border : '#C8E6C9' }, Shadows.card]}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={28} color={Colors.primary[500]} />
+          <View
+            style={[
+              styles.userCard,
+              {
+                backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF',
+                borderColor: isDarkMode ? themeColors.border : '#E2E8F0',
+              },
+              Shadows.card,
+            ]}
+          >
+            <View style={[styles.avatar, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+              <Ionicons name="person" size={26} color="#15803D" />
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: themeColors.textPrimary }]}>{user?.name || t('farmerFriend') || 'Farmer'}</Text>
-              <Text style={[styles.userEmail, { color: themeColors.textSecondary }]}>{user?.email || user?.mobile || 'farmer@farmerai.org'}</Text>
+              <Text style={[styles.userName, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                {user?.name || t('farmerFriend') || 'Farmer'}
+              </Text>
+              <Text style={[styles.userEmail, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
+                {user?.email || user?.mobile || 'farmer@farmerai.org'}
+              </Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-              <Ionicons name="create-outline" size={20} color={themeColors.textSecondary} />
-            </TouchableOpacity>
           </View>
         )}
 
-        {/* Menu items */}
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={[styles.menuItem, { borderBottomColor: themeColors.border }]}
-              onPress={() => navigation.navigate(item.screen as any)}
-              activeOpacity={0.6}
-            >
-              <View style={styles.menuIconContainer}>
-                <Ionicons name={item.icon} size={18} color={Colors.primary[600]} />
-              </View>
-              <Text style={[styles.menuLabel, { color: themeColors.textPrimary }]}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={themeColors.textSecondary} />
-            </TouchableOpacity>
-          ))}
+        {/* Menu items container matching Screenshot 2 */}
+        <View
+          style={[
+            styles.menuCard,
+            {
+              backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF',
+              borderColor: isDarkMode ? themeColors.border : '#E2E8F0',
+            },
+          ]}
+        >
+          {menuItems.map((item, idx) => {
+            const isLast = idx === menuItems.length - 1;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.menuItem,
+                  !isLast && {
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDarkMode ? '#374151' : '#F1F5F9',
+                  },
+                ]}
+                onPress={() => navigation.navigate(item.screen as any)}
+                activeOpacity={0.65}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+                  <Ionicons name={item.icon} size={19} color="#15803D" />
+                </View>
+                <Text style={[styles.menuLabel, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                  {item.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#6B7280' : '#94A3B8'} />
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        {/* Logout Button */}
+        {/* Logout Button (For Logged In Non-Guest Users) */}
         {!isGuest && (
           <Button
             title={t('logout') || 'Logout'}
@@ -143,7 +214,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
           />
         )}
 
-        <Text style={[styles.version, { color: themeColors.textSecondary }]}>Version 1.0.0</Text>
+        {/* Version text centered */}
+        <Text style={[styles.version, { color: isDarkMode ? '#6B7280' : '#94A3B8' }]}>
+          Version 1.0.0
+        </Text>
       </ScrollView>
 
       {/* Logout Dialog */}
@@ -162,61 +236,122 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigat
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 60 },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 60,
+  },
+
+  /* Guest Card matching Screenshot 2 */
   guestCard: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 20,
     gap: 12,
   },
   guestAvatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  guestTextContainer: { flex: 1 },
-  guestTitle: { fontSize: 17, fontWeight: '700', marginBottom: 2 },
-  guestSubtitle: { fontSize: 12, lineHeight: 16 },
+  guestTextContainer: {
+    flex: 1,
+  },
+  guestTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  guestSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
   signInButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primary[600],
+    backgroundColor: '#15803D',
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 20,
   },
-  signInButtonText: { fontSize: 13, fontWeight: '700', color: Colors.white },
+  signInButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  /* Logged In User Card */
   userCard: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: BorderRadius.lg, padding: 14, gap: 12,
-    borderWidth: 1, marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    gap: 12,
   },
   avatar: {
-    width: 46, height: 46, borderRadius: 23, backgroundColor: '#DCFCE7',
-    justifyContent: 'center', alignItems: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  userInfo: { flex: 1 },
-  userName: { ...Typography.h5, marginBottom: 2 },
-  userEmail: { ...Typography.bodySm },
-  menuContainer: { gap: Spacing.xxs },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 12,
+  },
+
+  /* Menu Card Container */
+  menuCard: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+  },
   menuItem: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 14,
-    gap: 12, borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    gap: 14,
   },
   menuIconContainer: {
-    width: 34, height: 34, borderRadius: 10, backgroundColor: '#DCFCE7',
-    justifyContent: 'center', alignItems: 'center',
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  menuLabel: { ...Typography.label, flex: 1, fontSize: 15 },
+  menuLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    flex: 1,
+  },
   version: {
-    ...Typography.caption, textAlign: 'center',
-    marginTop: 20,
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 28,
   },
 });

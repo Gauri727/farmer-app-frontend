@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -145,9 +146,13 @@ export const SignInScreen: React.FC<ProfileScreenProps<'SignIn'>> = ({ navigatio
         {/* Center Auth Card (matching Image 2) */}
         <View style={styles.cardWrapper}>
           <View style={[styles.card, Shadows.card]}>
-            {/* Top Icon Badge - Soft Green rounded box with Wheat/Leaf Icon */}
+            {/* Top Icon Badge - Farmer AI Logo */}
             <View style={styles.wheatIconBox}>
-              <Text style={styles.wheatEmoji}>🌾</Text>
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={{ width: 56, height: 56, borderRadius: 16 }}
+                resizeMode="contain"
+              />
             </View>
 
             {/* Title & Subtitle */}

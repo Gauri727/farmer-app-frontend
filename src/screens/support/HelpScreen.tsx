@@ -9,7 +9,7 @@ import { Colors, Spacing, BorderRadius, Typography } from '../../theme';
 
 const FAQS = [
   { q: 'How do I check scheme eligibility?', a: 'Go to the Eligibility tab, fill in your details, and get instant results.' },
-  { q: 'Which languages are supported?', a: 'We support 5 regional languages: English, Marathi, Hindi, Ahirani, and Konkani.' },
+  { q: 'Which languages are supported?', a: 'We support 3 regional languages: English, Marathi, and Hindi.' },
   { q: 'Is this app free to use?', a: 'Yes, Farmer AI is completely free for all farmers.' },
   { q: 'How do I save a scheme?', a: 'Tap the bookmark icon on any scheme to save it for later.' },
   { q: 'Can I use voice in my language?', a: 'Yes, tap the mic button and speak in your preferred language.' },
