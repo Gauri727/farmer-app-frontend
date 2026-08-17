@@ -21,10 +21,11 @@ export const useSchemes = (filters?: SchemeFilters) => {
 };
 
 export const useScheme = (id: string) => {
+  console.log("useScheme ID:", id);
   return useQuery({
     queryKey: queryKeys.schemes.detail(id),
     queryFn: () => schemeService.getSchemeById(id),
-    enabled: !!id,
+    enabled: Boolean(id && id.trim().length > 0),
   });
 };
 

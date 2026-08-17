@@ -1,14 +1,12 @@
-/**
- * SchemeCard Component
- * Displays scheme info: category badge, title, description, amount, CTA
- */
-
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../../theme';
+import { Colors, Spacing } from '../../theme';
 import { Scheme } from '../../types/api.types';
-import { getCategoryIcon, getCategoryColor } from '../../utils/category';
+import { getCategoryIcon } from '../../utils/category';
+import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
+import { getLocalizedScheme } from '../../utils/schemeLocalization';
 
 interface SchemeCardProps {
   scheme: Scheme;
@@ -16,215 +14,175 @@ interface SchemeCardProps {
   compact?: boolean;
 }
 
-const ACCENT = Colors.primary[600];
-const ACCENT_LIGHT = Colors.mint[100];
-
-
 export const SchemeCard: React.FC<SchemeCardProps> = ({ scheme, onPress, compact = false }) => {
-  const iconName = getCategoryIcon(scheme.category);
-  const iconBg = getCategoryColor(scheme.category);
-  const benefitText = scheme.amount || scheme.benefits || scheme.eligibility_criteria || 'View details';
+  const { t, selectedLanguage } = useLanguageContext();
+  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const locScheme = getLocalizedScheme(scheme, selectedLanguage.code);
+
+  const iconName = getCategoryIcon(scheme.category || locScheme.category);
+  const benefitText = locScheme.amount || locScheme.benefits || '५०% पर्यंत अनुदान';
+  const categoryLabel = locScheme.category
+    ? locScheme.category
+    : (locScheme.type === 'Central' ? t('centralType') : t('stateType'));
+
+  // Theme-aware design tokens
+  const primaryGreen = isDarkMode ? '#6EE7B7' : '#187A3D';
+  const lightGreenBg = isDarkMode ? '#064E3B' : '#EAF6EE';
+  const textDark = themeColors.textPrimary;
+  const textGray = themeColors.textSecondary;
 
   return (
     <TouchableOpacity
-      style={[styles.container, compact ? styles.compactContainer : styles.horizontalContainer]}
       onPress={() => onPress(scheme)}
-      activeOpacity={0.86}
+      activeOpacity={0.88}
+      style={[styles.pressable, compact ? styles.compactWidth : styles.horizontalWidth]}
       accessibilityLabel={`Scheme: ${scheme.title}`}
     >
-      {/* Top Header Row with Icon and Badge */}
-      <View style={styles.topRow}>
-        <View style={[styles.iconContainer, { backgroundColor: ACCENT }]}> 
-          <Ionicons name={iconName} size={22} color={Colors.white} />
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: themeColors.card,
+            borderColor: themeColors.border,
+          },
+        ]}
+      >
+        {/* Top Row: Green Icon Container & Green Category Pill */}
+        <View style={styles.topRow}>
+          <View style={[styles.iconContainer, { backgroundColor: lightGreenBg }]}>
+            <Ionicons name={iconName} size={22} color={primaryGreen} />
+          </View>
+          <View style={[styles.categoryPill, { backgroundColor: lightGreenBg }]}>
+            <Text style={[styles.categoryPillText, { color: primaryGreen }]}>
+              {categoryLabel}
+            </Text>
+          </View>
         </View>
 
-        {scheme.category && (
-          <View style={[styles.badge, { backgroundColor: getCategoryColor(scheme.category) }]}> 
-            <Text style={styles.badgeText}>{scheme.category}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Title */}
-      <Text style={[styles.title, compact ? styles.compactTitle : styles.horizontalTitle]} numberOfLines={2}>
-        {scheme.title}
-      </Text>
-
-      {/* Description */}
-      {!compact && (
-        <Text style={styles.description} numberOfLines={2}>
-          {scheme.description}
+        {/* Scheme Title */}
+        <Text style={[styles.title, { color: textDark }]} numberOfLines={2}>
+          {locScheme.title}
         </Text>
-      )}
 
-      {/* Amount Badge / CTA */}
-      {compact ? (
-        <View style={styles.footerRowCompact}>
-          <View style={styles.benefitBlockCompact}>
-            <Text style={styles.benefitLabel}>BENEFIT</Text>
-            <Text style={styles.benefitTextCompact} numberOfLines={1}>
-              {benefitText}
-            </Text>
-          </View>
+        {/* Short Description */}
+        <Text style={[styles.description, { color: textGray }]} numberOfLines={2}>
+          {locScheme.description}
+        </Text>
 
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.iconAction, styles.micAction]} onPress={() => onPress(scheme)}>
-              <Ionicons name="mic-outline" size={22} color={Colors.white} />
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconAction, styles.arrowAction]} onPress={() => onPress(scheme)}>
-              <Ionicons name="arrow-forward" size={22} color={ACCENT} />
-            </TouchableOpacity>
-          </View>
+        {/* Benefit Block */}
+        <View
+          style={[
+            styles.benefitBlock,
+            { backgroundColor: isDarkMode ? '#1F2937' : '#F3FAF5' },
+          ]}
+        >
+          <Text
+            style={[
+              styles.benefitLabel,
+              { color: isDarkMode ? '#34D399' : '#126B35' },
+            ]}
+          >
+            {t('benefitLabel') || 'BENEFIT'}
+          </Text>
+          <Text style={[styles.benefitText, { color: primaryGreen }]} numberOfLines={1}>
+            {benefitText}
+          </Text>
         </View>
-      ) : (
-        <>
-          <View style={styles.benefitBlock}>
-            <Text style={styles.benefitLabel}>BENEFIT</Text>
-            <Text style={styles.benefitText} numberOfLines={2}>
-              {benefitText}
-            </Text>
-          </View>
-          <View style={styles.footerRow}>
-            <View style={styles.cta}>
-              <Text style={styles.ctaText}>Know More</Text>
-              <Ionicons name="arrow-forward" size={15} color={ACCENT} />
-            </View>
-          </View>
-        </>
-      )}
+
+        {/* Know More CTA Action */}
+        <View style={styles.knowMoreRow}>
+          <Text style={[styles.knowMoreText, { color: primaryGreen }]}>
+            {t('knowMore') || 'Know More →'}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.white,
-    borderRadius: 24,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
-    width: 270,
-    marginBottom: Spacing.md,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
+  pressable: {
+    marginBottom: Spacing.sm,
   },
-  compactContainer: {
+  horizontalWidth: {
+    width: 310,
+    height: 235,
+    marginRight: 14,
+  },
+  compactWidth: {
     width: '100%',
+    marginBottom: 12,
   },
-  horizontalContainer: {
-    width: 270,
-    marginRight: Spacing.md,
+  container: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    justifyContent: 'space-between',
+    shadowColor: '#187A3D',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: 10,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
+    width: 42,
+    height: 42,
     borderRadius: 14,
-    backgroundColor: Colors.mint[100],
     justifyContent: 'center',
     alignItems: 'center',
   },
-  badge: {
-    backgroundColor: Colors.mint[100],
-    paddingVertical: 4,
+  categoryPill: {
+    paddingVertical: 5,
     paddingHorizontal: 12,
-    borderRadius: 12,
+    borderRadius: 16,
   },
-  badgeText: {
-    fontSize: 12,
-    color: Colors.primary[600],
+  categoryPillText: {
+    fontSize: 11,
     fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   title: {
     fontSize: 17,
-    fontWeight: '700',
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    fontWeight: '800',
     lineHeight: 22,
-  },
-  compactTitle: {
-    fontSize: 20,
-  },
-  horizontalTitle: {
-    fontSize: 16,
+    marginBottom: 4,
   },
   description: {
     fontSize: 13,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.md,
-    lineHeight: 19,
+    lineHeight: 18,
+    marginBottom: 8,
   },
   benefitBlock: {
-    marginBottom: Spacing.md,
-  },
-  benefitBlockCompact: {
-    flex: 1,
-    marginRight: Spacing.md,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginBottom: 6,
   },
   benefitLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.gray[500],
-    letterSpacing: 0.8,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
     marginBottom: 2,
   },
   benefitText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.primary[600],
-    lineHeight: 19,
-  },
-  benefitTextCompact: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: Colors.primary[700],
-    lineHeight: 20,
-  },
-  footerRowCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.sm,
-  },
-  iconAction: {
-    width: 54,
-    height: 54,
-    borderRadius: BorderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  micAction: {
-    backgroundColor: ACCENT,
-  },
-  arrowAction: {
-    backgroundColor: ACCENT_LIGHT,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  ctaText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: ACCENT,
+    fontWeight: '800',
+  },
+  knowMoreRow: {
+    alignSelf: 'flex-end',
+    marginTop: 2,
+  },
+  knowMoreText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

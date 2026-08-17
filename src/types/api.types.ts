@@ -36,6 +36,7 @@ export interface User {
   name: string;
   email: string;
   mobile?: string;
+  role?: 'admin' | 'moderator' | 'user' | string;
   preferred_language: string;
   avatar_url?: string;
   state?: string;
@@ -91,8 +92,29 @@ export interface Scheme {
   application_url?: string;
   deadline?: string;
   is_featured?: boolean;
+  department?: string;
+  about?: string;
+  target_group?: string;
+  beneficiary_category?: string;
+  gr_url?: string;
+  document_url?: string;
   created_at?: string;
   updated_at?: string;
+  overview?: any;
+  shortDescription?: string;
+  name?: string;
+  englishName?: string;
+  sections?: any[];
+  benefit?: any;
+  requiredDocuments?: any;
+  eligibility?: any;
+  howToApply?: any;
+  official_website?: string;
+  documents?: any;
+  faqs?: any[];
+  gr?: any;
+  contact?: any;
+  source?: any;
 }
 
 export interface SchemeCategory {

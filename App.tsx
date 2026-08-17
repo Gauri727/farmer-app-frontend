@@ -19,9 +19,51 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/api/queryClient';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 const isWeb = Platform.OS === 'web';
+
+const linking = {
+  prefixes: ['http://localhost:8081', 'http://localhost:8082', 'http://localhost:8083', 'farmerai://', '/'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          HomeTab: {
+            screens: {
+              Home: '',
+              SchemeDetails: 'SchemeDetails',
+              CropSelection: 'crop-selection',
+              DiseaseDiagnosis: 'disease-diagnosis',
+              Weather: 'weather',
+              Schemes: 'schemes',
+              MarketPrices: 'market-prices',
+              FertilizerAdvice: 'fertilizer-advice',
+              VoiceAssistant: 'mic',
+            },
+          },
+          SchemesTab: {
+            screens: {
+              SchemesList: 'schemes-list',
+              SchemeDetails: 'scheme-details',
+            },
+          },
+          EligibilityTab: {
+            screens: {
+              EligibilityForm: 'eligibility-form',
+            },
+          },
+          ProfileTab: {
+            screens: {
+              Profile: 'profile',
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 export default function App() {
   return (
@@ -32,10 +74,12 @@ export default function App() {
             <QueryClientProvider client={queryClient}>
               <AuthProvider>
                 <LanguageProvider>
-                  <NavigationContainer>
-                    <StatusBar style="dark" />
-                    <RootNavigator />
-                  </NavigationContainer>
+                  <ThemeProvider>
+                    <NavigationContainer linking={linking as any}>
+                      <StatusBar style="auto" />
+                      <RootNavigator />
+                    </NavigationContainer>
+                  </ThemeProvider>
                 </LanguageProvider>
               </AuthProvider>
             </QueryClientProvider>

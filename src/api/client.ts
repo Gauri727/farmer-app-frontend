@@ -1,7 +1,7 @@
 /**
  * Axios HTTP Client
  *
- * - Placeholder BASE_URL (update when backend is ready)
+ * - Configurable BASE_URL for web + mobile
  * - JWT token injection via request interceptor
  * - 401 handling with token refresh via response interceptor
  */
@@ -11,23 +11,33 @@ import axios, {
   AxiosInstance,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { Platform } from 'react-native';
 import { ApiError } from '../types/api.types';
 
-// ── Placeholder Base URL ──────────────────────────────────────────────
-// Update this when the backend is deployed
-export const BASE_URL = 'https://api.farmervoice.example.com/api/v1';
+// ── Configurable Base URL ─────────────────────────────────────────────
+// Web runs on the PC, so localhost works.
+// Android/iPhone must use the PC's LAN IP.
+export const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === 'web'
+    ? 'http://localhost:8000/api'
+    : 'http://localhost:8000/api');
 
 // ── Token Storage Interface ───────────────────────────────────────────
-// This will be connected to expo-secure-store via AuthContext
+
 let getAccessToken: (() => Promise<string | null>) | null = null;
 let getRefreshToken: (() => Promise<string | null>) | null = null;
-let onTokenRefreshed: ((accessToken: string, refreshToken: string) => Promise<void>) | null = null;
+let onTokenRefreshed:
+  ((accessToken: string, refreshToken: string) => Promise<void>) | null = null;
 let onSessionExpired: (() => void) | null = null;
 
 export function configureApiClient(config: {
   getAccessToken: () => Promise<string | null>;
   getRefreshToken: () => Promise<string | null>;
-  onTokenRefreshed: (accessToken: string, refreshToken: string) => Promise<void>;
+  onTokenRefreshed: (
+    accessToken: string,
+    refreshToken: string
+  ) => Promise<void>;
   onSessionExpired: () => void;
 }) {
   getAccessToken = config.getAccessToken;
@@ -53,10 +63,12 @@ apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     if (getAccessToken) {
       const token = await getAccessToken();
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -65,12 +77,16 @@ apiClient.interceptors.request.use(
 // ── Response Interceptor: Handle 401 & Refresh ────────────────────────
 
 let isRefreshing = false;
+
 let failedQueue: Array<{
   resolve: (value: unknown) => void;
   reject: (reason: unknown) => void;
 }> = [];
 
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (
+  error: unknown,
+  token: string | null = null
+) => {
   failedQueue.forEach((promise) => {
     if (error) {
       promise.reject(error);
@@ -78,26 +94,40 @@ const processQueue = (error: unknown, token: string | null = null) => {
       promise.resolve(token);
     }
   });
+
   failedQueue = [];
 };
 
 apiClient.interceptors.response.use(
   (response) => response,
+
   async (error: AxiosError<ApiError>) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & {
+        _retry?: boolean;
+      })
+      | undefined;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     // If 401 and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
-        // Queue the request while refresh is in progress
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
+          failedQueue.push({
+            resolve,
+            reject,
+          });
         }).then((token) => {
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${token}`;
           }
+
           return apiClient(originalRequest);
         });
       }
@@ -108,27 +138,42 @@ apiClient.interceptors.response.use(
       try {
         if (getRefreshToken && onTokenRefreshed) {
           const refreshToken = await getRefreshToken();
-          if (refreshToken) {
-            const response = await axios.post(`${BASE_URL}/auth/refresh`, {
-              refresh_token: refreshToken,
-            });
 
-            const { access_token, refresh_token } = response.data.data;
-            await onTokenRefreshed(access_token, refresh_token);
+          if (refreshToken) {
+            const response = await axios.post(
+              `${BASE_URL}/auth/refresh`,
+              {
+                refresh_token: refreshToken,
+              }
+            );
+
+            const {
+              access_token,
+              refresh_token,
+            } = response.data.data;
+
+            await onTokenRefreshed(
+              access_token,
+              refresh_token
+            );
 
             processQueue(null, access_token);
 
             if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${access_token}`;
+              originalRequest.headers.Authorization =
+                `Bearer ${access_token}`;
             }
+
             return apiClient(originalRequest);
           }
         }
-        // No refresh token available
+
         throw new Error('No refresh token');
       } catch (refreshError) {
         processQueue(refreshError, null);
+
         onSessionExpired?.();
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

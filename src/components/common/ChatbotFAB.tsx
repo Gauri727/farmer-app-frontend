@@ -1,782 +1,915 @@
 /**
- * ChatbotFAB — Floating Action Button + Full-Screen Farmer AI Chat
- *
- * Globally available chatbot button that floats above every screen.
- * Opens as a full-screen modal covering the entire app.
- * Supports 3 languages: English · हिंदी · मराठी
+ * ChatbotFAB Component — Farmer AI Assistant
+ * Fully responsive chatbot overlay with dynamic language detection & theme integration.
+ * Replies strictly in the language in which the question was asked (English, Marathi, Hindi).
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  FlatList,
+  Image,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Animated,
-  ScrollView,
-  Modal,
-  StatusBar,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../theme';
-import { chatService } from '../../services/chatService';
+import { useLanguageContext } from '../../contexts/LanguageContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
+import { Language } from '../../types/api.types';
 
-const SCREEN = Dimensions.get('window');
-const MOBILE_WIDTH = Math.min(SCREEN.width, 420);
-
-// ─── Language config ──────────────────────────────────────────────────────────
-
-type LangCode = 'en' | 'hi' | 'mr';
-
-interface LangConfig {
-  code: LangCode;
-  label: string;
-  nativeLabel: string;
-  placeholder: string;
-  welcomeTitle: string;
-  welcomeSub: string;
-  quickLabel: string;
-  headerSubtitle: string;
-  suggestions: string[];
-}
-
-const LANGUAGES: LangConfig[] = [
-  {
-    code: 'en',
-    label: 'EN',
-    nativeLabel: 'English',
-    placeholder: 'Type your question…',
-    welcomeTitle: 'Namaste! How can I help?',
-    welcomeSub: 'Ask me about government schemes, subsidies, or any farming-related questions.',
-    quickLabel: 'Quick questions:',
-    headerSubtitle: 'Online · Farming Expert',
-    suggestions: [
-      'What schemes are available for farmers?',
-      'How to apply for PM-KISAN?',
-      'Crop insurance details',
-      'Subsidy on fertilizers',
-    ],
-  },
-  {
-    code: 'hi',
-    label: 'हिं',
-    nativeLabel: 'हिंदी',
-    placeholder: 'अपना सवाल लिखें…',
-    welcomeTitle: 'नमस्ते! मैं कैसे मदद कर सकता हूँ?',
-    welcomeSub: 'सरकारी योजनाओं, सब्सिडी या खेती से जुड़े किसी भी सवाल के बारे में पूछें।',
-    quickLabel: 'त्वरित प्रश्न:',
-    headerSubtitle: 'ऑनलाइन · कृषि विशेषज्ञ',
-    suggestions: [
-      'किसानों के लिए कौन सी योजनाएं हैं?',
-      'PM-KISAN के लिए आवेदन कैसे करें?',
-      'फसल बीमा की जानकारी',
-      'उर्वरकों पर सब्सिडी',
-    ],
-  },
-  {
-    code: 'mr',
-    label: 'मरा',
-    nativeLabel: 'मराठी',
-    placeholder: 'तुमचा प्रश्न टाइप करा…',
-    welcomeTitle: 'नमस्कार! मी कशी मदत करू?',
-    welcomeSub: 'सरकारी योजना, अनुदान किंवा शेतीशी संबंधित कोणत्याही प्रश्नाबद्दल विचारा.',
-    quickLabel: 'त्वरित प्रश्न:',
-    headerSubtitle: 'ऑनलाइन · शेती तज्ञ',
-    suggestions: [
-      'शेतकऱ्यांसाठी कोणत्या योजना आहेत?',
-      'PM-KISAN साठी अर्ज कसा करावा?',
-      'पीक विमा माहिती',
-      'खतांवर अनुदान',
-    ],
-  },
-];
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ChatMessage {
+interface MessageItem {
   id: string;
-  role: 'user' | 'assistant';
+  sender: 'user' | 'bot';
   text: string;
   timestamp: Date;
 }
 
-// ─── Language Picker ──────────────────────────────────────────────────────────
-
-interface LangPickerProps {
-  selected: LangCode;
-  onSelect: (code: LangCode) => void;
-}
-
-const LangPicker: React.FC<LangPickerProps> = ({ selected, onSelect }) => (
-  <View style={langStyles.row}>
-    {LANGUAGES.map(lang => {
-      const active = lang.code === selected;
-      return (
-        <TouchableOpacity
-          key={lang.code}
-          style={[langStyles.pill, active && langStyles.pillActive]}
-          onPress={() => onSelect(lang.code)}
-          activeOpacity={0.75}
-          accessibilityLabel={`Switch to ${lang.nativeLabel}`}
-        >
-          <Text style={[langStyles.pillText, active && langStyles.pillTextActive]}>
-            {lang.label}
-          </Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
-
-const langStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-  },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  pillActive: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.white,
-  },
-  pillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.8)',
-  },
-  pillTextActive: {
-    color: Colors.primary[700],
-  },
-});
-
-// ─── Message Bubble ───────────────────────────────────────────────────────────
-
-const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
-  const isUser = message.role === 'user';
-  return (
-    <View style={[styles.bubbleRow, isUser ? styles.bubbleRowUser : styles.bubbleRowBot]}>
-      {!isUser && (
-        <View style={styles.botAvatar}>
-          <Ionicons name="leaf" size={16} color={Colors.white} />
-        </View>
-      )}
-      <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleBot]}>
-        <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : styles.bubbleTextBot]}>
-          {message.text}
-        </Text>
-        <Text style={[styles.timestamp, isUser ? styles.timestampUser : styles.timestampBot]}>
-          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Text>
-      </View>
-    </View>
-  );
-};
-
-// ─── Typing Indicator ─────────────────────────────────────────────────────────
-
-const TypingIndicator: React.FC = () => {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    const animate = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, { toValue: -7, duration: 300, useNativeDriver: true }),
-          Animated.timing(dot, { toValue: 0, duration: 300, useNativeDriver: true }),
-          Animated.delay(600),
-        ])
-      ).start();
-    animate(dot1, 0);
-    animate(dot2, 150);
-    animate(dot3, 300);
-  }, [dot1, dot2, dot3]);
-
-  return (
-    <View style={styles.typingContainer}>
-      <View style={styles.botAvatar}>
-        <Ionicons name="leaf" size={16} color={Colors.white} />
-      </View>
-      <View style={styles.typingBubble}>
-        {[dot1, dot2, dot3].map((dot, i) => (
-          <Animated.View key={i} style={[styles.dot, { transform: [{ translateY: dot }] }]} />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-// ─── Main ChatbotFAB ──────────────────────────────────────────────────────────
-
 export const ChatbotFAB: React.FC = () => {
-  const insets = useSafeAreaInsets();
-
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeLang, setActiveLang] = useState<LangCode>('en');
+  const [messageText, setMessageText] = useState('');
+  const [messages, setMessages] = useState<MessageItem[]>([]);
 
-  const lang = LANGUAGES.find(l => l.code === activeLang) ?? LANGUAGES[0];
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const isSmallScreen = windowWidth < 360;
 
-  // FAB pulse animation
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const flatListRef = useRef<FlatList>(null);
+  const { t, selectedLanguage, setLanguage } = useLanguageContext();
+  const { isDarkMode, colors: themeColors } = useThemeContext();
 
-  React.useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.12, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-      ])
-    );
-    pulse.start();
-    return () => pulse.stop();
-  }, [pulseAnim]);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const scrollToBottom = useCallback(() => {
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-  }, []);
+  // Press & Breathing Animations for Outer FAB
+  const pressAnim = useRef(new Animated.Value(1)).current;
+  const breathAnim = useRef(new Animated.Value(1)).current;
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed || isLoading) return;
+  useEffect(() => {
+    let breathing: Animated.CompositeAnimation;
+    if (!isOpen) {
+      breathing = Animated.loop(
+        Animated.sequence([
+          Animated.timing(breathAnim, {
+            toValue: 1.04,
+            duration: 2200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(breathAnim, {
+            toValue: 1,
+            duration: 2200,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      breathing.start();
+    } else {
+      breathAnim.setValue(1);
+    }
 
-      const userMsg: ChatMessage = {
-        id: Date.now().toString(),
-        role: 'user',
-        text: trimmed,
+    return () => {
+      if (breathing) breathing.stop();
+    };
+  }, [isOpen]);
+
+  const handlePressIn = () => {
+    Animated.spring(pressAnim, {
+      toValue: 0.94,
+      friction: 6,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(pressAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  /**
+   * Smart Language Detection & Tailored Response Logic
+   * Replies strictly in the language of the query asked.
+   */
+  const detectLanguage = (query: string): 'mr' | 'hi' | 'en' => {
+    const isDevanagari = /[\u0900-\u097F]/.test(query);
+
+    if (isDevanagari) {
+      // Check Marathi specific keywords
+      if (/योजना|कसा|काय|अर्ज|मिळेल|आहे|नाही|शेतकरी|ठिबक|पिक|माहिती|पाहिजे/.test(query)) {
+        return 'mr';
+      }
+      // Check Hindi specific keywords
+      if (/कैसे|क्या|आवेदन|मिलेगा|है|नहीं|किसान|ड्रिप|फसल|जानकारी|चाहिए/.test(query)) {
+        return 'hi';
+      }
+      return selectedLanguage.code === 'hi' ? 'hi' : 'mr';
+    }
+
+    // Latin Script / English query check
+    const qLower = query.toLowerCase();
+    if (/kaise|kya|kare|jankari|chahiye|mileyga/.test(qLower)) {
+      return 'hi'; // Hinglish
+    }
+    if (/kay|ahe|kasa|marathi|shetkari/.test(qLower)) {
+      return 'mr'; // Manglish
+    }
+
+    return 'en';
+  };
+
+  const generateBotReply = (query: string): string => {
+    const lang = detectLanguage(query);
+    const qLower = query.toLowerCase();
+
+    // Steps to Apply / How to Apply Queries
+    if (qLower.includes('step') || qLower.includes('apply') || qLower.includes('अर्ज कसा') || qLower.includes('आवेदन कैसे')) {
+      if (lang === 'mr') {
+        return 'अर्जाच्या पायऱ्या:\n१. महाडीबीटी पोर्टलला (mahadbt.maharashtra.gov.in) भेट द्या\n२. आधार व मोबाईल नंबरने नोंदणी करा\n३. योजना निवडून शेतीची माहिती भरा\n४. ७/१२ उतारा व बँक तपशील अपलोड करा\n५. अर्ज सबमिट करा';
+      }
+      if (lang === 'hi') {
+        return 'आवेदन के चरण:\n1. महाडीबीटी पोर्टल (mahadbt.maharashtra.gov.in) पर जाएं\n2. आधार और मोबाइल नंबर से पंजीकरण करें\n3. योजना चुनें और खेत की जानकारी भरें\n4. 7/12 खसरा और बैंक विवरण अपलोड करें\n5. आवेदन जमा करें';
+      }
+      return 'Steps to apply:\n1. Visit MahaDBT portal (mahadbt.maharashtra.gov.in)\n2. Register using your Aadhaar & mobile number\n3. Select your scheme & fill land/crop details\n4. Upload 7/12 land extract & bank details\n5. Submit your application';
+    }
+
+    // Drip / Micro Irrigation Queries
+    if (qLower.includes('drip') || qLower.includes('irrigation') || qLower.includes('सिंचन') || qLower.includes('सिंचाई')) {
+      if (lang === 'mr') {
+        return 'ठिबक सिंचनासाठी महाडीबीटी पोर्टलवर ऑनलाईन अर्ज करा. लहान व अल्पभूधारक शेतकऱ्यांना ५५% तर इतर शेतकऱ्यांना ४५% अनुदान दिले जाते.';
+      }
+      if (lang === 'hi') {
+        return 'ड्रिप सिंचाई के लिए महाडीबीटी पोर्टल पर ऑनलाइन आवेदन करें। छोटे और सीमांत किसानों को 55% तथा अन्य किसानों को 45% सब्सिडी दी जाती है।';
+      }
+      return 'To apply for drip irrigation, register on the MahaDBT portal. Small & marginal farmers receive a 55% subsidy, while other farmers receive a 45% subsidy.';
+    }
+
+    // Schemes Queries
+    if (qLower.includes('scheme') || qLower.includes('available') || qLower.includes('योजना') || qLower.includes('योजनाएं')) {
+      if (lang === 'mr') {
+        return 'भाऊसाहेब फुंडकर फळबाग योजना, नमो शेतकरी योजना, विहीर पुनर्भरण आणि महाडीबीटीवर अनेक योजना उपलब्ध आहेत.';
+      }
+      if (lang === 'hi') {
+        return 'भाऊसाहेब फुंडकर फलबाग योजना, नमो शेतकरी योजना, कुआं पुनर्भरण और महाडीबीटी पर कई योजनाएं उपलब्ध हैं।';
+      }
+      return 'Bhausaheb Fundkar Fruit Orchard Scheme, Namo Shetkari Scheme, Well Recharge, and several micro-irrigation subsidies are available on the MahaDBT portal.';
+    }
+
+    // PM Kisan Queries
+    if (qLower.includes('kisan') || qLower.includes('status') || qLower.includes('हप्ता') || qLower.includes('किस्त')) {
+      if (lang === 'mr') {
+        return 'तुमचा पीएम-किसान हप्ता स्टेटस pmkisan.gov.in वर नोंदणीकृत मोबाईल नंबर किंवा आधार नंबर टाकून तपासू शकता.';
+      }
+      if (lang === 'hi') {
+        return 'आप अपना पीएम-किसान किस्त का स्टेटस pmkisan.gov.in पर अपने पंजीकृत मोबाइल नंबर या आधार नंबर से जांच सकते हैं।';
+      }
+      return 'You can check your PM-Kisan installment status on pmkisan.gov.in using your registered mobile number or Aadhaar number.';
+    }
+
+    // Default / Greeting Queries
+    if (lang === 'mr') {
+      return 'मी तुमचा Farmer AI सहाय्यक आहे! मी तुम्हाला शासकीय योजना, अनुदान, पीक व्यवस्थापन आणि पात्रतेबाबत मार्गदर्शन करू शकतो. मी तुम्हाला कशी मदत करू?';
+    }
+    if (lang === 'hi') {
+      return 'मैं आपका Farmer AI सहायक हूं! मैं आपको सरकारी योजनाओं, सब्सिडी, फसल प्रबंधन और पात्रता के बारे में जानकारी दे सकता हूं। मैं आपकी कैसे मदद कर सकता हूं?';
+    }
+    return 'I am your Farmer AI Assistant! I can guide you on government schemes, subsidies, crop management, and eligibility requirements. How can I help you today?';
+  };
+
+  const handleSend = (customText?: string) => {
+    const query = (customText || messageText).trim();
+    if (!query) return;
+
+    const userMsg: MessageItem = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: query,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setMessageText('');
+
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    // Generate response strictly in the language asked
+    setTimeout(() => {
+      const botReply = generateBotReply(query);
+      const botMsg: MessageItem = {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: botReply,
         timestamp: new Date(),
       };
+      setMessages((prev) => [...prev, botMsg]);
 
-      setMessages(prev => [...prev, userMsg]);
-      setInputText('');
-      setIsLoading(true);
-      scrollToBottom();
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, 700);
+  };
 
-      try {
-        const response = await chatService.sendMessage({
-          message: trimmed,
-          language: activeLang,
-        });
+  const handleSelectLanguage = (code: string) => {
+    const langMap: Record<string, Language> = {
+      en: { code: 'en', name: 'English' },
+      hi: { code: 'hi', name: 'हिंदी' },
+      mr: { code: 'mr', name: 'मराठी' },
+    };
+    if (langMap[code]) {
+      setLanguage(langMap[code]);
+    }
+  };
 
-        const botMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          text: response?.data?.answer ?? 'Sorry, I could not get a response. Please try again.',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, botMsg]);
-      } catch {
-        const errorMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          text:
-            activeLang === 'hi'
-              ? 'अभी कनेक्ट करने में समस्या हो रही है। कृपया दोबारा कोशिश करें।'
-              : activeLang === 'mr'
-              ? 'आत्ता कनेक्ट होण्यात समस्या आहे. कृपया पुन्हा प्रयत्न करा.'
-              : 'Having trouble connecting right now. Please check your internet and try again.',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMsg]);
-      } finally {
-        setIsLoading(false);
-        scrollToBottom();
-      }
-    },
-    [isLoading, activeLang, scrollToBottom]
-  );
-
-  const handleLangChange = useCallback((code: LangCode) => {
-    setActiveLang(code);
-    setMessages([]);
-    setInputText('');
-  }, []);
-
-  const showSuggestions = messages.length === 0 && !isLoading;
-
-  return (
-    <>
-      {/* ── Floating Action Button ── */}
-      {!isOpen && (
-        <View
-          style={[styles.fabWrapper, { bottom: insets.bottom + 90 }]}
-          pointerEvents="box-none"
+  /* =====================================================
+     OPEN CHATBOT FULL-SCREEN OVERLAY
+     ===================================================== */
+  if (isOpen) {
+    return (
+      <View style={[styles.fullScreenOverlay, { backgroundColor: isDarkMode ? themeColors.background : Colors.white }]}>
+        <KeyboardAvoidingView
+          style={styles.fullScreen}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
         >
-          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={() => setIsOpen(true)}
-              activeOpacity={0.85}
-              accessibilityLabel="Open Farmer AI Assistant"
-              accessibilityRole="button"
+          <View style={[styles.chatbotContainer, { backgroundColor: isDarkMode ? themeColors.background : Colors.white }]}>
+            {/* Header matching App Theme */}
+            <View
+              style={[
+                styles.header,
+                {
+                  backgroundColor: isDarkMode ? '#1E293B' : '#15803D',
+                  paddingTop: Math.max(insets.top, 12),
+                  paddingHorizontal: isSmallScreen ? 8 : 12,
+                },
+              ]}
             >
-              <Ionicons name="chatbubble-ellipses" size={26} color={Colors.white} />
-            </TouchableOpacity>
-          </Animated.View>
-          <Text style={styles.fabLabel}>Farmer AI</Text>
-        </View>
-      )}
+              <TouchableOpacity
+                style={[
+                  styles.backButton,
+                  isSmallScreen && { width: 36, height: 36, borderRadius: 18 },
+                ]}
+                onPress={() => setIsOpen(false)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="arrow-back" size={isSmallScreen ? 20 : 24} color={Colors.white} />
+              </TouchableOpacity>
 
-      {/* ── Full-Screen Chat Modal ── */}
-      <Modal
-        visible={isOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsOpen(false)}
-        statusBarTranslucent
-      >
-        <StatusBar backgroundColor={Colors.primary[700]} barStyle="light-content" />
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.mobileContainer, { paddingTop: insets.top }]}>
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={[
+                  styles.headerLogo,
+                  isSmallScreen && { width: 34, height: 34, borderRadius: 17 },
+                ]}
+                resizeMode="contain"
+              />
 
-          {/* ── Gradient-style Header ── */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={() => setIsOpen(false)}
-              accessibilityLabel="Close Farmer AI Assistant"
-            >
-              <Ionicons name="arrow-back" size={22} color={Colors.white} />
-            </TouchableOpacity>
-
-            <View style={styles.headerCenter}>
-              <View style={styles.headerAvatar}>
-                <Ionicons name="leaf" size={20} color={Colors.white} />
-              </View>
-              <View>
-                <Text style={styles.headerTitle}>Farmer AI Assistant</Text>
+              <View style={styles.headerText}>
+                <Text
+                  style={[
+                    styles.headerTitle,
+                    isSmallScreen && { fontSize: 14 },
+                  ]}
+                  numberOfLines={1}
+                >
+                  Farmer AI Assistant
+                </Text>
                 <View style={styles.onlineRow}>
                   <View style={styles.onlineDot} />
-                  <Text style={styles.onlineText}>{lang.headerSubtitle}</Text>
+                  <Text style={styles.onlineText} numberOfLines={1}>
+                    Online · Farming Expert
+                  </Text>
                 </View>
+              </View>
+
+              {/* Language Selection Buttons (EN, हि, मरा) */}
+              <View style={styles.languageButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.langBtn,
+                    selectedLanguage.code === 'en' ? styles.langBtnActive : styles.langBtnInactive,
+                    isSmallScreen && { paddingHorizontal: 7, paddingVertical: 4 },
+                  ]}
+                  onPress={() => handleSelectLanguage('en')}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      selectedLanguage.code === 'en' ? styles.langTextActive : styles.langTextInactive,
+                      isSmallScreen && { fontSize: 10 },
+                    ]}
+                  >
+                    EN
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.langBtn,
+                    selectedLanguage.code === 'hi' ? styles.langBtnActive : styles.langBtnInactive,
+                    isSmallScreen && { paddingHorizontal: 7, paddingVertical: 4 },
+                  ]}
+                  onPress={() => handleSelectLanguage('hi')}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      selectedLanguage.code === 'hi' ? styles.langTextActive : styles.langTextInactive,
+                      isSmallScreen && { fontSize: 10 },
+                    ]}
+                  >
+                    हि
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.langBtn,
+                    selectedLanguage.code === 'mr' ? styles.langBtnActive : styles.langBtnInactive,
+                    isSmallScreen && { paddingHorizontal: 7, paddingVertical: 4 },
+                  ]}
+                  onPress={() => handleSelectLanguage('mr')}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      selectedLanguage.code === 'mr' ? styles.langTextActive : styles.langTextInactive,
+                      isSmallScreen && { fontSize: 10 },
+                    ]}
+                  >
+                    मरा
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 
-            <LangPicker selected={activeLang} onSelect={handleLangChange} />
-          </View>
+            {/* Content Area */}
+            <View style={[styles.content, { backgroundColor: isDarkMode ? themeColors.background : Colors.white }]}>
+              <ScrollView
+                ref={scrollViewRef}
+                style={styles.messagesScrollView}
+                contentContainerStyle={[
+                  styles.messagesContent,
+                  { paddingHorizontal: isSmallScreen ? 14 : 20 },
+                ]}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                {/* Welcome Card when no messages */}
+                {messages.length === 0 ? (
+                  <View style={styles.welcomeContainer}>
+                    <Image
+                      source={require('../../../assets/icon.png')}
+                      style={[
+                        styles.welcomeLogo,
+                        isSmallScreen && { width: 52, height: 52 },
+                      ]}
+                      resizeMode="contain"
+                    />
 
-          {/* ── Chat Body ── */}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.chatBody}
-            keyboardVerticalOffset={0}
-          >
-            {/* Welcome banner */}
-            {messages.length === 0 && (
-              <View style={styles.welcomeBanner}>
-                <Text style={styles.welcomeEmoji}>🌾</Text>
-                <Text style={styles.welcomeTitle}>{lang.welcomeTitle}</Text>
-                <Text style={styles.welcomeSub}>{lang.welcomeSub}</Text>
-                <View style={styles.langBadge}>
-                  <Ionicons name="language-outline" size={13} color={Colors.primary[600]} />
-                  <Text style={styles.langBadgeText}>{lang.nativeLabel}</Text>
-                </View>
-              </View>
-            )}
+                    <Text
+                      style={[
+                        styles.welcomeTitle,
+                        { color: isDarkMode ? '#F9FAFB' : Colors.text.primary },
+                        isSmallScreen && { fontSize: 18 },
+                      ]}
+                    >
+                      {t('namasteGreeting') || 'Namaste! How can I help?'}
+                    </Text>
 
-            {/* Messages list */}
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => <MessageBubble message={item} />}
-              contentContainerStyle={styles.messagesList}
-              onContentSizeChange={scrollToBottom}
-              showsVerticalScrollIndicator={false}
-              ListFooterComponent={isLoading ? <TypingIndicator /> : null}
-            />
+                    <Text
+                      style={[
+                        styles.welcomeSubtitle,
+                        { color: isDarkMode ? '#9CA3AF' : Colors.text.secondary },
+                        isSmallScreen && { fontSize: 12, lineHeight: 17 },
+                      ]}
+                    >
+                      {t('heroSubTitle') || 'Ask me about government schemes, subsidies, or any farming-related questions.'}
+                    </Text>
 
-            {/* Suggestion chips */}
-            {showSuggestions && (
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionsLabel}>{lang.quickLabel}</Text>
+                    <TouchableOpacity
+                      style={[
+                        styles.languagePill,
+                        {
+                          backgroundColor: isDarkMode ? '#1E293B' : Colors.primary[50],
+                          borderColor: isDarkMode ? '#374151' : Colors.primary[100],
+                        },
+                      ]}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="language-outline"
+                        size={14}
+                        color={isDarkMode ? '#34D399' : Colors.primary[600]}
+                      />
+                      <Text style={[styles.languagePillText, { color: isDarkMode ? '#34D399' : Colors.primary[600] }]}>
+                        {selectedLanguage.name}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  /* Active Message Bubbles */
+                  <View style={styles.messagesList}>
+                    {messages.map((msg) => (
+                      <View
+                        key={msg.id}
+                        style={[
+                          styles.messageBubble,
+                          msg.sender === 'user'
+                            ? styles.userBubble
+                            : [styles.botBubble, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }],
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageText,
+                            msg.sender === 'user'
+                              ? styles.userMessageText
+                              : [styles.botMessageText, { color: isDarkMode ? '#F9FAFB' : '#0F172A' }],
+                          ]}
+                        >
+                          {msg.text}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </ScrollView>
+
+              {/* Quick Ask Questions — Horizontally Scrollable Row */}
+              <View style={[styles.quickSection, { borderTopColor: isDarkMode ? '#374151' : Colors.gray[100] }]}>
+                <Text style={[styles.quickTitle, { color: isDarkMode ? '#9CA3AF' : Colors.text.secondary }]}>
+                  {t('quickAskHeader') || 'Quick Ask'}
+                </Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.suggestionsScroll}
+                  contentContainerStyle={styles.quickQuestionsScroll}
+                  keyboardShouldPersistTaps="handled"
                 >
-                  {lang.suggestions.map(s => (
-                    <TouchableOpacity
-                      key={s}
-                      style={styles.chip}
-                      onPress={() => sendMessage(s)}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={styles.chipText}>{s}</Text>
-                    </TouchableOpacity>
-                  ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.quickQuestionPill,
+                      {
+                        backgroundColor: isDarkMode ? '#1E293B' : Colors.white,
+                        borderColor: isDarkMode ? '#374151' : '#DCFCE7',
+                      },
+                    ]}
+                    onPress={() => handleSend('What schemes are available for farmers?')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="mic-outline"
+                      size={15}
+                      color="#15803D"
+                    />
+                    <Text style={[styles.quickQuestionText, { color: isDarkMode ? '#F9FAFB' : '#15803D' }]} numberOfLines={2}>
+                      What schemes are available for farmers?
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.quickQuestionPill,
+                      {
+                        backgroundColor: isDarkMode ? '#1E293B' : Colors.white,
+                        borderColor: isDarkMode ? '#374151' : '#DCFCE7',
+                      },
+                    ]}
+                    onPress={() => handleSend('How to apply for drip irrigation scheme?')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="mic-outline"
+                      size={15}
+                      color="#15803D"
+                    />
+                    <Text style={[styles.quickQuestionText, { color: isDarkMode ? '#F9FAFB' : '#15803D' }]} numberOfLines={2}>
+                      How to apply for drip irrigation scheme?
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.quickQuestionPill,
+                      {
+                        backgroundColor: isDarkMode ? '#1E293B' : Colors.white,
+                        borderColor: isDarkMode ? '#374151' : '#DCFCE7',
+                      },
+                    ]}
+                    onPress={() => handleSend('PM Kisan installment status check')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="mic-outline"
+                      size={15}
+                      color="#15803D"
+                    />
+                    <Text style={[styles.quickQuestionText, { color: isDarkMode ? '#F9FAFB' : '#15803D' }]} numberOfLines={2}>
+                      PM Kisan status check
+                    </Text>
+                  </TouchableOpacity>
                 </ScrollView>
               </View>
-            )}
 
-            {/* Input row */}
-            <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-              <TextInput
-                style={styles.textInput}
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder={lang.placeholder}
-                placeholderTextColor={Colors.gray[400]}
-                multiline
-                maxLength={500}
-                returnKeyType="send"
-                onSubmitEditing={() => sendMessage(inputText)}
-                blurOnSubmit={false}
-                editable={!isLoading}
-              />
-              <TouchableOpacity
+              {/* Input Bar — Matching App Theme with Solid Green Send Button */}
+              <View
                 style={[
-                  styles.sendBtn,
-                  (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
+                  styles.inputArea,
+                  {
+                    backgroundColor: isDarkMode ? '#111827' : Colors.white,
+                    borderTopColor: isDarkMode ? '#374151' : Colors.gray[100],
+                    paddingBottom: Math.max(insets.bottom, 10),
+                  },
                 ]}
-                onPress={() => sendMessage(inputText)}
-                disabled={!inputText.trim() || isLoading}
-                activeOpacity={0.8}
-                accessibilityLabel="Send message"
               >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color={Colors.white} />
-                ) : (
-                  <Ionicons name="send" size={18} color={Colors.white} />
-                )}
-              </TouchableOpacity>
+                <TextInput
+                  value={messageText}
+                  onChangeText={setMessageText}
+                  placeholder={t('askSearchPlaceholder') || 'e.g. Drip irrigation, PM-Kisan subsidy...'}
+                  placeholderTextColor={isDarkMode ? '#64748B' : Colors.text.tertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: isDarkMode ? '#1E293B' : Colors.gray[50],
+                      borderColor: isDarkMode ? '#374151' : Colors.gray[200],
+                      color: isDarkMode ? '#F9FAFB' : Colors.text.primary,
+                    },
+                  ]}
+                  returnKeyType="send"
+                  blurOnSubmit={false}
+                  onSubmitEditing={() => handleSend()}
+                  onKeyPress={(e: any) => {
+                    if (e.nativeEvent?.key === 'Enter' && !e.nativeEvent?.shiftKey) {
+                      if (Platform.OS === 'web' && e.preventDefault) {
+                        e.preventDefault();
+                      }
+                      handleSend();
+                    }
+                  }}
+                />
+
+                <TouchableOpacity
+                  style={styles.sendButtonTouchable}
+                  onPress={() => handleSend()}
+                  disabled={!messageText.trim()}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={messageText.trim() ? ['#16A34A', '#15803D'] : ['#A7F3D0', '#86EFAC']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.sendButtonGradient}
+                  >
+                    <Ionicons name="send" size={17} color={Colors.white} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             </View>
-          </KeyboardAvoidingView>
           </View>
-        </View>
-      </Modal>
-    </>
+        </KeyboardAvoidingView>
+      </View>
+    );
+  }
+
+  /* =====================================================
+     OUTER FLOATING CHATBOT BUTTON (EXACT MATCH REFERENCE DESIGN)
+     Green Gradient + Thin White Inner Ring + White Speech Bubble with 3 Dots + Floating Shadow
+     ===================================================== */
+  return (
+    <Animated.View
+      style={[
+        styles.fabContainer,
+        {
+          transform: [
+            { scale: Animated.multiply(pressAnim, breathAnim) },
+          ],
+        },
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.fabTouchable}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={() => setIsOpen(true)}
+        activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel="Open Farmer AI Chatbot Assistant"
+      >
+        <LinearGradient
+          colors={['#22C55E', '#16A34A', '#116B31']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.greenGradientContainer}
+        >
+          <View style={styles.whiteInnerRing}>
+            <Ionicons
+              name="chatbubble-ellipses"
+              size={34}
+              color="#FFFFFF"
+            />
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  // FAB
-  fabWrapper: {
+  fullScreenOverlay: {
     position: 'absolute',
-    right: 18,
-    alignItems: 'center',
-    zIndex: 999,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 99999,
     elevation: 999,
   },
-  fab: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: Colors.primary[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.primary[900],
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 12,
-  },
-  fabLabel: {
-    marginTop: 5,
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.primary[600],
-    letterSpacing: 0.3,
-  },
-
-  // Modal backdrop + mobile container
-  modalBackdrop: {
+  fullScreen: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
+    height: '100%',
   },
-  mobileContainer: {
-    width: MOBILE_WIDTH,
+  chatbotContainer: {
     flex: 1,
-    backgroundColor: Colors.white,
+    width: '100%',
+    height: '100%',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 24,
-    elevation: 30,
   },
 
-  // Header
+  /* Header */
   header: {
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    backgroundColor: Colors.primary[600],
-    gap: 10,
+    paddingBottom: 10,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  headerAvatar: {
+  backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
+    marginRight: 6,
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.white,
+    marginRight: 8,
+  },
+  headerText: {
+    flex: 1,
+    justifyContent: 'center',
+    marginRight: 4,
   },
   headerTitle: {
+    color: Colors.white,
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.white,
   },
   onlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
     marginTop: 2,
   },
   onlineDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#4ADE80',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#55D88A',
+    marginRight: 4,
   },
   onlineText: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
+    color: Colors.white,
+    opacity: 0.9,
+    fontSize: 10,
   },
-
-  // Chat body
-  chatBody: {
-    flex: 1,
-    backgroundColor: '#F8FAF8',
-  },
-
-  // Welcome
-  welcomeBanner: {
+  languageButtons: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 40,
-    paddingBottom: 16,
+    gap: 4,
   },
-  welcomeEmoji: {
-    fontSize: 52,
-    marginBottom: 12,
+  langBtn: {
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  welcomeTitle: {
-    fontSize: 20,
+  langBtnActive: {
+    backgroundColor: Colors.white,
+  },
+  langBtnInactive: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.45)',
+  },
+  langTextActive: {
+    color: '#15803D',
+    fontSize: 11,
     fontWeight: '700',
-    color: Colors.text.primary,
-    marginBottom: 8,
-    textAlign: 'center',
   },
-  welcomeSub: {
-    fontSize: 14,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: 21,
+  langTextInactive: {
+    color: Colors.white,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  /* Content & Messages Area */
+  content: {
+    flex: 1,
+  },
+  messagesScrollView: {
+    flex: 1,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  welcomeContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  welcomeLogo: {
+    width: 64,
+    height: 64,
     marginBottom: 16,
   },
-  langBadge: {
+  welcomeTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: '90%',
+  },
+  languagePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: Colors.primary[50],
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    marginTop: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.primary[200],
+    alignSelf: 'center',
   },
-  langBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.primary[700],
-  },
-
-  // Messages
-  messagesList: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexGrow: 1,
-  },
-  bubbleRow: {
-    flexDirection: 'row',
-    marginBottom: 14,
-    alignItems: 'flex-end',
-    gap: 10,
-  },
-  bubbleRowUser: { justifyContent: 'flex-end' },
-  bubbleRowBot: { justifyContent: 'flex-start' },
-  botAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.primary[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  bubble: {
-    maxWidth: '78%',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-  },
-  bubbleUser: {
-    backgroundColor: Colors.primary[600],
-    borderBottomRightRadius: 4,
-  },
-  bubbleBot: {
-    backgroundColor: Colors.white,
-    borderBottomLeftRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  bubbleText: { fontSize: 15, lineHeight: 22 },
-  bubbleTextUser: { color: Colors.white },
-  bubbleTextBot: { color: Colors.text.primary },
-  timestamp: { fontSize: 10, marginTop: 5 },
-  timestampUser: { color: 'rgba(255,255,255,0.65)', textAlign: 'right' },
-  timestampBot: { color: Colors.gray[400] },
-
-  // Typing indicator
-  typingContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-    marginBottom: 14,
-    paddingHorizontal: 16,
-  },
-  typingBubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    borderBottomLeftRadius: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.primary[400],
-  },
-
-  // Suggestions
-  suggestionsContainer: {
-    paddingLeft: 16,
-    paddingBottom: 10,
-    paddingTop: 4,
-  },
-  suggestionsLabel: {
+  languagePillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.gray[500],
-    marginBottom: 9,
-  },
-  suggestionsScroll: {
-    gap: 8,
-    paddingRight: 16,
-  },
-  chip: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderWidth: 1.5,
-    borderColor: Colors.primary[300],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  chipText: {
-    fontSize: 13,
-    color: Colors.primary[700],
-    fontWeight: '600',
   },
 
-  // Input
-  inputRow: {
+  /* Active Messages List */
+  messagesList: {
+    width: '100%',
+    gap: 8,
+  },
+  messageBubble: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 18,
+    maxWidth: '82%',
+    marginVertical: 2,
+  },
+  userBubble: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#15803D',
+    borderBottomRightRadius: 4,
+  },
+  botBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F1F5F9',
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  userMessageText: {
+    color: Colors.white,
+  },
+  botMessageText: {
+    color: '#0F172A',
+  },
+
+  /* Quick Questions — Horizontal Scrollable Row */
+  quickSection: {
+    paddingBottom: 8,
+    paddingTop: 4,
+    borderTopWidth: 1,
+  },
+  quickTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  quickQuestionsScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  quickQuestionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    maxWidth: 290,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  quickQuestionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    flexShrink: 1,
+  },
+
+  /* Input Bar */
+  inputArea: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: 14,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray[100],
-    gap: 10,
-    backgroundColor: Colors.white,
+    gap: 8,
   },
-  textInput: {
+  input: {
     flex: 1,
-    minHeight: 46,
-    maxHeight: 120,
-    backgroundColor: '#F0F4F0',
-    borderRadius: 23,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: Colors.text.primary,
-    borderWidth: 1.5,
-    borderColor: Colors.gray[200],
+    minHeight: 44,
+    maxHeight: 100,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 14,
+    borderWidth: 1,
   },
-  sendBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: Colors.primary[500],
+  sendButtonTouchable: {
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  sendButtonGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary[900],
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.28,
-    shadowRadius: 6,
-    elevation: 5,
   },
-  sendBtnDisabled: {
-    backgroundColor: Colors.gray[300],
-    shadowOpacity: 0,
-    elevation: 0,
+
+  /* Floating Outer FAB Button */
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 90,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    zIndex: 999,
+    elevation: 10,
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  fabTouchable: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+  },
+  greenGradientContainer: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  whiteInnerRing: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
 });

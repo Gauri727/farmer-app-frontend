@@ -1,5 +1,6 @@
 /**
- * Profile Screen — User info, Guest Sign-in banner, menu items, logout
+ * Profile Screen — User info, Guest Sign-in card, menu options, logout
+ * Styled to match user reference layout (Screenshot 2).
  */
 
 import React, { useState } from 'react';
@@ -9,336 +10,225 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Colors,
-  Spacing,
-  BorderRadius,
-  Typography,
-  Shadows,
-} from '../../theme';
+import { CommonActions } from '@react-navigation/native';
+import { Colors, Spacing, BorderRadius, Typography, Shadows } from '../../theme';
+import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/common/Button';
 import { Dialog } from '../../components/common/Dialog';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { useThemeContext } from '../../contexts/ThemeContext';
+import { useLanguageContext } from '../../contexts/LanguageContext';
 import { useLogout } from '../../hooks/useAuth';
 import { ProfileScreenProps } from '../../navigation/types';
 
-interface MenuItem {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  screen: string;
-  badge?: string;
-}
-
-const MENU_ITEMS: MenuItem[] = [
-  // Your Applied Schemes option
-  {
-    icon: 'paper-plane-outline',
-    label: 'Applied Schemes',
-    screen: 'SchemesTab',
-  },
-
-  // Gauri's latest menu items
-  {
-    icon: 'settings-outline',
-    label: 'Settings',
-    screen: 'Settings',
-  },
-  {
-    icon: 'language-outline',
-    label: 'Language',
-    screen: 'LanguageSelection',
-  },
-  {
-    icon: 'bookmark-outline',
-    label: 'Bookmarks',
-    screen: 'Bookmarks',
-  },
-  {
-    icon: 'chatbubbles-outline',
-    label: 'Chat History',
-    screen: 'ConversationHistory',
-  },
-  {
-    icon: 'help-circle-outline',
-    label: 'Help & Support',
-    screen: 'Help',
-  },
-  {
-    icon: 'information-circle-outline',
-    label: 'About',
-    screen: 'About',
-  },
-  {
-    icon: 'shield-checkmark-outline',
-    label: 'Privacy Policy',
-    screen: 'PrivacyPolicy',
-  },
-  {
-    icon: 'document-text-outline',
-    label: 'Terms & Conditions',
-    screen: 'TermsConditions',
-  },
-];
-
-export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
-  navigation,
-}) => {
-  const insets = useSafeAreaInsets();
+export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({ navigation }) => {
   const { user, logout } = useAuthContext();
+  const { isDarkMode, colors: themeColors } = useThemeContext();
+  const { t } = useLanguageContext();
   const logoutMutation = useLogout();
+
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  // Guest mode
   const isGuest = !user || user.id === 'guest_user';
+
+  // Strictly 4 options as requested: Language, Bookmarked Schemes, Conversation History, Admin Panel
+  const menuItems = [
+    {
+      id: 'language',
+      icon: 'language-outline' as const,
+      label: t('language') || 'Language',
+      screen: 'LanguageSelection',
+    },
+    {
+      id: 'bookmarks',
+      icon: 'bookmark-outline' as const,
+      label: t('bookmarks') || 'Bookmarked Schemes',
+      screen: 'Bookmarks',
+    },
+    {
+      id: 'conversationHistory',
+      icon: 'chatbubble-outline' as const,
+      label: t('conversationHistory') || 'Conversation History',
+      screen: 'ConversationHistory',
+    },
+    {
+      id: 'adminPanel',
+      icon: 'shield-outline' as const,
+      label: t('admin') || 'Admin',
+      screen: 'AdminPanel',
+    },
+  ];
+
+  const handleSignIn = () => {
+    navigation.dispatch(
+      CommonActions.navigate({
+        name: 'Auth',
+        params: {
+          screen: 'Login',
+        },
+      })
+    );
+  };
 
   const handleLogout = async () => {
     setShowLogoutDialog(false);
-
-    try {
-      await logoutMutation.mutateAsync();
-    } catch {}
-
+    try { await logoutMutation.mutateAsync(); } catch {}
     await logout();
   };
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('HomeTab' as any);
+    }
+  };
+
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingTop: insets.top + Spacing.md,
-        },
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: isDarkMode ? themeColors.background : '#F8FAFC' }]}>
+      {/* Header matching Screenshot 2 top bar with back button, Profile title, language selector & theme toggle */}
+      <Header
+        showBack
+        onBackPress={handleBack}
+        title={t('profileTab') || 'Profile'}
+        showLanguageSelector
+      />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* =========================================
-            PROFILE HEADER
-            Farmer AI logo + Profile
-           ========================================= */}
-
-        <View style={styles.headerBar}>
-          <View style={styles.headerLeft}>
-            <Image
-              source={require('../../../assets/icon.png')}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.screenTitle}>Profile</Text>
-
-              <Text style={styles.profileSubtitle}>
-                Manage your account and preferences
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.headerRightActions}>
-            <TouchableOpacity
-              style={styles.actionIconButton}
-              onPress={() =>
-                navigation.navigate('LanguageSelection')
-              }
-              activeOpacity={0.7}
-              accessibilityLabel="Language"
-            >
-              <Ionicons
-                name="globe-outline"
-                size={20}
-                color={Colors.text.primary}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionIconButton}
-              onPress={() => {}}
-              activeOpacity={0.7}
-              accessibilityLabel="Notifications"
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={20}
-                color={Colors.text.primary}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* =========================================
-            GUEST / USER CARD
-           ========================================= */}
-
+        {/* Guest Banner or User Card matching Screenshot 2 */}
         {isGuest ? (
-          <View style={[styles.guestCard, Shadows.card]}>
-            <View style={styles.guestAvatarContainer}>
-              <Ionicons
-                name="person-outline"
-                size={28}
-                color={Colors.primary[600]}
-              />
+          <View
+            style={[
+              styles.guestCard,
+              {
+                backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF',
+                borderColor: isDarkMode ? themeColors.border : '#E2E8F0',
+              },
+              Shadows.card,
+            ]}
+          >
+            <View
+              style={[
+                styles.guestAvatarContainer,
+                { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' },
+              ]}
+            >
+              <Ionicons name="person-outline" size={26} color="#15803D" />
             </View>
 
             <View style={styles.guestTextContainer}>
-              <Text style={styles.guestTitle}>
-                Guest
+              <Text style={[styles.guestTitle, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                {t('guest') || 'Guest'}
               </Text>
-
-              <Text style={styles.guestSubtitle}>
-                Sign in to save{'\n'}
-                schemes and applications
+              <Text style={[styles.guestSubtitle, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
+                {t('signInSaveSchemes') || 'Sign in to save schemes and applications'}
               </Text>
             </View>
 
             <TouchableOpacity
               style={styles.signInButton}
-              onPress={() => navigation.navigate('SignIn')}
+              onPress={handleSignIn}
               activeOpacity={0.85}
             >
-              <Ionicons
-                name="log-in-outline"
-                size={18}
-                color={Colors.white}
-              />
-
-              <Text style={styles.signInButtonText}>
-                Sign in
-              </Text>
+              <Ionicons name="log-in-outline" size={16} color="#FFFFFF" />
+              <Text style={styles.signInButtonText}>{t('signIn') || 'Sign in'}</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={[styles.userCard, Shadows.card]}>
-            <View style={styles.avatar}>
-              <Ionicons
-                name="person"
-                size={32}
-                color={Colors.primary[600]}
-              />
+          <View
+            style={[
+              styles.userCard,
+              {
+                backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF',
+                borderColor: isDarkMode ? themeColors.border : '#E2E8F0',
+              },
+              Shadows.card,
+            ]}
+          >
+            <View style={[styles.avatar, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+              <Ionicons name="person" size={26} color="#15803D" />
             </View>
-
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>
-                {user?.name || 'Farmer'}
+              <Text style={[styles.userName, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                {user?.name || t('farmerFriend') || 'Farmer'}
               </Text>
-
-              <Text style={styles.userEmail}>
-                {user?.email ||
-                  user?.mobile ||
-                  'Logged in'}
+              <Text style={[styles.userEmail, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
+                {user?.email || user?.mobile || 'farmer@farmerai.org'}
               </Text>
             </View>
-
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('Settings')
-              }
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="create-outline"
-                size={20}
-                color={Colors.gray[500]}
-              />
-            </TouchableOpacity>
           </View>
         )}
 
-        {/* =========================================
-            MENU ITEMS
-           ========================================= */}
-
-        <View style={styles.menuContainer}>
-          {MENU_ITEMS.map((item, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.menuItem}
-              onPress={() =>
-                navigation.navigate(item.screen as any)
-              }
-              activeOpacity={0.6}
-            >
-              <View style={styles.menuIconContainer}>
-                <Ionicons
-                  name={item.icon}
-                  size={20}
-                  color={Colors.primary[600]}
-                />
-              </View>
-
-              <Text style={styles.menuLabel}>
-                {item.label}
-              </Text>
-
-              {item.badge && (
-                <View style={styles.menuBadge}>
-                  <Text style={styles.menuBadgeText}>
-                    {item.badge}
-                  </Text>
+        {/* Menu items container matching Screenshot 2 */}
+        <View
+          style={[
+            styles.menuCard,
+            {
+              backgroundColor: isDarkMode ? themeColors.card : '#FFFFFF',
+              borderColor: isDarkMode ? themeColors.border : '#E2E8F0',
+            },
+          ]}
+        >
+          {menuItems.map((item, idx) => {
+            const isLast = idx === menuItems.length - 1;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.menuItem,
+                  !isLast && {
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDarkMode ? '#374151' : '#F1F5F9',
+                  },
+                ]}
+                onPress={() => navigation.navigate(item.screen as any)}
+                activeOpacity={0.65}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
+                  <Ionicons name={item.icon} size={19} color="#15803D" />
                 </View>
-              )}
-
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={Colors.gray[400]}
-              />
-            </TouchableOpacity>
-          ))}
+                <Text style={[styles.menuLabel, { color: isDarkMode ? '#F9FAFB' : '#1E293B' }]}>
+                  {item.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={isDarkMode ? '#6B7280' : '#94A3B8'} />
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        {/* =========================================
-            LOGOUT
-           ========================================= */}
-
+        {/* Logout Button (For Logged In Non-Guest Users) */}
         {!isGuest && (
           <Button
-            title="Logout"
-            onPress={() =>
-              setShowLogoutDialog(true)
-            }
+            title={t('logout') || 'Logout'}
+            onPress={() => setShowLogoutDialog(true)}
             variant="danger"
             size="md"
             icon="log-out-outline"
             fullWidth
-            style={{
-              marginTop: Spacing['2xl'],
-            }}
+            style={{ marginTop: 20 }}
           />
         )}
 
-        <Text style={styles.version}>
+        {/* Version text centered */}
+        <Text style={[styles.version, { color: isDarkMode ? '#6B7280' : '#94A3B8' }]}>
           Version 1.0.0
         </Text>
       </ScrollView>
 
-      {/* =========================================
-          LOGOUT DIALOG
-         ========================================= */}
-
+      {/* Logout Dialog */}
       <Dialog
         visible={showLogoutDialog}
-        onClose={() =>
-          setShowLogoutDialog(false)
-        }
-        title="Logout"
-        message="Are you sure you want to logout?"
+        onClose={() => setShowLogoutDialog(false)}
+        title={t('logout') || 'Logout'}
+        message={t('logoutConfirm') || 'Are you sure you want to logout?'}
         actions={[
-          {
-            label: 'Cancel',
-            onPress: () =>
-              setShowLogoutDialog(false),
-          },
-          {
-            label: 'Logout',
-            onPress: handleLogout,
-            variant: 'destructive',
-          },
+          { label: t('cancel') || 'Cancel', onPress: () => setShowLogoutDialog(false) },
+          { label: t('logout') || 'Logout', onPress: handleLogout, variant: 'destructive' },
         ]}
       />
     </View>
@@ -348,229 +238,120 @@ export const ProfileScreen: React.FC<ProfileScreenProps<'Profile'>> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
-
   scrollContent: {
-    padding: Spacing.xl,
-    paddingBottom: 100,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 60,
   },
 
-  /* =========================================
-     PROFILE HEADER
-     ========================================= */
-
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xl,
-  },
-
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-
-  headerLogo: {
-    width: 52,
-    height: 52,
-    marginRight: Spacing.md,
-  },
-
-  headerTextContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-
-  screenTitle: {
-    ...Typography.h3,
-    color: Colors.text.primary,
-    marginBottom: 2,
-  },
-
-  profileSubtitle: {
-    ...Typography.bodySm,
-    color: Colors.text.secondary,
-  },
-
-  headerRightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-
-  actionIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F8FAFC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-
-  /* =========================================
-     GUEST CARD
-     ========================================= */
-
+  /* Guest Card matching Screenshot 2 */
   guestCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: 24,
-    padding: Spacing.lg,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: Spacing['2xl'],
-    gap: Spacing.md,
+    marginBottom: 20,
+    gap: 12,
   },
-
   guestAvatarContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.primary[50],
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   guestTextContainer: {
     flex: 1,
   },
-
   guestTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text.primary,
+    fontSize: 17,
+    fontWeight: '800',
     marginBottom: 2,
   },
-
   guestSubtitle: {
-    fontSize: 13,
-    color: Colors.text.secondary,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 16,
   },
-
   signInButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primary[500],
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 24,
-    shadowColor: Colors.primary[500],
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: '#15803D',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
   },
-
   signInButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: Colors.white,
+    color: '#FFFFFF',
   },
 
-  /* =========================================
-     USER CARD
-     ========================================= */
-
+  /* Logged In User Card */
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    gap: Spacing.lg,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
-    borderColor: Colors.gray[100],
-    marginBottom: Spacing['2xl'],
+    marginBottom: 20,
+    gap: 12,
   },
-
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primary[50],
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   userInfo: {
     flex: 1,
   },
-
   userName: {
-    ...Typography.h5,
-    color: Colors.text.primary,
+    fontSize: 17,
+    fontWeight: '800',
     marginBottom: 2,
   },
-
   userEmail: {
-    ...Typography.bodySm,
-    color: Colors.text.secondary,
+    fontSize: 12,
   },
 
-  /* =========================================
-     MENU
-     ========================================= */
-
-  menuContainer: {
-    gap: Spacing.xxs,
+  /* Menu Card Container */
+  menuCard: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
   },
-
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    gap: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    paddingVertical: 15,
+    gap: 14,
   },
-
   menuIconContainer: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: 10,
-    backgroundColor: Colors.primary[50],
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   menuLabel: {
-    ...Typography.label,
-    color: Colors.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
     flex: 1,
   },
-
-  menuBadge: {
-    backgroundColor: Colors.primary[500],
-    borderRadius: 10,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-  },
-
-  menuBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: Colors.white,
-  },
-
-  /* =========================================
-     VERSION
-     ========================================= */
-
   version: {
-    ...Typography.caption,
-    color: Colors.text.tertiary,
+    fontSize: 12,
+    fontWeight: '500',
     textAlign: 'center',
-    marginTop: Spacing['3xl'],
+    marginTop: 28,
   },
 });
